@@ -1,0 +1,13 @@
+# Documentation initiale
+*.docx
+docx_text.txt
+
+# Dossiers systèmes KI
+.agents/
+
+# Modules (si à la racine)
+node_modules/
+
+# Environnement
+.env
+.env.local
