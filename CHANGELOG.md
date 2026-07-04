@@ -31,3 +31,6 @@ This document tracks all implemented steps and modifications for the JobConnect 
 ### Security & Authentication
 - Installed `@nestjs/jwt`, `@nestjs/passport`, `bcrypt` and their types.
 - Generated NestJS `auth` module, service, and controller as the foundation for the JWT authentication system.
+- Implemented `/auth/register` endpoint using `bcrypt` for secure password hashing.
+- Implemented `/auth/login` endpoint that returns a signed JWT token on valid credentials.
+- Configured Passport `JwtStrategy` and `JwtAuthGuard` to protect authenticated API routes.
