@@ -12,15 +12,15 @@ export class JobsService {
     return `This action returns all jobs`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} job`;
   }
 
-  update(id: number, updateJobDto: UpdateJobDto) {
+  update(id: string, updateJobDto: UpdateJobDto) {
     return `This action updates a #${id} job`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} job`;
   }
 }
