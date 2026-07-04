@@ -34,3 +34,11 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - Implemented `/auth/register` endpoint using `bcrypt` for secure password hashing.
 - Implemented `/auth/login` endpoint that returns a signed JWT token on valid credentials.
 - Configured Passport `JwtStrategy` and `JwtAuthGuard` to protect authenticated API routes.
+
+## Sprint 2: Frontend Web (Next.js)
+### Authentication UI
+- Installed `axios`, `lucide-react`, `clsx`, `tailwind-merge`.
+- Created a premium Tailwind v4 theme in `globals.css` (Glassmorphism, gradients).
+- Developed a modern `/login` page with JWT saving to `localStorage`.
+- Developed a modern `/register` page with auto-login on success.
+- Configured `api.ts` Axios client to auto-attach the JWT to requests.

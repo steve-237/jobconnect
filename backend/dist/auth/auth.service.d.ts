@@ -10,10 +10,10 @@ export declare class AuthService {
         access_token: string;
     }>;
     register(createUserDto: CreateUserDto): Promise<{
-        id: string;
         email: string;
         firstName: string;
         lastName: string;
+        id: string;
         role: import("@prisma/client").$Enums.Role;
         bio: string | null;
         avatarUrl: string | null;
