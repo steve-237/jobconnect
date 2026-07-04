@@ -1,13 +1,97 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYER
+  CANDIDATE
+}
+
+enum JobStatus {
+  PENDING
+  PUBLISHED
+  MATCHING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  role            Role      @default(CANDIDATE)
+  
+  // Profile Info
+  bio             String?
+  avatarUrl       String?
+  isVerified      Boolean   @default(false)
+  
+  // Relations
+  postedJobs      Job[]     @relation("EmployerJobs")
+  appliedJobs     Application[]
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  iconUrl     String?
+  jobs        Job[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Job {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  status      JobStatus @default(PENDING)
+  location    String?
+  
+  // Relations
+  employerId  String
+  employer    User      @relation("EmployerJobs", fields: [employerId], references: [id], onDelete: Cascade)
+  
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  
+  applications Application[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Application {
+  id          String   @id @default(uuid())
+  message     String?
+  isAccepted  Boolean  @default(false)
+  
+  // Relations
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  candidateId String
+  candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([jobId, candidateId]) // A user can only apply once per job
 }
