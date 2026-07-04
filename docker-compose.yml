@@ -5,8 +5,8 @@ services:
     container_name: jobconnect_db
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: jobconnect
     ports:
       - '5432:5432'
