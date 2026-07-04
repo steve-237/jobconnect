@@ -27,3 +27,7 @@ This document tracks all implemented steps and modifications for the JobConnect 
   - `Category`
   - `Application`
 - Generated basic REST API CRUD controllers and services in NestJS for `users`, `jobs`, and `categories`.
+
+### Security & Authentication
+- Installed `@nestjs/jwt`, `@nestjs/passport`, `bcrypt` and their types.
+- Generated NestJS `auth` module, service, and controller as the foundation for the JWT authentication system.
