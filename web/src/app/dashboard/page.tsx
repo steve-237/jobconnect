@@ -2,24 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Users,
-  Clock,
-  Plus,
-  Search,
-  User,
-  MessageSquare,
-  ArrowRight,
-  TrendingUp,
-  ArrowLeft,
-  FileText,
-} from 'lucide-react';
-import Link from 'next/link';
-
-/* ---------- helpers ---------- */
+import CandidateDashboard from './CandidateDashboard';
+import EmployerDashboard from './EmployerDashboard';
 
 function decodeUserFromToken(): { email: string, role?: string } | null {
   try {
@@ -38,29 +22,7 @@ function firstNameFromEmail(email: string): string {
   return local.charAt(0).toUpperCase() + local.slice(1);
 }
 
-/* ---------- data ---------- */
-
-const recentJobsCandidate = [
-  { id: 1, title: 'Senior React Developer', price: '$85k – $120k', location: 'Remote', status: 'Applied', postedAgo: '2 days ago' },
-  { id: 2, title: 'UI/UX Designer', price: '$60k – $90k', location: 'New York, NY', status: 'Interview', postedAgo: '1 week ago' },
-];
-
-const recentJobsEmployer = [
-  { id: 1, title: 'Backend Engineer (Node.js)', price: '$95k – $130k', location: 'San Francisco, CA', status: 'Open', postedAgo: '1 day ago' },
-  { id: 2, title: 'DevOps Specialist', price: '$100k – $140k', location: 'Remote', status: 'Closed', postedAgo: '3 days ago' },
-];
-
-const statusColor: Record<string, string> = {
-  Open: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-  'In Review': 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
-  Closed: 'bg-red-500/20 text-red-400 border border-red-500/30',
-  Applied: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-  Interview: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
-};
-
-/* ---------- component ---------- */
-
-export default function DashboardPage() {
+export default function DashboardRouterPage() {
   const router = useRouter();
   const [greeting, setGreeting] = useState('');
   const [userRole, setUserRole] = useState<string>('');
@@ -97,127 +59,10 @@ export default function DashboardPage() {
     );
   }
 
-  const isEmployer = userRole === 'EMPLOYER';
+  // Dashboard Visual Routing
+  if (userRole === 'EMPLOYER') {
+    return <EmployerDashboard greeting={greeting} userRole={userRole} />;
+  }
 
-  const stats = isEmployer ? [
-    { label: 'Active Jobs', value: 3, icon: Briefcase, accent: 'text-primary' },
-    { label: 'Applications', value: 12, icon: Users, accent: 'text-emerald-400' },
-    { label: 'Messages', value: 5, icon: MessageSquare, accent: 'text-amber-400' },
-  ] : [
-    { label: 'Jobs Applied', value: 8, icon: FileText, accent: 'text-primary' },
-    { label: 'Interviews', value: 2, icon: Users, accent: 'text-emerald-400' },
-    { label: 'Profile Views', value: 45, icon: TrendingUp, accent: 'text-violet-400' },
-  ];
-
-  const quickActions = isEmployer ? [
-    { label: 'Post a Job', href: '/jobs/create', icon: Plus, color: 'bg-primary/20 text-primary' },
-    { label: 'Manage Jobs', href: '/jobs', icon: Briefcase, color: 'bg-emerald-500/20 text-emerald-400' },
-    { label: 'My Profile', href: '/profile', icon: User, color: 'bg-violet-500/20 text-violet-400' },
-  ] : [
-    { label: 'Browse Jobs', href: '/jobs', icon: Search, color: 'bg-emerald-500/20 text-emerald-400' },
-    { label: 'My Applications', href: '#', icon: FileText, color: 'bg-primary/20 text-primary' },
-    { label: 'My Profile', href: '/profile', icon: User, color: 'bg-violet-500/20 text-violet-400' },
-  ];
-
-  const recentJobs = isEmployer ? recentJobsEmployer : recentJobsCandidate;
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute -right-40 top-1/3 h-[400px] w-[400px] rounded-full bg-violet-500/10 blur-[120px]" />
-        <div className="absolute bottom-0 left-1/2 h-[350px] w-[350px] -translate-x-1/2 rounded-full bg-emerald-500/8 blur-[120px]" />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-6">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </Link>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl flex items-center gap-4">
-              {greeting}
-              <span className="text-xs font-medium px-3 py-1 bg-white/10 rounded-full text-muted-foreground border border-white/10 uppercase">
-                {userRole}
-              </span>
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              {isEmployer ? "Here's the activity on your job postings." : "Here's the status of your applications and job searches."}
-            </p>
-          </div>
-        </header>
-
-        <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {stats.map((s) => (
-            <div key={s.label} className="glass group rounded-2xl p-6 transition-all duration-300 hover:scale-[1.03] hover:shadow-lg hover:shadow-primary/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{s.label}</p>
-                  <p className="mt-1 text-3xl font-bold text-foreground">{s.value}</p>
-                </div>
-                <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.accent} bg-white/5`}>
-                  <s.icon className="h-6 w-6" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <section className="lg:col-span-2">
-            <div className="glass rounded-2xl p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">
-                  {isEmployer ? 'Your Recent Postings' : 'Your Recent Applications'}
-                </h2>
-                <button onClick={() => router.push('/jobs')} className="flex items-center gap-1 text-sm text-primary transition-colors hover:text-primary/80">
-                  {isEmployer ? 'View all jobs' : 'Browse more'} <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {recentJobs.map((job) => (
-                  <div key={job.id} className="group flex flex-col gap-3 rounded-xl bg-white/[0.03] p-5 transition-all duration-200 hover:bg-white/[0.06] sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                        {job.title}
-                      </h3>
-                      <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5" />{job.price}</span>
-                        <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{job.location}</span>
-                        <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{job.postedAgo}</span>
-                      </div>
-                    </div>
-                    <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium ${statusColor[job.status]}`}>
-                      {job.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <aside className="space-y-6">
-            <div className="glass rounded-2xl p-6">
-              <h2 className="mb-5 text-xl font-semibold text-foreground">Quick Actions</h2>
-              <div className="space-y-3">
-                {quickActions.map((action) => (
-                  <button key={action.label} onClick={() => router.push(action.href)} className="flex w-full items-center gap-4 rounded-xl bg-white/[0.03] p-4 text-left transition-all duration-200 hover:bg-white/[0.07] group">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}`}>
-                      <action.icon className="h-5 w-5" />
-                    </div>
-                    <span className="font-medium text-foreground group-hover:text-primary transition-colors">
-                      {action.label}
-                    </span>
-                    <ArrowRight className="ml-auto h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </div>
-  );
+  return <CandidateDashboard greeting={greeting} userRole={userRole} />;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -11,7 +11,9 @@ export class JobsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createJobDto: CreateJobDto, @Request() req: any) {
-    // req.user contains the decoded JWT token payload (e.g. { userId, email, role })
+    if (req.user.role === 'CANDIDATE') {
+      throw new ForbiddenException('Candidates are not allowed to post jobs');
+    }
     return this.jobsService.create(createJobDto, req.user.userId);
   }
 

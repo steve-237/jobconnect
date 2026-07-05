@@ -27,6 +27,20 @@ export default function CreateJobPage() {
   });
 
   useEffect(() => {
+    // Role check
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.role === 'CANDIDATE') {
+          router.replace('/dashboard');
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const fetchCategories = async () => {
       try {
         const response = await api.get('/categories');
@@ -38,11 +52,11 @@ export default function CreateJobPage() {
         console.error('Failed to load categories', err);
         setError('Failed to load categories. Please try again later.');
       } finally {
-        setIsFetchingCats(false);
+        setIsLoading(false);
       }
     };
     fetchCategories();
-  }, []);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

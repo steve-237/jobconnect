@@ -24,6 +24,9 @@ let JobsController = class JobsController {
         this.jobsService = jobsService;
     }
     create(createJobDto, req) {
+        if (req.user.role === 'CANDIDATE') {
+            throw new common_1.ForbiddenException('Candidates are not allowed to post jobs');
+        }
         return this.jobsService.create(createJobDto, req.user.userId);
     }
     findAll() {
