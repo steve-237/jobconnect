@@ -42,3 +42,13 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - Developed a modern `/login` page with JWT saving to `localStorage`.
 - Developed a modern `/register` page with auto-login on success.
 - Configured `api.ts` Axios client to auto-attach the JWT to requests.
+
+### Landing Page Redesign
+- Complete professional redesign with sticky navbar, hero section with illustration, features section with generated images, how-it-works 4-step flow, testimonials, CTA banner, and footer.
+- Added fade-in animations, gradient-border effects, and glassmorphism utilities.
+- Updated layout.tsx with Inter font and proper SEO metadata.
+
+### New Pages
+- **Dashboard** (`/dashboard`): Stats cards, recent jobs, quick actions sidebar, activity feed. Auth-guarded with JWT decode for personalized greeting.
+- **Browse Jobs** (`/jobs`): Job grid with search bar, category filter, 6 realistic mock jobs (French), pagination UI.
+- **Profile** (`/profile`): User profile with avatar, editable personal info form, account settings, stats cards. Auth-guarded.
