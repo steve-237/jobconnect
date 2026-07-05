@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -25,6 +26,53 @@ async function main() {
     });
     console.log(`Created category: ${category.name}`);
   }
+
+  console.log('Seeding admin user...');
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash('admin', salt);
+  
+  await prisma.user.upsert({
+    where: { email: 'admin@jobconnect.com' },
+    update: {},
+    create: {
+      email: 'admin@jobconnect.com',
+      passwordHash,
+      firstName: 'System',
+      lastName: 'Admin',
+      role: 'ADMIN',
+    },
+  });
+  console.log('Created admin user: admin@jobconnect.com');
+
+  console.log('Seeding test users...');
+  const testPasswordHash = await bcrypt.hash('test', salt);
+  
+  await prisma.user.upsert({
+    where: { email: 'employeur@test.com' },
+    update: {},
+    create: {
+      email: 'employeur@test.com',
+      passwordHash: testPasswordHash,
+      firstName: 'Jean',
+      lastName: 'Employeur',
+      role: 'EMPLOYER',
+    },
+  });
+  console.log('Created test employer: employeur@test.com');
+
+  await prisma.user.upsert({
+    where: { email: 'candidat@test.com' },
+    update: {},
+    create: {
+      email: 'candidat@test.com',
+      passwordHash: testPasswordHash,
+      firstName: 'Marc',
+      lastName: 'Candidat',
+      role: 'CANDIDATE',
+    },
+  });
+  console.log('Created test candidate: candidat@test.com');
+
   console.log('Seeding finished.');
 }
 

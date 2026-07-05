@@ -57,8 +57,8 @@ export default function JobsPage() {
           api.get('/jobs'),
           api.get('/categories')
         ]);
-        setJobs(jobsRes.data);
-        setCategories(catsRes.data);
+        setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
+        setCategories(Array.isArray(catsRes.data) ? catsRes.data : []);
       } catch (err) {
         console.error('Failed to fetch data', err);
       } finally {
@@ -68,9 +68,9 @@ export default function JobsPage() {
     fetchData();
   }, []);
 
-  const allCategories = ['Toutes les catégories', ...categories.map(c => c.name)];
+  const allCategories = ['Toutes les catégories', ...(Array.isArray(categories) ? categories.map(c => c.name) : [])];
 
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = (Array.isArray(jobs) ? jobs : []).filter((job) => {
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

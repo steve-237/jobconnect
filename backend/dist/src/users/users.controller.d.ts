@@ -6,6 +6,8 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     create(createUserDto: CreateUserDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         firstName: string;
         lastName: string;
@@ -13,8 +15,6 @@ export declare class UsersController {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
@@ -32,6 +32,8 @@ export declare class UsersController {
     } | null>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -40,11 +42,11 @@ export declare class UsersController {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -53,7 +55,5 @@ export declare class UsersController {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }
