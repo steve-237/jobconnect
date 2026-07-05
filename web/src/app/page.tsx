@@ -86,8 +86,9 @@ export default function Home() {
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="text-sm text-gray-400 hover:text-white transition-colors p-2">
+                <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-colors">
                   <LogOut className="w-4 h-4" />
+                  Sign Out
                 </button>
               </>
             ) : (
@@ -141,13 +142,22 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 w-full">
             {isLoggedIn ? (
-              <Link 
-                href="/dashboard"
-                className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
-              >
-                Go to Dashboard
-                <LayoutDashboard className="w-5 h-5" />
-              </Link>
+              <>
+                <Link 
+                  href="/dashboard"
+                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                >
+                  Go to Dashboard
+                  <LayoutDashboard className="w-5 h-5" />
+                </Link>
+                <Link 
+                  href="/jobs"
+                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+                >
+                  <Search className="w-5 h-5" />
+                  Browse Jobs
+                </Link>
+              </>
             ) : (
               <>
                 <Link 
@@ -294,19 +304,39 @@ export default function Home() {
             Join thousands of freelancers and employers who trust JobConnect for their punctual job needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
-            <Link 
-              href="/register"
-              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
-            >
-              Create Free Account
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link 
-              href="/jobs"
-              className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
-            >
-              Browse Jobs
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link 
+                  href="/dashboard"
+                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                >
+                  Go to Dashboard
+                  <LayoutDashboard className="w-5 h-5" />
+                </Link>
+                <Link 
+                  href="/jobs"
+                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+                >
+                  Browse Jobs
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/register"
+                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                >
+                  Create Free Account
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link 
+                  href="/jobs"
+                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+                >
+                  Browse Jobs
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
