@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Briefcase,
   User,
+  ArrowLeft,
 } from 'lucide-react';
+import Link from 'next/link';
 
 const mockJobs = [
   {
@@ -130,6 +132,10 @@ export default function JobsPage() {
       <section className="relative overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-6">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
           <div className="mb-8 text-center">
             <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl">
               Browse{' '}

@@ -16,7 +16,9 @@ import {
   Lock,
   Trash2,
   FileText,
+  ArrowLeft,
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface UserProfile {
   firstName: string;
@@ -107,6 +109,10 @@ export default function ProfilePage() {
       </div>
 
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-8">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
         {/* ─── Profile Header ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
