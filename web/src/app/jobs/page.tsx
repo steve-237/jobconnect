@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   MapPin,
@@ -31,6 +31,15 @@ interface Job {
   category: {
     name: string;
   };
+}
+
+function daysAgo(dateStr: string) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Aujourd'hui";
+  if (diff === 1) return 'Hier';
+  return `Il y a ${diff} jours`;
 }
 
 export default function JobsPage() {

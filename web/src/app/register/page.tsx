@@ -15,7 +15,8 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
-    password: ''
+    password: '',
+    role: 'CANDIDATE'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +68,35 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Role Selection */}
+            <div className="flex gap-4 mb-2">
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, role: 'CANDIDATE'})}
+                className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                  formData.role === 'CANDIDATE' 
+                    ? 'bg-primary/20 border-primary text-white shadow-lg shadow-primary/10' 
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                }`}
+              >
+                <User className="w-6 h-6" />
+                <span className="text-sm font-medium">Je cherche un job</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setFormData({...formData, role: 'EMPLOYER'})}
+                className={`flex-1 py-3 px-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                  formData.role === 'EMPLOYER' 
+                    ? 'bg-amber-500/20 border-amber-500 text-white shadow-lg shadow-amber-500/10' 
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                }`}
+              >
+                <Briefcase className="w-6 h-6" />
+                <span className="text-sm font-medium">Je propose un job</span>
+              </button>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-5">
               <div className="space-y-2 flex-1">
                 <label className="text-sm font-medium text-gray-300">First Name</label>

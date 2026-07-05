@@ -25,7 +25,7 @@ export class UsersService {
         passwordHash,
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
-        // Optional role mapping could go here
+        role: createUserDto.role || 'CANDIDATE',
       },
     });
 

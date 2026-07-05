@@ -5,4 +5,5 @@ export class CreateUserDto {
   password!: string;
   firstName!: string;
   lastName!: string;
+  role?: 'CANDIDATE' | 'EMPLOYER';
 }
