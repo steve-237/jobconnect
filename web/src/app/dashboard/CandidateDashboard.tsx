@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock } from 'lucide-react';
+import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -17,6 +17,11 @@ const statusColor: Record<string, string> = {
 export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.replace('/login');
+  };
+
   const stats = [
     { label: 'Jobs Applied', value: 8, icon: FileText, accent: 'text-primary' },
     { label: 'Interviews', value: 2, icon: Users, accent: 'text-emerald-400' },
@@ -24,9 +29,10 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   ];
 
   const quickActions = [
-    { label: 'Browse Jobs', href: '/jobs', icon: Search, color: 'bg-emerald-500/20 text-emerald-400' },
-    { label: 'My Applications', href: '#', icon: FileText, color: 'bg-primary/20 text-primary' },
-    { label: 'My Profile', href: '/profile', icon: User, color: 'bg-violet-500/20 text-violet-400' },
+    { label: 'Browse Jobs', onClick: () => router.push('/jobs'), icon: Search, color: 'bg-emerald-500/20 text-emerald-400' },
+    { label: 'My Applications', onClick: () => {}, icon: FileText, color: 'bg-primary/20 text-primary' },
+    { label: 'My Profile', onClick: () => router.push('/profile'), icon: User, color: 'bg-violet-500/20 text-violet-400' },
+    { label: 'Sign Out', onClick: handleLogout, icon: LogOut, color: 'bg-red-500/20 text-red-400' },
   ];
 
   return (
@@ -98,7 +104,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             <h2 className="mb-5 text-xl font-semibold text-foreground">Quick Actions</h2>
             <div className="space-y-3">
               {quickActions.map((action) => (
-                <button key={action.label} onClick={() => router.push(action.href)} className="flex w-full items-center gap-4 rounded-xl bg-white/[0.03] p-4 text-left transition-all duration-200 hover:bg-white/[0.07] group">
+                <button key={action.label} onClick={action.onClick} className="flex w-full items-center gap-4 rounded-xl bg-white/[0.03] p-4 text-left transition-all duration-200 hover:bg-white/[0.07] group">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${action.color}`}>
                     <action.icon className="h-5 w-5" />
                   </div>

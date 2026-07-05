@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell } from 'lucide-react';
+import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +12,11 @@ const recentJobsEmployer = [
 
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.replace('/login');
+  };
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background relative overflow-hidden">
@@ -43,6 +48,10 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             <button onClick={() => router.push('/profile')} className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl font-medium transition-all">
               <User className="w-5 h-5" />
               Company Profile
+            </button>
+            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all mt-4 border border-transparent hover:border-red-500/20">
+              <LogOut className="w-5 h-5" />
+              Sign Out
             </button>
           </nav>
         </div>

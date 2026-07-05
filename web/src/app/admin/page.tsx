@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Search,
   CheckCircle2,
+  LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -61,6 +62,11 @@ export default function AdminPage() {
     fetchUsers();
   }, [router]);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    router.replace('/login');
+  };
+
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
@@ -106,9 +112,15 @@ export default function AdminPage() {
               Administration Control Panel
             </h1>
           </div>
-          <div className="mt-4 md:mt-0 flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm font-semibold">
-            <CheckCircle2 className="w-4 h-4" />
-            Admin Privileges Active
+          <div className="mt-4 md:mt-0 flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm font-semibold">
+              <CheckCircle2 className="w-4 h-4" />
+              Admin Privileges Active
+            </div>
+            <button onClick={handleLogout} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-muted-foreground hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
           </div>
         </header>
 

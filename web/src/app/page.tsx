@@ -50,8 +50,10 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) setIsLoggedIn(true);
-  }, []);
+    if (token) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
