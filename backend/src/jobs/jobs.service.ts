@@ -1,26 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 @Injectable()
 export class JobsService {
-  create(createJobDto: CreateJobDto) {
-    return 'This action adds a new job';
+  async create(createJobDto: CreateJobDto, employerId: string) {
+    return prisma.job.create({
+      data: {
+        title: createJobDto.title,
+        description: createJobDto.description,
+        price: createJobDto.price,
+        location: createJobDto.location,
+        categoryId: createJobDto.categoryId,
+        employerId: employerId,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all jobs`;
+  async findAll() {
+    return prisma.job.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: true,
+        employer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} job`;
+  async findOne(id: string) {
+    const job = await prisma.job.findUnique({
+      where: { id },
+      include: {
+        category: true,
+        employer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+    if (!job) {
+      throw new NotFoundException(`Job with ID ${id} not found`);
+    }
+    return job;
   }
 
-  update(id: string, updateJobDto: UpdateJobDto) {
-    return `This action updates a #${id} job`;
+  async update(id: string, updateJobDto: UpdateJobDto, userId: string) {
+    const job = await this.findOne(id);
+    if (job.employerId !== userId) {
+      throw new Error('Unauthorized to update this job');
+    }
+    return prisma.job.update({
+      where: { id },
+      data: updateJobDto,
+    });
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} job`;
+  async remove(id: string, userId: string) {
+    const job = await this.findOne(id);
+    if (job.employerId !== userId) {
+      throw new Error('Unauthorized to delete this job');
+    }
+    return prisma.job.delete({
+      where: { id },
+    });
   }
 }
