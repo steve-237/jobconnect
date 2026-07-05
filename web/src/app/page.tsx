@@ -110,89 +110,86 @@ export default function Home() {
       </header>
 
       {/* ========== HERO SECTION ========== */}
-      <section className="relative flex flex-col lg:flex-row items-center max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-28 gap-12 lg:gap-16">
+      <section className="relative flex flex-col items-center text-center max-w-5xl mx-auto px-6 py-20 lg:py-28 z-10 animate-fade-in-up">
         {/* Background blobs */}
-        <div className="absolute top-0 left-[-15%] w-[50%] h-[60%] rounded-full bg-primary/15 blur-[150px] pointer-events-none" />
-        <div className="absolute bottom-0 right-[-15%] w-[40%] h-[50%] rounded-full bg-purple-900/15 blur-[150px] pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[80%] rounded-full bg-primary/15 blur-[150px] pointer-events-none" />
 
-        <div className="flex flex-col items-start lg:w-1/2 z-10 animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            Now in Beta — Join 2,500+ professionals
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.15]">
-            Find the perfect{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
-              short-term job
-            </span>{' '}
-            in seconds.
-          </h1>
-          
-          <p className="text-lg text-muted-foreground mb-8 max-w-lg leading-relaxed">
-            Whether you need help moving, a weekend gardener, or a skilled handyman — connect instantly with verified professionals near you.
-          </p>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+          </span>
+          Now in Beta — Join 2,500+ professionals
+        </div>
+        
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.15] max-w-4xl mx-auto">
+          Find the perfect{' '}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
+            short-term job
+          </span>{' '}
+          in seconds.
+        </h1>
+        
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+          Whether you need help moving, a weekend gardener, or a skilled handyman — connect instantly with verified professionals near you.
+        </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-8">
-            {isLoggedIn ? (
-              <>
-                <Link 
-                  href="/dashboard"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-7 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25"
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                  Go to Dashboard
-                </Link>
-                <Link 
-                  href="/jobs"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-medium transition-all border border-white/10"
-                >
-                  <Search className="w-5 h-5" />
-                  Browse Jobs
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link 
-                  href="/register"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-7 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25"
-                >
-                  Create Free Account
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link 
-                  href="/jobs"
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-medium transition-all border border-white/10"
-                >
-                  <Search className="w-5 h-5" />
-                  Browse Jobs
-                </Link>
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free to join</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure payments</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Verified pros</span>
-          </div>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-10">
+          {isLoggedIn ? (
+            <>
+              <Link 
+                href="/dashboard"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                Go to Dashboard
+              </Link>
+              <Link 
+                href="/jobs"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+              >
+                <Search className="w-5 h-5" />
+                Browse Jobs
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link 
+                href="/register"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+              >
+                Create Free Account
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link 
+                href="/jobs"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+              >
+                <Search className="w-5 h-5" />
+                Browse Jobs
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Hero Image */}
-        <div className="lg:w-1/2 flex justify-center relative w-full max-w-[520px] aspect-square z-10 animate-fade-in-up animate-delay-200">
-          <div className="absolute inset-0 rounded-3xl overflow-hidden gradient-border glass shadow-2xl shadow-primary/10">
-            <Image 
-              src="/hero.png"
-              alt="JobConnect — Digital platform connecting professionals"
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 520px"
-              className="object-cover hover:scale-105 transition-transform duration-700"
-            />
-          </div>
+        <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+          <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free to join</span>
+          <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure payments</span>
+          <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Verified profiles</span>
+        </div>
+      </section>
+
+      {/* Hero Image Section (Centered Below) */}
+      <section className="relative max-w-6xl mx-auto px-6 pb-24 z-10 animate-fade-in-up animate-delay-200">
+        <div className="relative w-full aspect-video md:aspect-[21/9] rounded-3xl overflow-hidden gradient-border glass shadow-2xl shadow-primary/20">
+          <Image 
+            src="/hero.png"
+            alt="JobConnect Platform"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover hover:scale-105 transition-transform duration-700"
+          />
         </div>
       </section>
 
