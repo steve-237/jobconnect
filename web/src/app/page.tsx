@@ -116,7 +116,7 @@ export default function Home() {
         <div className="absolute bottom-0 right-[-15%] w-[40%] h-[50%] rounded-full bg-purple-900/15 blur-[150px] pointer-events-none" />
 
         <div className="flex flex-col items-start lg:w-1/2 z-10 animate-fade-in-up">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -124,35 +124,31 @@ export default function Home() {
             Now in Beta — Join 2,500+ professionals
           </div>
           
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter mb-6 leading-[1.05]">
-            <span className="bg-gradient-to-br from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
-              Find the perfect
-            </span>
-            <br />
-            <span className="text-primary">short-term job</span>
-            <br />
-            <span className="bg-gradient-to-br from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">
-              in seconds.
-            </span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-[1.15]">
+            Find the perfect{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">
+              short-term job
+            </span>{' '}
+            in seconds.
           </h1>
           
-          <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
+          <p className="text-lg text-muted-foreground mb-8 max-w-lg leading-relaxed">
             Whether you need help moving, a weekend gardener, or a skilled handyman — connect instantly with verified professionals near you.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full">
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mb-8">
             {isLoggedIn ? (
               <>
                 <Link 
                   href="/dashboard"
-                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-7 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25"
                 >
-                  Go to Dashboard
                   <LayoutDashboard className="w-5 h-5" />
+                  Go to Dashboard
                 </Link>
                 <Link 
                   href="/jobs"
-                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-medium transition-all border border-white/10"
                 >
                   <Search className="w-5 h-5" />
                   Browse Jobs
@@ -162,14 +158,14 @@ export default function Home() {
               <>
                 <Link 
                   href="/register"
-                  className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white px-7 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25"
                 >
                   Create Free Account
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link 
                   href="/jobs"
-                  className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-8 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 border border-white/10"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-medium transition-all border border-white/10"
                 >
                   <Search className="w-5 h-5" />
                   Browse Jobs
@@ -178,16 +174,10 @@ export default function Home() {
             )}
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-success" /> Free to join
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-success" /> Secure payments
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-success" /> Verified profiles
-            </div>
+          <div className="flex flex-wrap items-center gap-5 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Free to join</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure payments</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Verified pros</span>
           </div>
         </div>
 
