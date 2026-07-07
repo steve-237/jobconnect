@@ -59,6 +59,17 @@ let JobsService = class JobsService {
         }
         return job;
     }
+    async findMyJobs(employerId) {
+        return prisma.job.findMany({
+            where: { employerId },
+            include: {
+                _count: {
+                    select: { applications: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    }
     async update(id, updateJobDto, userId) {
         const job = await this.findOne(id);
         if (job.employerId !== userId) {

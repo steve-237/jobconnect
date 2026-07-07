@@ -1,21 +1,45 @@
 'use client';
 
-import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut } from 'lucide-react';
+import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-
-const recentJobsCandidate = [
-  { id: 1, title: 'Senior React Developer', price: '$85k – $120k', location: 'Remote', status: 'Applied', postedAgo: '2 days ago' },
-  { id: 2, title: 'UI/UX Designer', price: '$60k – $90k', location: 'New York, NY', status: 'Interview', postedAgo: '1 week ago' },
-];
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
 const statusColor: Record<string, string> = {
-  Applied: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-  Interview: 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+  PENDING: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
+  ACCEPTED: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
 };
+
+interface Application {
+  id: string;
+  isAccepted: boolean;
+  createdAt: string;
+  job: {
+    title: string;
+    price: number;
+    location: string;
+  };
+}
 
 export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const res = await api.get('/applications/my-applications');
+        setApplications(res.data);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchApps();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -23,8 +47,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   };
 
   const stats = [
-    { label: 'Jobs Applied', value: 8, icon: FileText, accent: 'text-primary' },
-    { label: 'Interviews', value: 2, icon: Users, accent: 'text-emerald-400' },
+    { label: 'Jobs Applied', value: applications.length, icon: FileText, accent: 'text-primary' },
+    { label: 'Accepted', value: applications.filter(a => a.isAccepted).length, icon: CheckCircle2, accent: 'text-emerald-400' },
     { label: 'Profile Views', value: 45, icon: TrendingUp, accent: 'text-violet-400' },
   ];
 
@@ -78,23 +102,34 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             </div>
 
             <div className="space-y-4">
-              {recentJobsCandidate.map((job) => (
-                <div key={job.id} className="group flex flex-col gap-3 rounded-xl bg-white/[0.03] p-5 transition-all duration-200 hover:bg-white/[0.06] sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
-                      {job.title}
-                    </h3>
-                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5" />{job.price}</span>
-                      <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{job.location}</span>
-                      <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{job.postedAgo}</span>
-                    </div>
-                  </div>
-                  <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium ${statusColor[job.status]}`}>
-                    {job.status}
-                  </span>
+              {isLoading ? (
+                <p className="text-muted-foreground text-sm p-4">Loading applications...</p>
+              ) : applications.length === 0 ? (
+                <div className="p-8 text-center bg-white/5 border border-white/10 rounded-xl">
+                  <p className="text-muted-foreground mb-4">You haven't applied to any jobs yet.</p>
+                  <button onClick={() => router.push('/jobs')} className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-lg transition-colors font-medium">
+                    Find Jobs
+                  </button>
                 </div>
-              ))}
+              ) : (
+                applications.map((app) => (
+                  <div key={app.id} className="group flex flex-col gap-3 rounded-xl bg-white/[0.03] p-5 transition-all duration-200 hover:bg-white/[0.06] sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
+                        {app.job.title}
+                      </h3>
+                      <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5" />{app.job.price}</span>
+                        <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{app.job.location || 'Remote'}</span>
+                        <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />Applied {new Date(app.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium ${statusColor[app.isAccepted ? 'ACCEPTED' : 'PENDING']}`}>
+                      {app.isAccepted ? 'Accepted' : 'Pending'}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>

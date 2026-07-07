@@ -1,17 +1,56 @@
 'use client';
 
-import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut } from 'lucide-react';
+import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
-const recentJobsEmployer = [
-  { id: 1, title: 'Backend Engineer (Node.js)', applicants: 12, status: 'Active', postedAgo: '1 day ago' },
-  { id: 2, title: 'DevOps Specialist', applicants: 5, status: 'Reviewing', postedAgo: '3 days ago' },
-  { id: 3, title: 'Frontend Developer', applicants: 28, status: 'Closed', postedAgo: '2 weeks ago' },
-];
+interface Job {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  _count: { applications: number };
+}
+
+interface Application {
+  id: string;
+  message: string;
+  isAccepted: boolean;
+  createdAt: string;
+  candidate: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}
 
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal state
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [isLoadingApps, setIsLoadingApps] = useState(false);
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
+
+  const fetchJobs = async () => {
+    try {
+      const res = await api.get('/jobs/employer/my-jobs');
+      setJobs(res.data);
+    } catch (e) {
+      console.error('Failed to fetch jobs', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -101,7 +140,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             <div className="flex justify-between items-start">
               <div className="bg-blue-500/20 text-blue-400 p-3 rounded-xl"><Users className="w-6 h-6" /></div>
             </div>
-            <h3 className="text-4xl font-bold mt-4 mb-1">45</h3>
+            <h3 className="text-4xl font-bold mt-4 mb-1">
+              {jobs.reduce((acc, job) => acc + job._count.applications, 0)}
+            </h3>
             <p className="text-muted-foreground font-medium">Total Applicants</p>
           </div>
 
@@ -135,40 +176,128 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {recentJobsEmployer.map((job) => (
-                  <tr key={job.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-foreground">{job.title}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${
-                        job.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                        job.status === 'Reviewing' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-red-500/10 text-red-400 border-red-500/20'
-                      }`}>
-                        {job.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-medium">{job.applicants}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-muted-foreground text-sm">
-                      {job.postedAgo}
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <button className="p-2 text-muted-foreground hover:bg-white/10 hover:text-white rounded-lg transition-colors">
-                        <MoreVertical className="w-5 h-5" />
+                {isLoading ? (
+                  <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading jobs...</td></tr>
+                ) : jobs.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center">
+                      <p className="text-muted-foreground mb-4">You haven't posted any jobs yet.</p>
+                      <button onClick={() => router.push('/jobs/create')} className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        Post your first Job
                       </button>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  jobs.map((job) => (
+                    <tr key={job.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="px-6 py-5">
+                        <div className="font-bold text-foreground">{job.title}</div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${
+                          job.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
+                          'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        }`}>
+                          {job.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{job._count.applications}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-muted-foreground text-sm">
+                        {new Date(job.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <button 
+                          onClick={async () => {
+                            setSelectedJob(job);
+                            setIsLoadingApps(true);
+                            try {
+                              const res = await api.get(`/applications/job/${job.id}`);
+                              setApplications(res.data);
+                            } catch (e) {
+                              console.error(e);
+                            } finally {
+                              setIsLoadingApps(false);
+                            }
+                          }}
+                          className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          View Applicants
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Modal for Applicants */}
+        {selectedJob && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+              <div className="flex justify-between items-center p-6 border-b border-white/10">
+                <div>
+                  <h3 className="text-xl font-bold">Applicants for "{selectedJob.title}"</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{applications.length} total candidates</p>
+                </div>
+                <button onClick={() => setSelectedJob(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {isLoadingApps ? (
+                  <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>
+                ) : applications.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">No applicants yet.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {applications.map(app => (
+                      <div key={app.id} className="bg-white/5 border border-white/10 p-5 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                        <div>
+                          <h4 className="font-bold text-lg">{app.candidate.firstName} {app.candidate.lastName}</h4>
+                          <p className="text-sm text-muted-foreground mb-2">{app.candidate.email}</p>
+                          <div className="bg-black/30 p-3 rounded-lg text-sm italic text-gray-300">
+                            "{app.message || "I am very interested in this opportunity."}"
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          {app.isAccepted ? (
+                            <span className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-lg font-semibold">
+                              <CheckCircle className="w-4 h-4" /> Accepted
+                            </span>
+                          ) : (
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await api.patch(`/applications/${app.id}/accept`);
+                                  setApplications(applications.map(a => a.id === app.id ? { ...a, isAccepted: true } : a));
+                                } catch (e) {
+                                  console.error(e);
+                                  alert('Failed to accept');
+                                }
+                              }}
+                              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
+                            >
+                              <Check className="w-4 h-4" /> Accept Candidate
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

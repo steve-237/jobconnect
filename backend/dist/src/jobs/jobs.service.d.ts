@@ -67,6 +67,22 @@ export declare class JobsService {
         employerId: string;
         categoryId: string;
     }>;
+    findMyJobs(employerId: string): Promise<({
+        _count: {
+            applications: number;
+        };
+    } & {
+        id: string;
+        title: string;
+        description: string;
+        price: number;
+        status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        employerId: string;
+        categoryId: string;
+    })[]>;
     update(id: string, updateJobDto: UpdateJobDto, userId: string): Promise<{
         id: string;
         title: string;

@@ -43,6 +43,22 @@ export declare class JobsController {
         employerId: string;
         categoryId: string;
     })[]>;
+    findMyJobs(req: any): Promise<({
+        _count: {
+            applications: number;
+        };
+    } & {
+        id: string;
+        title: string;
+        description: string;
+        price: number;
+        status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        employerId: string;
+        categoryId: string;
+    })[]>;
     findOne(id: string): Promise<{
         employer: {
             id: string;

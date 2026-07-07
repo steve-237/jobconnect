@@ -32,8 +32,17 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const [isApplying, setIsApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserRole(payload.role);
+      }
+    } catch (e) {}
     const fetchJob = async () => {
       try {
         const response = await api.get(`/jobs/${id}`);
@@ -49,12 +58,24 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   }, [id]);
 
   const handleApply = async () => {
+    if (!job) return;
     setIsApplying(true);
-    // Simulate API call for application
-    setTimeout(() => {
+    try {
+      await api.post('/applications', {
+        jobId: job.id,
+        message,
+      });
       setApplied(true);
+    } catch (err: any) {
+      console.error('Apply error', err);
+      if (err.response?.status === 409) {
+        setApplied(true); // Already applied
+      } else {
+        alert(err.response?.data?.message || 'Failed to apply');
+      }
+    } finally {
       setIsApplying(false);
-    }, 1000);
+    }
   };
 
   if (isLoading) {
@@ -138,26 +159,49 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Action */}
-          <div className="flex justify-center sm:justify-start">
-            {applied ? (
-              <button disabled className="flex items-center gap-2 bg-success/20 text-success px-8 py-4 rounded-xl font-semibold cursor-not-allowed border border-success/30">
-                <CheckCircle2 className="w-5 h-5" />
-                Application Sent Successfully!
-              </button>
-            ) : (
-              <button 
-                onClick={handleApply}
-                disabled={isApplying}
-                className="flex items-center justify-center w-full sm:w-auto gap-2 bg-primary hover:bg-primary-hover text-white px-10 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                {isApplying ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> Applying...</>
-                ) : (
-                  'Apply for this Job'
-                )}
-              </button>
-            )}
-          </div>
+          {userRole === 'CANDIDATE' ? (
+            <div className="flex flex-col gap-4 max-w-lg mt-8">
+              {applied ? (
+                <button disabled className="flex items-center justify-center gap-2 bg-emerald-500/20 text-emerald-400 px-8 py-4 rounded-xl font-semibold cursor-not-allowed border border-emerald-500/30">
+                  <CheckCircle2 className="w-5 h-5" />
+                  Application Sent Successfully!
+                </button>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300">Message to Employer (Optional)</label>
+                    <textarea 
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="Why are you a good fit for this job?"
+                      rows={3}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors resize-none"
+                    />
+                  </div>
+                  <button 
+                    onClick={handleApply}
+                    disabled={isApplying}
+                    className="flex items-center justify-center w-full sm:w-auto gap-2 bg-primary hover:bg-primary-hover text-white px-10 py-4 rounded-xl font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  >
+                    {isApplying ? (
+                      <><Loader2 className="w-5 h-5 animate-spin" /> Applying...</>
+                    ) : (
+                      'Apply for this Job'
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
+          ) : userRole ? (
+            <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl text-center text-muted-foreground text-sm">
+              You must be a candidate to apply for this job.
+            </div>
+          ) : (
+            <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-xl text-center">
+              <p className="text-muted-foreground text-sm mb-4">Please sign in as a candidate to apply.</p>
+              <Link href="/login" className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-medium">Sign In</Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

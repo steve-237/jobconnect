@@ -22,6 +22,12 @@ export class JobsController {
     return this.jobsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('employer/my-jobs')
+  findMyJobs(@Request() req: any) {
+    return this.jobsService.findMyJobs(req.user.userId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);

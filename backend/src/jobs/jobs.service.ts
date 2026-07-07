@@ -58,6 +58,18 @@ export class JobsService {
     return job;
   }
 
+  async findMyJobs(employerId: string) {
+    return prisma.job.findMany({
+      where: { employerId },
+      include: {
+        _count: {
+          select: { applications: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
   async update(id: string, updateJobDto: UpdateJobDto, userId: string) {
     const job = await this.findOne(id);
     if (job.employerId !== userId) {
