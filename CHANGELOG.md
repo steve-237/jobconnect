@@ -69,3 +69,12 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - chore(backend): Updated Prisma seed to inject default `ADMIN`, `EMPLOYER`, and `CANDIDATE` test users.
 - feat(web): Auto-redirect logged-in users from the landing page to their dashboard.
 - feat(web): Added functional logout buttons across all dashboards.
+
+## [v0.5.0] - Application Management (Sprint 5)
+- feat(backend): Generated `applications` NestJS module, controller, and service.
+- feat(backend): Implemented application creation, list per candidate, list per job, and acceptance endpoints.
+- feat(backend): Added `employer/my-jobs` endpoint to retrieve jobs and application counts for an employer.
+- feat(web): Updated `jobs/[id]` page with a message textarea and API connection for candidates to apply.
+- feat(web): Replaced mocked applications in `CandidateDashboard` with real API data.
+- feat(web): Replaced mocked jobs in `EmployerDashboard` with real API data.
+- feat(web): Added an "Applicants" modal in `EmployerDashboard` to view candidate messages and Accept/Reject them.
