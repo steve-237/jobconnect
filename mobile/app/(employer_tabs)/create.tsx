@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import api from '../../src/api/client';
@@ -8,12 +8,34 @@ export default function CreateJobScreen() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingCats, setFetchingCats] = useState(true);
+  
   const router = useRouter();
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get('/categories');
+        setCategories(res.data);
+        if (res.data.length > 0) {
+          setCategoryId(res.data[0].id);
+        }
+      } catch (e) {
+        console.error('Error fetching categories', e);
+      } finally {
+        setFetchingCats(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const handleCreate = async () => {
-    if (!title || !description || !price || !location) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!title || !description || !price || !location || !categoryId) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs et sélectionner une catégorie.');
       return;
     }
 
@@ -24,10 +46,10 @@ export default function CreateJobScreen() {
         description,
         price,
         location,
-        categoryId: '1', // Default category for MVP, ideally should fetch categories
+        categoryId,
       });
       
-      Alert.alert('Success', 'Job posted successfully!', [
+      Alert.alert('Succès', 'Annonce publiée avec succès !', [
         { text: 'OK', onPress: () => {
             setTitle('');
             setDescription('');
@@ -38,14 +60,14 @@ export default function CreateJobScreen() {
       ]);
     } catch (e: any) {
       console.error(e);
-      Alert.alert('Error', 'Could not post the job');
+      Alert.alert('Erreur', 'Impossible de publier l\'annonce.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 24 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 24, paddingBottom: 60 }}>
       <Text style={styles.header}>Post a New Job</Text>
       <Text style={styles.subtext}>Find the right candidate for your task.</Text>
 
@@ -58,6 +80,33 @@ export default function CreateJobScreen() {
           value={title}
           onChangeText={setTitle}
         />
+      </View>
+      
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Category</Text>
+        {fetchingCats ? (
+          <ActivityIndicator color="#3B82F6" style={{ alignSelf: 'flex-start', marginTop: 10 }} />
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+            {categories.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[
+                  styles.categoryPill,
+                  categoryId === cat.id && styles.categoryPillActive
+                ]}
+                onPress={() => setCategoryId(cat.id)}
+              >
+                <Text style={[
+                  styles.categoryPillText,
+                  categoryId === cat.id && styles.categoryPillTextActive
+                ]}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       <View style={styles.formGroup}>
@@ -74,13 +123,14 @@ export default function CreateJobScreen() {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Price / Compensation</Text>
+        <Text style={styles.label}>Price / Compensation (€)</Text>
         <TextInput
           style={styles.input}
-          placeholder="e.g. 50€ or 20€/hour"
+          placeholder="e.g. 50 or 20/hour"
           placeholderTextColor="#666"
           value={price}
           onChangeText={setPrice}
+          keyboardType="numeric"
         />
       </View>
 
@@ -95,7 +145,7 @@ export default function CreateJobScreen() {
         />
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleCreate} disabled={loading}>
+      <TouchableOpacity style={styles.button} onPress={handleCreate} disabled={loading || fetchingCats}>
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
@@ -120,7 +170,7 @@ const styles = StyleSheet.create({
   subtext: {
     fontSize: 14,
     color: '#888',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   formGroup: {
     marginBottom: 20,
@@ -144,8 +194,33 @@ const styles = StyleSheet.create({
     height: 120,
     textAlignVertical: 'top',
   },
+  categoryScroll: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  categoryPill: {
+    backgroundColor: '#111',
+    borderWidth: 1,
+    borderColor: '#333',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  categoryPillActive: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)', // Light blue
+    borderColor: '#3B82F6',
+  },
+  categoryPillText: {
+    color: '#888',
+    fontWeight: '500',
+  },
+  categoryPillTextActive: {
+    color: '#3B82F6',
+    fontWeight: 'bold',
+  },
   button: {
-    backgroundColor: '#3B82F6', // Blue for Employer
+    backgroundColor: '#3B82F6',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
