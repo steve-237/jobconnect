@@ -87,3 +87,11 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - feat(web): Created a dedicated custom hook `useSocket` to manage connections and JWT authentication.
 - feat(web): Built the Chat Room UI (`/messages/[applicationId]`) with auto-scroll and instant message display.
 - feat(web): Added "Discuter" buttons on both `CandidateDashboard` and `EmployerDashboard` for accepted applications.
+
+## [v0.7.0] - Mobile App MVP (Sprint 7)
+- feat(mobile): Initialized Expo project with Expo Router (`app/` directory).
+- feat(mobile): Created `api/client.ts` with Axios interceptors for automatic JWT injection via `expo-secure-store`.
+- feat(mobile): Developed `LoginScreen` for Candidate authentication.
+- feat(mobile): Implemented `JobsScreen` with `FlatList` to fetch and display available jobs dynamically.
+- feat(mobile): Added `ProfileScreen` with SecureStore token deletion (Logout) functionality.
+- chore(backend): Adjusted CORS settings in NestJS `main.ts` to accept mobile requests.
