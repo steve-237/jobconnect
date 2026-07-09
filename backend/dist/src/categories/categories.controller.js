@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CategoriesController = void 0;
 const common_1 = require("@nestjs/common");
 const categories_service_1 = require("./categories.service");
+const public_decorator_1 = require("../auth/decorators/public.decorator");
 let CategoriesController = class CategoriesController {
     categoriesService;
     constructor(categoriesService) {
@@ -29,6 +30,7 @@ let CategoriesController = class CategoriesController {
 };
 exports.CategoriesController = CategoriesController;
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

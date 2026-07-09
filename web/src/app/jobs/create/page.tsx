@@ -140,13 +140,13 @@ export default function CreateJobPage() {
                   disabled={isFetchingCats}
                   value={formData.categoryId}
                   onChange={handleChange}
-                  className="block w-full appearance-none rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3.5 text-foreground focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                  className="block w-full rounded-xl border border-white/10 bg-[#111] pl-12 pr-4 py-3.5 text-white focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
                 >
                   {isFetchingCats ? (
                     <option value="">Loading categories...</option>
                   ) : (
                     categories.map((cat) => (
-                      <option key={cat.id} value={cat.id} className="bg-card text-foreground">
+                      <option key={cat.id} value={cat.id} className="bg-[#111] text-white">
                         {cat.name}
                       </option>
                     ))
