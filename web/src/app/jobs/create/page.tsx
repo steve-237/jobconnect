@@ -52,7 +52,7 @@ export default function CreateJobPage() {
         console.error('Failed to load categories', err);
         setError('Failed to load categories. Please try again later.');
       } finally {
-        setIsLoading(false);
+        setIsFetchingCats(false);
       }
     };
     fetchCategories();
