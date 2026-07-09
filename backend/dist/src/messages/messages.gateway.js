@@ -61,7 +61,7 @@ let MessagesGateway = class MessagesGateway {
             const token = client.handshake.auth?.token?.split(' ')[1] || client.handshake.headers.authorization?.split(' ')[1];
             if (!token)
                 return null;
-            return jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+            return jwt.verify(token, process.env.JWT_SECRET || 'secretKey');
         }
         catch (e) {
             return null;
