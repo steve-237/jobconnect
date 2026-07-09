@@ -95,3 +95,10 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - feat(mobile): Implemented `JobsScreen` with `FlatList` to fetch and display available jobs dynamically.
 - feat(mobile): Added `ProfileScreen` with SecureStore token deletion (Logout) functionality.
 - chore(backend): Adjusted CORS settings in NestJS `main.ts` to accept mobile requests.
+
+## [v0.8.0] - Employer Mobile Experience (Sprint 9)
+- feat(mobile): Created dynamic role-based routing in `_layout.tsx` (redirects `CANDIDATE` to `(tabs)` and `EMPLOYER` to `(employer_tabs)`).
+- feat(mobile): Added Employer Bottom Navigation Tabs (My Jobs, Create, Profile).
+- feat(mobile): Developed `CreateJobScreen` allowing employers to post jobs directly from their phone.
+- feat(mobile): Implemented `EmployerJobsScreen` showing live statistics on applicants per job.
+- feat(mobile): Created `ApplicantsScreen` allowing employers to review, accept candidates, and start chatting directly on mobile.
