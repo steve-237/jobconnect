@@ -1,0 +1,85 @@
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { LogOut } from 'lucide-react-native';
+
+export default function ProfileScreen() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await SecureStore.deleteItemAsync('token');
+    router.replace('/(auth)/login');
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>JC</Text>
+        </View>
+        <Text style={styles.name}>Candidate User</Text>
+        <Text style={styles.email}>candidate@jobconnect.com</Text>
+      </View>
+
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <LogOut color="#EF4444" size={20} />
+        <Text style={styles.logoutText}>Sign Out</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+    padding: 24,
+  },
+  header: {
+    alignItems: 'center',
+    marginVertical: 40,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.5)',
+  },
+  avatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#10B981',
+  },
+  name: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 16,
+    color: '#888',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    padding: 16,
+    borderRadius: 16,
+    marginTop: 'auto',
+  },
+  logoutText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
