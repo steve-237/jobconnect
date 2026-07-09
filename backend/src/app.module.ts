@@ -6,9 +6,10 @@ import { JobsModule } from './jobs/jobs.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
-  imports: [UsersModule, JobsModule, CategoriesModule, AuthModule, ApplicationsModule],
+  imports: [UsersModule, JobsModule, CategoriesModule, AuthModule, ApplicationsModule, MessagesModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -267,11 +267,19 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                             "{app.message || "I am very interested in this opportunity."}"
                           </div>
                         </div>
-                        <div className="shrink-0">
+                        <div className="shrink-0 flex items-center gap-2">
                           {app.isAccepted ? (
-                            <span className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-lg font-semibold">
-                              <CheckCircle className="w-4 h-4" /> Accepted
-                            </span>
+                            <>
+                              <span className="hidden sm:inline-flex items-center gap-2 text-emerald-400 px-2 text-sm font-semibold">
+                                <CheckCircle className="w-4 h-4" /> Accepted
+                              </span>
+                              <button 
+                                onClick={() => router.push(`/messages/${app.id}`)}
+                                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
+                              >
+                                <MessageSquare className="w-4 h-4" /> Discuter
+                              </button>
+                            </>
                           ) : (
                             <button 
                               onClick={async () => {

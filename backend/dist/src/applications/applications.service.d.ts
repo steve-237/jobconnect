@@ -2,32 +2,32 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 export declare class ApplicationsService {
     create(createApplicationDto: CreateApplicationDto, candidateId: string): Promise<{
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     }>;
     findAllForCandidate(candidateId: string): Promise<({
         job: {
             id: string;
+            description: string;
             createdAt: Date;
             updatedAt: Date;
             title: string;
-            description: string;
             price: number;
-            status: import("@prisma/client").$Enums.JobStatus;
             location: string | null;
-            employerId: string;
             categoryId: string;
+            status: import("@prisma/client").$Enums.JobStatus;
+            employerId: string;
         };
     } & {
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     })[]>;
@@ -41,19 +41,19 @@ export declare class ApplicationsService {
         };
     } & {
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     })[]>;
     acceptApplication(id: string, employerId: string): Promise<{
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     }>;

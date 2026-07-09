@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut, CheckCircle2 } from 'lucide-react';
+import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut, CheckCircle2, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -124,9 +124,16 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                         <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />Applied {new Date(app.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
-                    <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium ${statusColor[app.isAccepted ? 'ACCEPTED' : 'PENDING']}`}>
-                      {app.isAccepted ? 'Accepted' : 'Pending'}
-                    </span>
+                    {app.isAccepted ? (
+                      <Link href={`/messages/${app.id}`} className="inline-flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors">
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        Discuter
+                      </Link>
+                    ) : (
+                      <span className="inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        Pending
+                      </span>
+                    )}
                   </div>
                 ))
               )}

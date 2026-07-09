@@ -4,6 +4,8 @@ import { User } from '@prisma/client';
 export declare class UsersService {
     create(createUserDto: CreateUserDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         firstName: string;
         lastName: string;
@@ -11,8 +13,6 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
@@ -31,6 +31,8 @@ export declare class UsersService {
     findByEmail(email: string): Promise<User | null>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -39,11 +41,11 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -52,7 +54,5 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
 }

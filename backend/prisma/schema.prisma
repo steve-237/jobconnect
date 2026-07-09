@@ -41,6 +41,7 @@ model User {
   // Relations
   postedJobs      Job[]     @relation("EmployerJobs")
   appliedJobs     Application[]
+  messagesSent    Message[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -90,8 +91,24 @@ model Application {
   candidateId String
   candidate   User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   
+  messages    Message[]
+
   @@unique([jobId, candidateId]) // A user can only apply once per job
+}
+
+model Message {
+  id            String      @id @default(uuid())
+  content       String
+  
+  // Relations
+  senderId      String
+  sender        User        @relation(fields: [senderId], references: [id])
+  
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime    @default(now())
 }

@@ -78,3 +78,12 @@ This document tracks all implemented steps and modifications for the JobConnect 
 - feat(web): Replaced mocked applications in `CandidateDashboard` with real API data.
 - feat(web): Replaced mocked jobs in `EmployerDashboard` with real API data.
 - feat(web): Added an "Applicants" modal in `EmployerDashboard` to view candidate messages and Accept/Reject them.
+
+## [v0.6.0] - Real-time Chat (Sprint 6)
+- feat(backend): Integrated `@nestjs/websockets` and `socket.io`.
+- feat(backend): Created `Message` model in Prisma.
+- feat(backend): Developed `MessagesGateway` to handle bidirectional socket communication in isolated application rooms.
+- feat(backend): Added `MessagesController` and `MessagesService` for persisting and retrieving message histories.
+- feat(web): Created a dedicated custom hook `useSocket` to manage connections and JWT authentication.
+- feat(web): Built the Chat Room UI (`/messages/[applicationId]`) with auto-scroll and instant message display.
+- feat(web): Added "Discuter" buttons on both `CandidateDashboard` and `EmployerDashboard` for accepted applications.

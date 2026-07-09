@@ -3,69 +3,69 @@ import { UpdateJobDto } from './dto/update-job.dto';
 export declare class JobsService {
     create(createJobDto: CreateJobDto, employerId: string): Promise<{
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     }>;
     findAll(): Promise<({
+        category: {
+            id: string;
+            name: string;
+            description: string | null;
+            iconUrl: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
         employer: {
             id: string;
             firstName: string;
             lastName: string;
             avatarUrl: string | null;
         };
-        category: {
-            id: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            iconUrl: string | null;
-        };
     } & {
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     })[]>;
     findOne(id: string): Promise<{
+        category: {
+            id: string;
+            name: string;
+            description: string | null;
+            iconUrl: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+        };
         employer: {
             id: string;
             firstName: string;
             lastName: string;
             avatarUrl: string | null;
         };
-        category: {
-            id: string;
-            description: string | null;
-            createdAt: Date;
-            updatedAt: Date;
-            name: string;
-            iconUrl: string | null;
-        };
     } & {
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     }>;
     findMyJobs(employerId: string): Promise<({
         _count: {
@@ -73,38 +73,38 @@ export declare class JobsService {
         };
     } & {
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     })[]>;
     update(id: string, updateJobDto: UpdateJobDto, userId: string): Promise<{
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     }>;
     remove(id: string, userId: string): Promise<{
         id: string;
-        title: string;
         description: string;
-        price: number;
-        status: import("@prisma/client").$Enums.JobStatus;
-        location: string | null;
         createdAt: Date;
         updatedAt: Date;
-        employerId: string;
+        title: string;
+        price: number;
+        location: string | null;
         categoryId: string;
+        status: import("@prisma/client").$Enums.JobStatus;
+        employerId: string;
     }>;
 }
