@@ -5,8 +5,6 @@ export declare class AuthController {
     constructor(authService: AuthService);
     register(createUserDto: CreateUserDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         firstName: string;
         lastName: string;
@@ -15,6 +13,8 @@ export declare class AuthController {
         avatarUrl: string | null;
         isVerified: boolean;
         expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     login(body: Record<string, any>): Promise<{
         access_token: string;

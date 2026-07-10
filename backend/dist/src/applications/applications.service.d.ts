@@ -1,33 +1,36 @@
 import { CreateApplicationDto } from './dto/create-application.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class ApplicationsService {
+    private readonly notificationsService;
+    constructor(notificationsService: NotificationsService);
     create(createApplicationDto: CreateApplicationDto, candidateId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         message: string | null;
         isAccepted: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         jobId: string;
         candidateId: string;
     }>;
     findAllForCandidate(candidateId: string): Promise<({
         job: {
             id: string;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             description: string;
             price: number;
             status: import("@prisma/client").$Enums.JobStatus;
             location: string | null;
-            createdAt: Date;
-            updatedAt: Date;
             employerId: string;
             categoryId: string;
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         message: string | null;
         isAccepted: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         jobId: string;
         candidateId: string;
     })[]>;
@@ -41,19 +44,19 @@ export declare class ApplicationsService {
         };
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         message: string | null;
         isAccepted: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         jobId: string;
         candidateId: string;
     })[]>;
     acceptApplication(id: string, employerId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         message: string | null;
         isAccepted: boolean;
+        createdAt: Date;
+        updatedAt: Date;
         jobId: string;
         candidateId: string;
     }>;

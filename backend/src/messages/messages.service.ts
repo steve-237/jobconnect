@@ -1,10 +1,12 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const prisma = new PrismaClient();
 
 @Injectable()
 export class MessagesService {
+  constructor(private readonly notificationsService: NotificationsService) {}
   /**
    * Verifies if a user is part of the application (either the candidate or the employer).
    * Also checks if the application is accepted.
@@ -38,9 +40,10 @@ export class MessagesService {
    */
   async saveMessage(applicationId: string, senderId: string, content: string) {
     // We already verified access in the gateway before calling this, but keeping it robust
-    await this.verifyAccess(applicationId, senderId);
+    const application = await this.verifyAccess(applicationId, senderId);
+    const isEmployer = application.job.employerId === senderId;
 
-    return prisma.message.create({
+    const savedMessage = await prisma.message.create({
       data: {
         applicationId,
         senderId,
@@ -57,6 +60,20 @@ export class MessagesService {
         }
       }
     });
+
+    // Send push notification to the other party
+    const receiverId = isEmployer ? application.candidateId : application.job.employerId;
+    const receiver = await prisma.user.findUnique({ where: { id: receiverId } });
+    if (receiver?.expoPushToken) {
+      await this.notificationsService.sendPushNotification(
+        receiver.expoPushToken,
+        `New message from ${savedMessage.sender.firstName}`,
+        content,
+        { type: 'chat', applicationId }
+      );
+    }
+
+    return savedMessage;
   }
 
   /**

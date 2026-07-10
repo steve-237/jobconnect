@@ -7,9 +7,10 @@ import { CategoriesModule } from './categories/categories.module';
 import { AuthModule } from './auth/auth.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { MessagesModule } from './messages/messages.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
-  imports: [UsersModule, JobsModule, CategoriesModule, AuthModule, ApplicationsModule, MessagesModule],
+  imports: [UsersModule, JobsModule, CategoriesModule, AuthModule, ApplicationsModule, MessagesModule, NotificationsModule],
   controllers: [AppController],
   providers: [AppService],
 })

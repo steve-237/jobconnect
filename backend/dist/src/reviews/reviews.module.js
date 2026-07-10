@@ -6,20 +6,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessagesModule = void 0;
+exports.ReviewsModule = void 0;
 const common_1 = require("@nestjs/common");
-const messages_service_1 = require("./messages.service");
-const messages_gateway_1 = require("./messages.gateway");
-const messages_controller_1 = require("./messages.controller");
-const notifications_module_1 = require("../notifications/notifications.module");
-let MessagesModule = class MessagesModule {
+const reviews_controller_1 = require("./reviews.controller");
+const reviews_service_1 = require("./reviews.service");
+let ReviewsModule = class ReviewsModule {
 };
-exports.MessagesModule = MessagesModule;
-exports.MessagesModule = MessagesModule = __decorate([
+exports.ReviewsModule = ReviewsModule;
+exports.ReviewsModule = ReviewsModule = __decorate([
     (0, common_1.Module)({
-        imports: [notifications_module_1.NotificationsModule],
-        controllers: [messages_controller_1.MessagesController],
-        providers: [messages_gateway_1.MessagesGateway, messages_service_1.MessagesService],
+        controllers: [reviews_controller_1.ReviewsController],
+        providers: [reviews_service_1.ReviewsService]
     })
-], MessagesModule);
-//# sourceMappingURL=messages.module.js.map
+], ReviewsModule);
+//# sourceMappingURL=reviews.module.js.map

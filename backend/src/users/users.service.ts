@@ -39,6 +39,24 @@ export class UsersService {
     });
   }
 
+  async findById(id: string) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (user) {
+      const { passwordHash, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  async updatePushToken(id: string, token: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { expoPushToken: token },
+    });
+  }
+
   async findOne(id: string) {
     return prisma.user.findUnique({
       where: { id },

@@ -6,8 +6,6 @@ export declare class UsersController {
     constructor(usersService: UsersService);
     create(createUserDto: CreateUserDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         firstName: string;
         lastName: string;
@@ -16,6 +14,35 @@ export declare class UsersController {
         avatarUrl: string | null;
         isVerified: boolean;
         expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    getProfile(req: any): Promise<{
+        id: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        bio: string | null;
+        avatarUrl: string | null;
+        isVerified: boolean;
+        expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    } | null>;
+    updatePushToken(token: string, req: any): Promise<{
+        id: string;
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+        role: import("@prisma/client").$Enums.Role;
+        bio: string | null;
+        avatarUrl: string | null;
+        isVerified: boolean;
+        expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     findAll(): Promise<{
         id: string;
@@ -33,8 +60,6 @@ export declare class UsersController {
     } | null>;
     update(id: string, updateUserDto: UpdateUserDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -44,11 +69,11 @@ export declare class UsersController {
         avatarUrl: string | null;
         isVerified: boolean;
         expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         passwordHash: string;
         firstName: string;
@@ -58,5 +83,7 @@ export declare class UsersController {
         avatarUrl: string | null;
         isVerified: boolean;
         expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

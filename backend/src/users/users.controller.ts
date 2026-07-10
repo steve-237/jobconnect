@@ -14,6 +14,16 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
+  @Get('me')
+  getProfile(@Request() req: any) {
+    return this.usersService.findById(req.user.userId);
+  }
+
+  @Patch('push-token')
+  updatePushToken(@Body('token') token: string, @Request() req: any) {
+    return this.usersService.updatePushToken(req.user.userId, token);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();

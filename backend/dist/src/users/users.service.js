@@ -71,6 +71,22 @@ let UsersService = class UsersService {
             select: { id: true, email: true, firstName: true, lastName: true, role: true },
         });
     }
+    async findById(id) {
+        const user = await prisma.user.findUnique({
+            where: { id },
+        });
+        if (user) {
+            const { passwordHash, ...result } = user;
+            return result;
+        }
+        return null;
+    }
+    async updatePushToken(id, token) {
+        return prisma.user.update({
+            where: { id },
+            data: { expoPushToken: token },
+        });
+    }
     async findOne(id) {
         return prisma.user.findUnique({
             where: { id },

@@ -26,6 +26,12 @@ let UsersController = class UsersController {
     create(createUserDto) {
         return this.usersService.create(createUserDto);
     }
+    getProfile(req) {
+        return this.usersService.findById(req.user.userId);
+    }
+    updatePushToken(token, req) {
+        return this.usersService.updatePushToken(req.user.userId, token);
+    }
     findAll() {
         return this.usersService.findAll();
     }
@@ -47,6 +53,21 @@ __decorate([
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", void 0)
 ], UsersController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    __param(0, Request()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Patch)('push-token'),
+    __param(0, (0, common_1.Body)('token')),
+    __param(1, Request()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], UsersController.prototype, "updatePushToken", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

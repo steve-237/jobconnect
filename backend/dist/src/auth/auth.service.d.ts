@@ -11,8 +11,6 @@ export declare class AuthService {
     }>;
     register(createUserDto: CreateUserDto): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         email: string;
         firstName: string;
         lastName: string;
@@ -21,5 +19,7 @@ export declare class AuthService {
         avatarUrl: string | null;
         isVerified: boolean;
         expoPushToken: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
 }

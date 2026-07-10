@@ -5,12 +5,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationsService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const notifications_service_1 = require("../notifications/notifications.service");
 const prisma = new client_1.PrismaClient();
 let ApplicationsService = class ApplicationsService {
+    notificationsService;
+    constructor(notificationsService) {
+        this.notificationsService = notificationsService;
+    }
     async create(createApplicationDto, candidateId) {
         const job = await prisma.job.findUnique({
             where: { id: createApplicationDto.jobId },
@@ -91,11 +99,16 @@ let ApplicationsService = class ApplicationsService {
             where: { id: application.jobId },
             data: { status: 'IN_PROGRESS' },
         });
+        const candidate = await prisma.user.findUnique({ where: { id: application.candidateId } });
+        if (candidate?.expoPushToken) {
+            await this.notificationsService.sendPushNotification(candidate.expoPushToken, 'Candidature Acceptée ! 🎉', `Votre candidature pour "${application.job.title}" a été acceptée. Vous pouvez maintenant discuter avec l'employeur !`, { type: 'application_accepted', applicationId: id });
+        }
         return updated;
     }
 };
 exports.ApplicationsService = ApplicationsService;
 exports.ApplicationsService = ApplicationsService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
 ], ApplicationsService);
 //# sourceMappingURL=applications.service.js.map
