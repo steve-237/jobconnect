@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check } from 'lucide-react';
+import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,6 +37,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoadingApps, setIsLoadingApps] = useState(false);
 
+  // Review modal state
+  const [selectedJobToReview, setSelectedJobToReview] = useState<Job | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -55,6 +60,34 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const handleLogout = () => {
     localStorage.removeItem('token');
     router.replace('/login');
+  };
+
+  const handleCompleteJob = async (jobId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir terminer cette mission ?')) return;
+    try {
+      await api.patch(`/jobs/${jobId}/status`, { status: 'COMPLETED' });
+      setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'COMPLETED' } : j));
+    } catch(e) {
+      console.error(e);
+      alert('Erreur lors de la clôture de la mission');
+    }
+  };
+
+  const submitReview = async () => {
+    if (!selectedJobToReview) return;
+    try {
+      await api.post('/reviews', { 
+        jobId: selectedJobToReview.id, 
+        rating: reviewRating, 
+        comment: reviewComment 
+      });
+      setSelectedJobToReview(null);
+      setReviewRating(5);
+      setReviewComment('');
+      alert('Avis publié avec succès !');
+    } catch(e: any) {
+      alert(e.response?.data?.message || 'Erreur lors de la publication de l\'avis');
+    }
   };
 
   return (
@@ -210,7 +243,23 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                       <td className="px-6 py-5 text-muted-foreground text-sm">
                         {new Date(job.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-5 text-right">
+                      <td className="px-6 py-5 text-right whitespace-nowrap">
+                        {job.status === 'IN_PROGRESS' && (
+                          <button 
+                            onClick={() => handleCompleteJob(job.id)}
+                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
+                          >
+                            <CheckCircle className="inline w-4 h-4 mr-1" /> Terminer
+                          </button>
+                        )}
+                        {job.status === 'COMPLETED' && (
+                          <button 
+                            onClick={() => setSelectedJobToReview(job)}
+                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
+                          >
+                            <Star className="inline w-4 h-4 mr-1" /> Noter
+                          </button>
+                        )}
                         <button 
                           onClick={async () => {
                             setSelectedJob(job);
@@ -301,6 +350,48 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Review Modal */}
+        {selectedJobToReview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md flex flex-col shadow-2xl">
+              <div className="flex justify-between items-center p-6 border-b border-white/10">
+                <h3 className="text-xl font-bold">Évaluer le candidat</h3>
+                <button onClick={() => setSelectedJobToReview(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Comment s'est passée la mission "{selectedJobToReview.title}" ?
+                </p>
+                <div className="flex gap-2 justify-center mb-6">
+                  {[1,2,3,4,5].map((star) => (
+                    <button 
+                      key={star} 
+                      onClick={() => setReviewRating(star)}
+                      className={`p-2 rounded-full transition-colors ${reviewRating >= star ? 'text-amber-500' : 'text-white/20'}`}
+                    >
+                      <Star className="w-8 h-8 fill-current" />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Laissez un commentaire sur le travail effectué..."
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none resize-none mb-6"
+                />
+                <button 
+                  onClick={submitReview}
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold transition-all"
+                >
+                  Publier l'avis
+                </button>
               </div>
             </div>
           </div>

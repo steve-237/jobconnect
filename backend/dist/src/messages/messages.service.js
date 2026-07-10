@@ -85,4 +85,6 @@ let MessagesService = class MessagesService {
 exports.MessagesService = MessagesService;
 exports.MessagesService = MessagesService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [notifications_service_1.
+    __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
+], MessagesService);
+//# sourceMappingURL=messages.service.js.map
