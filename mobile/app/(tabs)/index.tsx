@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { MapPin, DollarSign, Clock } from 'lucide-react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { MapPin, DollarSign, Clock, Search, Filter } from 'lucide-react-native';
 import api from '../../src/api/client';
 
 export default function JobsScreen() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const fetchJobs = async () => {
     try {
@@ -21,6 +23,18 @@ export default function JobsScreen() {
   useEffect(() => {
     fetchJobs();
   }, []);
+
+  const categories = Array.from(new Set(jobs.map(job => job.category?.name).filter(Boolean)));
+
+  const filteredJobs = jobs.filter(job => {
+    const matchesSearch = 
+      (job.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
+      (job.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = selectedCategory ? job.category?.name === selectedCategory : true;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return (
@@ -59,13 +73,70 @@ export default function JobsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <View style={styles.searchContainer}>
+          <Search size={20} color="#888" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search jobs..."
+            placeholderTextColor="#888"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+        
+        {categories.length > 0 && (
+          <View style={styles.categoriesWrapper}>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesContainer}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.categoryPill,
+                  selectedCategory === null && styles.categoryPillActive
+                ]}
+                onPress={() => setSelectedCategory(null)}
+              >
+                <Text style={[
+                  styles.categoryPillText,
+                  selectedCategory === null && styles.categoryPillTextActive
+                ]}>All</Text>
+              </TouchableOpacity>
+              
+              {categories.map((cat: any) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryPill,
+                    selectedCategory === cat && styles.categoryPillActive
+                  ]}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text style={[
+                    styles.categoryPillText,
+                    selectedCategory === cat && styles.categoryPillTextActive
+                  ]}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+
       <FlatList
-        data={jobs}
+        data={filteredJobs}
         keyExtractor={(item) => item.id}
         renderItem={renderJob}
         contentContainerStyle={styles.list}
         onRefresh={fetchJobs}
         refreshing={loading}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No jobs found matching your criteria.</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -81,6 +152,61 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  headerContainer: {
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#000',
+    borderBottomWidth: 1,
+    borderBottomColor: '#222',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#111',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+    height: 48,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
+    height: '100%',
+  },
+  categoriesWrapper: {
+    marginTop: 16,
+  },
+  categoriesContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryPill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#111',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  categoryPillActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: '#10B981',
+  },
+  categoryPillText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  categoryPillTextActive: {
+    color: '#10B981',
+    fontWeight: '600',
   },
   list: {
     padding: 16,
@@ -152,5 +278,14 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontSize: 14,
     fontWeight: '600',
-  }
+  },
+  emptyContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#888',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });

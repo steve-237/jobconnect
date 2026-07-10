@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter, useSegments } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
+import { usePushNotifications } from '../src/hooks/usePushNotifications';
 
 // Simple atob polyfill
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
@@ -16,6 +17,7 @@ function atobPol(input: string) {
 }
 
 export default function RootLayout() {
+  usePushNotifications();
   const [isReady, setIsReady] = useState(false);
   const [authRole, setAuthRole] = useState<string | null>(null);
   const router = useRouter();
