@@ -20,8 +20,33 @@ export class JobsService {
     });
   }
 
-  async findAll() {
+  async findAll(query: any = {}) {
+    const { search, categoryId, location, minPrice, maxPrice } = query;
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    if (categoryId) {
+      where.categoryId = categoryId;
+    }
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = parseFloat(minPrice);
+      if (maxPrice) where.price.lte = parseFloat(maxPrice);
+    }
+    
+    // Hide completed and cancelled jobs from public browse feed
+    where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
+
     return prisma.job.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       include: {
         category: true,
@@ -78,6 +103,17 @@ export class JobsService {
     return prisma.job.update({
       where: { id },
       data: updateJobDto,
+    });
+  }
+
+  async updateStatus(id: string, status: any, userId: string) {
+    const job = await this.findOne(id);
+    if (job.employerId !== userId) {
+      throw new Error('Unauthorized to update this job');
+    }
+    return prisma.job.update({
+      where: { id },
+      data: { status },
     });
   }
 

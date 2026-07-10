@@ -14,6 +14,7 @@ export declare class AuthController {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
+        expoPushToken: string | null;
     }>;
     login(body: Record<string, any>): Promise<{
         access_token: string;

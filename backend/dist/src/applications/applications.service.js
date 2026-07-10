@@ -83,10 +83,15 @@ let ApplicationsService = class ApplicationsService {
         if (application.job.employerId !== employerId) {
             throw new common_1.ForbiddenException('You do not own this job');
         }
-        return prisma.application.update({
+        const updated = await prisma.application.update({
             where: { id },
             data: { isAccepted: true },
         });
+        await prisma.job.update({
+            where: { id: application.jobId },
+            data: { status: 'IN_PROGRESS' },
+        });
+        return updated;
     }
 };
 exports.ApplicationsService = ApplicationsService;

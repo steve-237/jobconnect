@@ -13,6 +13,7 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
+        expoPushToken: string | null;
     }>;
     findAll(): Promise<{
         id: string;
@@ -41,6 +42,7 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
+        expoPushToken: string | null;
     }>;
     remove(id: string): Promise<{
         id: string;
@@ -54,5 +56,6 @@ export declare class UsersService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
+        expoPushToken: string | null;
     }>;
 }

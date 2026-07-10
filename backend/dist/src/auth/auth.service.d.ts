@@ -20,5 +20,6 @@ export declare class AuthService {
         bio: string | null;
         avatarUrl: string | null;
         isVerified: boolean;
+        expoPushToken: string | null;
     }>;
 }

@@ -29,8 +29,8 @@ let JobsController = class JobsController {
         }
         return this.jobsService.create(createJobDto, req.user.userId);
     }
-    findAll() {
-        return this.jobsService.findAll();
+    findAll(query) {
+        return this.jobsService.findAll(query);
     }
     findMyJobs(req) {
         return this.jobsService.findMyJobs(req.user.userId);
@@ -40,6 +40,9 @@ let JobsController = class JobsController {
     }
     update(id, updateJobDto, req) {
         return this.jobsService.update(id, updateJobDto, req.user.userId);
+    }
+    updateStatus(id, status, req) {
+        return this.jobsService.updateStatus(id, status, req.user.userId);
     }
     remove(id, req) {
         return this.jobsService.remove(id, req.user.userId);
@@ -57,8 +60,9 @@ __decorate([
 ], JobsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], JobsController.prototype, "findAll", null);
 __decorate([
@@ -86,6 +90,16 @@ __decorate([
     __metadata("design:paramtypes", [String, update_job_dto_1.UpdateJobDto, Object]),
     __metadata("design:returntype", void 0)
 ], JobsController.prototype, "update", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Patch)(':id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
+    __param(2, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", void 0)
+], JobsController.prototype, "updateStatus", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Delete)(':id'),

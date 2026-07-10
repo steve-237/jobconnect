@@ -92,9 +92,17 @@ export class ApplicationsService {
       throw new ForbiddenException('You do not own this job');
     }
 
-    return prisma.application.update({
+    const updated = await prisma.application.update({
       where: { id },
       data: { isAccepted: true },
     });
+
+    // Automatically set job to IN_PROGRESS when candidate is accepted
+    await prisma.job.update({
+      where: { id: application.jobId },
+      data: { status: 'IN_PROGRESS' },
+    });
+
+    return updated;
   }
 }

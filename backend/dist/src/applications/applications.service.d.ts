@@ -12,15 +12,15 @@ export declare class ApplicationsService {
     findAllForCandidate(candidateId: string): Promise<({
         job: {
             id: string;
+            title: string;
             description: string;
+            price: number;
+            status: import("@prisma/client").$Enums.JobStatus;
+            location: string | null;
             createdAt: Date;
             updatedAt: Date;
-            title: string;
-            price: number;
-            location: string | null;
-            categoryId: string;
-            status: import("@prisma/client").$Enums.JobStatus;
             employerId: string;
+            categoryId: string;
         };
     } & {
         id: string;

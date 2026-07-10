@@ -7,10 +7,10 @@ export declare class MessagesService {
             updatedAt: Date;
             title: string;
             price: number;
-            location: string | null;
-            categoryId: string;
             status: import("@prisma/client").$Enums.JobStatus;
+            location: string | null;
             employerId: string;
+            categoryId: string;
         };
     } & {
         id: string;

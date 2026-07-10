@@ -37,11 +37,14 @@ model User {
   bio             String?
   avatarUrl       String?
   isVerified      Boolean   @default(false)
+  expoPushToken   String?
   
   // Relations
   postedJobs      Job[]     @relation("EmployerJobs")
   appliedJobs     Application[]
   messagesSent    Message[]
+  reviewsGiven    Review[]  @relation("ReviewsGiven")
+  reviewsReceived Review[]  @relation("ReviewsReceived")
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -74,6 +77,7 @@ model Job {
   category    Category  @relation(fields: [categoryId], references: [id])
   
   applications Application[]
+  reviews      Review[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -111,4 +115,22 @@ model Message {
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   
   createdAt     DateTime    @default(now())
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  rating      Int
+  comment     String?
+  
+  // Relations
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  reviewerId  String
+  reviewer    User     @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  
+  revieweeId  String
+  reviewee    User     @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
 }
