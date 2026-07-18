@@ -8,10 +8,10 @@ export declare class ReviewsController {
         comment?: string;
     }, req: any): Promise<{
         id: string;
-        rating: number;
-        comment: string | null;
         createdAt: Date;
         jobId: string;
+        rating: number;
+        comment: string | null;
         reviewerId: string;
         revieweeId: string;
     }>;
@@ -27,10 +27,10 @@ export declare class ReviewsController {
         };
     } & {
         id: string;
-        rating: number;
-        comment: string | null;
         createdAt: Date;
         jobId: string;
+        rating: number;
+        comment: string | null;
         reviewerId: string;
         revieweeId: string;
     })[]>;

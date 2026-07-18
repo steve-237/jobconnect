@@ -11,10 +11,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     }>;
     findAll(query: any): Promise<({
         category: {
@@ -38,10 +38,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     })[]>;
     findMyJobs(req: any): Promise<({
         _count: {
@@ -54,10 +54,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     })[]>;
     findOne(id: string): Promise<{
         category: {
@@ -81,10 +81,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     }>;
     update(id: string, updateJobDto: UpdateJobDto, req: any): Promise<{
         id: string;
@@ -93,10 +93,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     }>;
     updateStatus(id: string, status: any, req: any): Promise<{
         id: string;
@@ -105,10 +105,10 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     }>;
     remove(id: string, req: any): Promise<{
         id: string;
@@ -117,9 +117,9 @@ export declare class JobsController {
         updatedAt: Date;
         title: string;
         price: number;
-        location: string | null;
-        categoryId: string;
         status: import("@prisma/client").$Enums.JobStatus;
+        location: string | null;
         employerId: string;
+        categoryId: string;
     }>;
 }

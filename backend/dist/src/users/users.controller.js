@@ -55,7 +55,7 @@ __decorate([
 ], UsersController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)('me'),
-    __param(0, Request()),
+    __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
@@ -63,7 +63,7 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('push-token'),
     __param(0, (0, common_1.Body)('token')),
-    __param(1, Request()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)

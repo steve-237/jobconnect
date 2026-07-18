@@ -16,14 +16,13 @@ exports.ReviewsController = void 0;
 const common_1 = require("@nestjs/common");
 const reviews_service_1 = require("./reviews.service");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
-const public_decorator_1 = require("../auth/decorators/public.decorator");
 let ReviewsController = class ReviewsController {
     reviewsService;
     constructor(reviewsService) {
         this.reviewsService = reviewsService;
     }
     create(body, req) {
-        return this.reviewsService.createReview(body.jobId, body.rating, body.comment, req.user.userId);
+        return this.reviewsService.createReview(body.jobId, body.rating, body.comment || '', req.user.userId);
     }
     getUserReviews(userId) {
         return this.reviewsService.getReviewsForUser(userId);
@@ -40,7 +39,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ReviewsController.prototype, "create", null);
 __decorate([
-    (0, public_decorator_1.Public)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('user/:userId'),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),

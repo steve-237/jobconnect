@@ -1,10 +1,10 @@
 export declare class ReviewsService {
     createReview(jobId: string, rating: number, comment: string, reviewerId: string): Promise<{
         id: string;
-        rating: number;
-        comment: string | null;
         createdAt: Date;
         jobId: string;
+        rating: number;
+        comment: string | null;
         reviewerId: string;
         revieweeId: string;
     }>;
@@ -20,10 +20,10 @@ export declare class ReviewsService {
         };
     } & {
         id: string;
-        rating: number;
-        comment: string | null;
         createdAt: Date;
         jobId: string;
+        rating: number;
+        comment: string | null;
         reviewerId: string;
         revieweeId: string;
     })[]>;

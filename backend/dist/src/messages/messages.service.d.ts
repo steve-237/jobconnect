@@ -5,10 +5,10 @@ export declare class MessagesService {
     verifyAccess(applicationId: string, userId: string): Promise<{
         job: {
             id: string;
+            description: string;
             createdAt: Date;
             updatedAt: Date;
             title: string;
-            description: string;
             price: number;
             status: import("@prisma/client").$Enums.JobStatus;
             location: string | null;
@@ -17,12 +17,12 @@ export declare class MessagesService {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         message: string | null;
         isAccepted: boolean;
         jobId: string;
         candidateId: string;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     saveMessage(applicationId: string, senderId: string, content: string): Promise<{
         sender: {

@@ -5,20 +5,20 @@ export declare class ApplicationsController {
     constructor(applicationsService: ApplicationsService);
     create(createApplicationDto: CreateApplicationDto, req: any): Promise<{
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     }>;
     findAllForCandidate(req: any): Promise<({
         job: {
             id: string;
+            description: string;
             createdAt: Date;
             updatedAt: Date;
             title: string;
-            description: string;
             price: number;
             status: import("@prisma/client").$Enums.JobStatus;
             location: string | null;
@@ -27,10 +27,10 @@ export declare class ApplicationsController {
         };
     } & {
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     })[]>;
@@ -44,19 +44,19 @@ export declare class ApplicationsController {
         };
     } & {
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     })[]>;
     acceptApplication(id: string, req: any): Promise<{
         id: string;
-        message: string | null;
-        isAccepted: boolean;
         createdAt: Date;
         updatedAt: Date;
+        message: string | null;
+        isAccepted: boolean;
         jobId: string;
         candidateId: string;
     }>;
