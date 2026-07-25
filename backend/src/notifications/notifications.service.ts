@@ -9,19 +9,26 @@ export class NotificationsService {
     this.expo = new Expo();
   }
 
-  async sendPushNotification(pushToken: string | null | undefined, title: string, body: string, data?: any) {
+  async sendPushNotification(
+    pushToken: string | null | undefined,
+    title: string,
+    body: string,
+    data?: any,
+  ) {
     if (!pushToken || !Expo.isExpoPushToken(pushToken)) {
       console.log(`Push token ${pushToken} is not a valid Expo push token`);
       return;
     }
 
-    const messages: ExpoPushMessage[] = [{
-      to: pushToken,
-      sound: 'default',
-      title,
-      body,
-      data: data || {},
-    }];
+    const messages: ExpoPushMessage[] = [
+      {
+        to: pushToken,
+        sound: 'default',
+        title,
+        body,
+        data: data || {},
+      },
+    ];
 
     try {
       const ticketChunk = await this.expo.sendPushNotificationsAsync(messages);

@@ -1,4 +1,9 @@
-import { Injectable, ForbiddenException, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -8,7 +13,10 @@ const prisma = new PrismaClient();
 @Injectable()
 export class ApplicationsService {
   constructor(private readonly notificationsService: NotificationsService) {}
-  async create(createApplicationDto: CreateApplicationDto, candidateId: string) {
+  async create(
+    createApplicationDto: CreateApplicationDto,
+    candidateId: string,
+  ) {
     const job = await prisma.job.findUnique({
       where: { id: createApplicationDto.jobId },
     });
@@ -18,7 +26,9 @@ export class ApplicationsService {
     }
 
     if (job.status !== 'PENDING' && job.status !== 'PUBLISHED') {
-      throw new ForbiddenException('This job is no longer accepting applications');
+      throw new ForbiddenException(
+        'This job is no longer accepting applications',
+      );
     }
 
     // Check if already applied
@@ -73,7 +83,7 @@ export class ApplicationsService {
             lastName: true,
             email: true,
             avatarUrl: true,
-          }
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -106,13 +116,15 @@ export class ApplicationsService {
     });
 
     // Notify the candidate
-    const candidate = await prisma.user.findUnique({ where: { id: application.candidateId } });
+    const candidate = await prisma.user.findUnique({
+      where: { id: application.candidateId },
+    });
     if (candidate?.expoPushToken) {
       await this.notificationsService.sendPushNotification(
         candidate.expoPushToken,
         'Candidature Acceptée ! 🎉',
         `Votre candidature pour "${application.job.title}" a été acceptée. Vous pouvez maintenant discuter avec l'employeur !`,
-        { type: 'application_accepted', applicationId: id }
+        { type: 'application_accepted', applicationId: id },
       );
     }
 

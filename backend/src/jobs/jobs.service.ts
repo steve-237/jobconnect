@@ -23,7 +23,7 @@ export class JobsService {
   async findAll(query: any = {}) {
     const { search, categoryId, location, minPrice, maxPrice } = query;
     const where: any = {};
-    
+
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
@@ -41,7 +41,7 @@ export class JobsService {
       if (minPrice) where.price.gte = parseFloat(minPrice);
       if (maxPrice) where.price.lte = parseFloat(maxPrice);
     }
-    
+
     // Hide completed and cancelled jobs from public browse feed
     where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
 
@@ -88,10 +88,10 @@ export class JobsService {
       where: { employerId },
       include: {
         _count: {
-          select: { applications: true }
-        }
+          select: { applications: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 

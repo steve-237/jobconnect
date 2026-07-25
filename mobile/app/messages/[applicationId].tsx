@@ -5,7 +5,6 @@ import { ArrowLeft, Send } from 'lucide-react-native';
 import api from '../../src/api/client';
 import { useSocket } from '../../src/hooks/useSocket';
 import * as SecureStore from 'expo-secure-store';
-import { Buffer } from 'buffer'; // Expo uses a subset of node APIs, but for jwt decoding on mobile, it's safer to use a simple base64 decode if Buffer isn't available, but we can do a quick manual decode.
 
 export default function ChatScreen() {
   const { applicationId } = useLocalSearchParams();

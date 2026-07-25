@@ -8,7 +8,10 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Get(':applicationId')
-  getHistory(@Param('applicationId') applicationId: string, @Request() req: any) {
+  getHistory(
+    @Param('applicationId') applicationId: string,
+    @Request() req: any,
+  ) {
     return this.messagesService.getHistory(applicationId, req.user.userId);
   }
 }

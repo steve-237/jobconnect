@@ -11,7 +11,7 @@ jest.mock('@prisma/client', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-    }
+    },
   };
   return { PrismaClient: jest.fn(() => mPrismaClient) };
 });
@@ -25,7 +25,7 @@ describe('JobsService', () => {
     }).compile();
 
     service = module.get<JobsService>(JobsService);
-    
+
     // Clear all mocks before each test
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
@@ -42,7 +42,9 @@ describe('JobsService', () => {
       const prisma = new PrismaClient();
       prisma.job.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return the job if it exists', async () => {
@@ -55,7 +57,7 @@ describe('JobsService', () => {
       expect(result).toEqual(mockJob);
       expect(prisma.job.findUnique).toHaveBeenCalledWith({
         where: { id: '123' },
-        include: expect.any(Object)
+        include: expect.any(Object),
       });
     });
   });
@@ -67,7 +69,9 @@ describe('JobsService', () => {
       const mockJob = { id: '123', title: 'Test Job', employerId: 'emp-1' };
       prisma.job.findUnique.mockResolvedValue(mockJob);
 
-      await expect(service.update('123', { title: 'New Title' }, 'hacker-user')).rejects.toThrow('Unauthorized to update this job');
+      await expect(
+        service.update('123', { title: 'New Title' }, 'hacker-user'),
+      ).rejects.toThrow('Unauthorized to update this job');
     });
   });
 });

@@ -35,7 +35,13 @@ export class UsersService {
 
   async findAll() {
     return prisma.user.findMany({
-      select: { id: true, email: true, firstName: true, lastName: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
     });
   }
 
@@ -60,7 +66,13 @@ export class UsersService {
   async findOne(id: string) {
     return prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, firstName: true, lastName: true, role: true },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
     });
   }
 

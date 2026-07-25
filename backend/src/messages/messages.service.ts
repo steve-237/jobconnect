@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -22,7 +26,9 @@ export class MessagesService {
     }
 
     if (!application.isAccepted) {
-      throw new ForbiddenException('You cannot chat until the application is accepted.');
+      throw new ForbiddenException(
+        'You cannot chat until the application is accepted.',
+      );
     }
 
     const isCandidate = application.candidateId === userId;
@@ -56,20 +62,24 @@ export class MessagesService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Send push notification to the other party
-    const receiverId = isEmployer ? application.candidateId : application.job.employerId;
-    const receiver = await prisma.user.findUnique({ where: { id: receiverId } });
+    const receiverId = isEmployer
+      ? application.candidateId
+      : application.job.employerId;
+    const receiver = await prisma.user.findUnique({
+      where: { id: receiverId },
+    });
     if (receiver?.expoPushToken) {
       await this.notificationsService.sendPushNotification(
         receiver.expoPushToken,
         `New message from ${savedMessage.sender.firstName}`,
         content,
-        { type: 'chat', applicationId }
+        { type: 'chat', applicationId },
       );
     }
 
@@ -92,9 +102,9 @@ export class MessagesService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
   }
 }

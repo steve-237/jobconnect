@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  UseGuards,
+  Request,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -9,17 +19,25 @@ export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Post()
-  create(@Body() createApplicationDto: CreateApplicationDto, @Request() req: any) {
+  create(
+    @Body() createApplicationDto: CreateApplicationDto,
+    @Request() req: any,
+  ) {
     if (req.user.role !== 'CANDIDATE') {
       throw new ForbiddenException('Only candidates can apply to jobs');
     }
-    return this.applicationsService.create(createApplicationDto, req.user.userId);
+    return this.applicationsService.create(
+      createApplicationDto,
+      req.user.userId,
+    );
   }
 
   @Get('my-applications')
   findAllForCandidate(@Request() req: any) {
     if (req.user.role !== 'CANDIDATE') {
-      throw new ForbiddenException('Only candidates can view their applications');
+      throw new ForbiddenException(
+        'Only candidates can view their applications',
+      );
     }
     return this.applicationsService.findAllForCandidate(req.user.userId);
   }

@@ -16,7 +16,9 @@ import * as jwt from 'jsonwebtoken';
     origin: '*', // For MVP, allow all. In prod, restrict to frontend URL
   },
 })
-export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MessagesGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -28,7 +30,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
    */
   private authenticateSocket(client: Socket): any {
     try {
-      const token = client.handshake.auth?.token?.split(' ')[1] || client.handshake.headers.authorization?.split(' ')[1];
+      const token =
+        client.handshake.auth?.token?.split(' ')[1] ||
+        client.handshake.headers.authorization?.split(' ')[1];
       if (!token) return null;
       return jwt.verify(token, process.env.JWT_SECRET || 'secretKey');
     } catch (e) {
@@ -60,11 +64,11 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     try {
       // Verify they have access to this room
       await this.messagesService.verifyAccess(data.applicationId, user.userId);
-      
+
       // Join the socket.io room
       client.join(`chat_${data.applicationId}`);
       // console.log(`User ${user.userId} joined room chat_${data.applicationId}`);
-      
+
       // Optional: notify others in room
       // client.to(`chat_${data.applicationId}`).emit('userJoined', { userId: user.userId });
     } catch (e) {
@@ -89,7 +93,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       );
 
       // 2. Broadcast to everyone in the room (including the sender, so they get the DB-confirmed message with ID and Timestamp)
-      this.server.to(`chat_${data.applicationId}`).emit('newMessage', savedMessage);
+      this.server
+        .to(`chat_${data.applicationId}`)
+        .emit('newMessage', savedMessage);
     } catch (e) {
       client.emit('error', { message: 'Failed to send message' });
     }

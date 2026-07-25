@@ -1,11 +1,20 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 @Injectable()
 export class ReviewsService {
-  async createReview(jobId: string, rating: number, comment: string, reviewerId: string) {
+  async createReview(
+    jobId: string,
+    rating: number,
+    comment: string,
+    reviewerId: string,
+  ) {
     // 1. Verify Job exists and is COMPLETED
     const job = await prisma.job.findUnique({
       where: { id: jobId },
@@ -13,10 +22,12 @@ export class ReviewsService {
     });
 
     if (!job) throw new NotFoundException('Job not found');
-    if (job.status !== 'COMPLETED') throw new ForbiddenException('Job must be COMPLETED to leave a review');
+    if (job.status !== 'COMPLETED')
+      throw new ForbiddenException('Job must be COMPLETED to leave a review');
 
     const acceptedApp = job.applications[0];
-    if (!acceptedApp) throw new ForbiddenException('No accepted candidate for this job');
+    if (!acceptedApp)
+      throw new ForbiddenException('No accepted candidate for this job');
 
     // 2. Determine Reviewee
     const isEmployer = job.employerId === reviewerId;
@@ -32,7 +43,10 @@ export class ReviewsService {
     const existing = await prisma.review.findFirst({
       where: { jobId, reviewerId },
     });
-    if (existing) throw new ForbiddenException('You have already left a review for this job');
+    if (existing)
+      throw new ForbiddenException(
+        'You have already left a review for this job',
+      );
 
     return prisma.review.create({
       data: {
@@ -55,13 +69,13 @@ export class ReviewsService {
             firstName: true,
             lastName: true,
             avatarUrl: true,
-          }
+          },
         },
         job: {
-          select: { title: true }
-        }
+          select: { title: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 }

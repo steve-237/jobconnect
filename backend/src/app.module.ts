@@ -10,7 +10,16 @@ import { MessagesModule } from './messages/messages.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 @Module({
-  imports: [UsersModule, JobsModule, CategoriesModule, AuthModule, ApplicationsModule, MessagesModule, NotificationsModule, PaymentsModule],
+  imports: [
+    UsersModule,
+    JobsModule,
+    CategoriesModule,
+    AuthModule,
+    ApplicationsModule,
+    MessagesModule,
+    NotificationsModule,
+    PaymentsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
