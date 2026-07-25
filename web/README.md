@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Frontend Web - JobConnect 🌐
 
-## Getting Started
+Ceci est l'application Web de JobConnect destinée principalement aux utilisateurs naviguant depuis leur navigateur de bureau.
 
-First, run the development server:
+## 🛠️ Technologies
+- **Framework** : Next.js 15 (App Router)
+- **Styling** : Tailwind CSS (Dark Mode & Glassmorphism)
+- **Requêtes HTTP** : Axios
+- **Icônes** : Lucide React
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 📂 Structure du projet
+L'architecture utilise le système "App Router" de Next.js :
+- `src/app/page.tsx` : Landing page vitrine (Hero section, Features).
+- `src/app/login/page.tsx` : Interface de connexion.
+- `src/app/register/page.tsx` : Interface d'inscription.
+- `src/app/dashboard/page.tsx` : Tableau de bord dynamique. Il affiche une vue différente selon que l'utilisateur connecté est un Employeur ou un Candidat.
+- `src/app/jobs/page.tsx` : Page d'exploration des offres d'emploi (Candidats).
+- `src/app/profile/page.tsx` : Page de profil utilisateur.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Démarrage Rapide
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Installer les dépendances**
+   ```bash
+   npm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Lancer le serveur de développement**
+   ```bash
+   npm run dev -- -p 3001
+   ```
+   *Remarque : Nous utilisons le port `3001` pour éviter tout conflit avec le serveur Backend NestJS qui tourne sur le port `3000`.*
 
-## Learn More
+3. **Accéder à l'application**
+   Ouvrez [http://localhost:3001](http://localhost:3001) dans votre navigateur.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎨 Composants UI
+L'application repose fortement sur une classe CSS personnalisée `.glass` définie dans `src/app/globals.css`, qui applique automatiquement les effets de flou (backdrop-filter) et de bordures translucides caractéristiques du style *Glassmorphism*.

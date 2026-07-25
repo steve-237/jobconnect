@@ -333,11 +333,12 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                             <button 
                               onClick={async () => {
                                 try {
-                                  await api.patch(`/applications/${app.id}/accept`);
-                                  setApplications(applications.map(a => a.id === app.id ? { ...a, isAccepted: true } : a));
+                                  const res = await api.post(`/payments/checkout/${app.id}`);
+                                  if (res.data.url) {
+                                    window.location.href = res.data.url;
+                                  }
                                 } catch (e) {
-                                  console.error(e);
-                                  alert('Failed to accept');
+                                  alert('Failed to initiate payment');
                                 }
                               }}
                               className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"

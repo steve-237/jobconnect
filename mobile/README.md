@@ -1,56 +1,38 @@
-# Welcome to your Expo app 👋
+# Frontend Mobile - JobConnect 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ceci est l'application Mobile de JobConnect, conçue pour iOS et Android. Elle permet aux utilisateurs (Employeurs et Jobsetters) d'accéder à la plateforme en déplacement, avec des fonctionnalités natives comme la géolocalisation et les notifications Push.
 
-## Get started
+## 🛠️ Technologies
+- **Framework** : React Native (Version 0.86)
+- **Outil de Build** : Expo (Version 57)
+- **Navigation** : Expo Router (Routing basé sur les dossiers)
+- **Stockage Sécurisé** : Expo Secure Store (pour les JWT)
+- **Temps Réel** : Socket.io-client
 
-1. Install dependencies
+## 📂 Structure du projet (Feature-First)
+L'application utilise le routing par dossier via `app/` :
+- `src/api/` : Configuration du client HTTP Axios.
+- `src/hooks/` : Hooks personnalisés (ex: `usePushNotifications`, `useSocket`).
+- `app/_layout.tsx` : Root layout qui protège l'application et gère les redirections selon le rôle de l'utilisateur (Employeur vs Candidat).
+- `app/(auth)/` : Écrans de connexion et d'inscription.
+- `app/(tabs)/` : Écrans principaux pour les Candidats (Exploration de jobs, Profil).
+- `app/(employer_tabs)/` : Écrans principaux pour les Employeurs (Gestion des annonces, Profil).
+- `app/applicants/` : Écran affichant les candidatures reçues pour une mission.
+- `app/messages/` : Messagerie en temps réel.
 
+## 🚀 Démarrage Rapide
+
+1. **Installer les dépendances**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Lancer le serveur Expo (Metro Bundler)**
    ```bash
-   npx expo start
+   npx expo start --android --port 8082
    ```
+   *Remarque : Nous utilisons le port `8082` et forçons l'environnement Android par défaut pour ce MVP.*
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+3. **Accéder à l'application**
+   - **Émulateur** : Appuyez sur `a` dans le terminal pour lancer l'émulateur Android si celui-ci ne s'est pas ouvert automatiquement.
+   - **Appareil Physique** : Téléchargez l'application **Expo Go** sur votre téléphone et scannez le QR code affiché dans le terminal.

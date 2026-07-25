@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, RefreshControl, Alert, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
 import { ArrowLeft, CheckCircle, MessageSquare, User } from 'lucide-react-native';
 import api from '../../src/api/client';
 
@@ -28,12 +29,14 @@ export default function ApplicantsScreen() {
 
   const handleAccept = async (appId: string) => {
     try {
-      await api.patch(`/applications/${appId}/accept`);
-      Alert.alert('Success', 'Candidate accepted!');
-      fetchApplicants(); // Refresh list to show accepted state
+      const res = await api.post(`/payments/checkout/${appId}`);
+      if (res.data.url) {
+        await WebBrowser.openBrowserAsync(res.data.url);
+        fetchApplicants(); // Refresh list to show accepted state after returning
+      }
     } catch (e: any) {
       console.error(e);
-      Alert.alert('Error', e.response?.data?.message || 'Could not accept candidate');
+      Alert.alert('Error', e.response?.data?.message || 'Could not initiate payment');
     }
   };
 

@@ -1,112 +1,57 @@
-# JobConnect - Temporary Jobs Platform
+# JobConnect 🚀
 
-JobConnect is a full-stack platform connecting individuals for temporary jobs and micro-tasks (cleaning, moving, DIY, babysitting, etc.). The platform allows quick job posting, intelligent matching, and secure escrow payments.
+JobConnect est une plateforme de mise en relation de type "Uber pour les petits boulots". Elle permet à des employeurs de publier des missions ponctuelles (jardinage, montage de meubles, nettoyage, etc.) et à des candidats (Jobsetters) d'y postuler, avec un système de paiement sécurisé, de messagerie en temps réel et de notation.
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture Globale
+Le projet est divisé en 3 parties distinctes interconnectées :
+1. **Backend (API)** : Construit avec **NestJS**, **Prisma** et **PostgreSQL**.
+2. **Frontend Web** : Construit avec **Next.js** et **Tailwind CSS**. 
+3. **Frontend Mobile** : Construit avec **React Native (Expo)**.
 
-The system follows a modern **Modular Monolith** architecture (3-tier) using a full TypeScript stack. This ensures rapid development for the MVP while maintaining the ability to split into microservices in the future if needed.
+## 🛠️ Stack Technique
+- **Base de Données** : PostgreSQL (Docker)
+- **Backend** : Node.js, NestJS, Socket.io (WebSockets), Stripe API, JWT (Authentication).
+- **Web** : React 19, Next.js (App Router), Tailwind CSS (Design Glassmorphism).
+- **Mobile** : React Native 0.86, Expo 57, Expo Router, expo-secure-store.
 
-### Core Tech Stack
+## 🎨 Design System
+Nous utilisons un design moderne de type **"Dark Mode & Glassmorphism"**.
+- Couleurs principales : Arrière-plans très sombres (`#000000`, `#111111`) avec des accents vifs (Emerald `#10B981` pour le succès, Indigo `#6366F1` / Bleu `#3B82F6` pour l'action).
+- Effets de transparence (CSS `backdrop-filter: blur()`).
+- Typographie et icônes claires via **Lucide Icons**.
 
-- **Backend API:** Node.js with NestJS (TypeScript)
-- **Database:** PostgreSQL with Prisma ORM
-- **Web Client (Employer / Admin):** Next.js (React) + TailwindCSS
-- **Mobile App (Candidate / Employer):** React Native (Expo)
-- **Payments:** Stripe Connect (Escrow & KYC)
-- **Infrastructure:** Docker, AWS / Vercel
+## 🚀 Comment Lancer l'Infrastructure
+
+### 1. Base de données
+Assurez-vous d'avoir Docker démarré.
+```bash
+docker run --name jobconnect_db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=jobconnect -p 5434:5432 -d postgres
+```
+
+### 2. Démarrer le Backend
+```bash
+cd backend
+npm install
+npx prisma migrate dev
+npm run start:dev
+```
+
+### 3. Démarrer le Web
+```bash
+cd web
+npm install
+npm run dev -- -p 3001
+```
+L'application Web sera disponible sur `http://localhost:3001`.
+
+### 4. Démarrer le Mobile
+```bash
+cd mobile
+npm install
+npx expo start --android --port 8082
+```
+Ouvrez l'émulateur Android ou utilisez Expo Go sur votre téléphone physique.
 
 ---
 
-## 📊 System Diagrams
-
-### 1. High-Level Architecture
-
-```mermaid
-graph TD
-    subgraph Clients
-        Web[Next.js Web Portal\nEmployers & Admins]
-        Mobile[Expo Mobile App\nCandidates & Employers]
-    end
-
-    subgraph Backend Services
-        API[NestJS Modular API]
-        Auth[Authentication JWT]
-        Matching[Matching Engine]
-    end
-
-    subgraph Data & Third-Party
-        DB[(PostgreSQL)]
-        Redis[(Redis Cache / Queue)]
-        Stripe[Stripe Connect\nPayments & Escrow]
-    end
-
-    Web <-->|REST / GraphQL| API
-    Mobile <-->|REST / GraphQL| API
-    
-    API --- Auth
-    API --- Matching
-    API <--> DB
-    API <--> Redis
-    API <--> Stripe
-```
-
-### 2. NestJS Modular Structure
-
-```mermaid
-classDiagram
-    class AppModule {
-        +imports: [UsersModule, JobsModule, PaymentsModule]
-    }
-    class UsersModule {
-        +AuthService
-        +UsersController
-        +KYCService
-    }
-    class JobsModule {
-        +JobsService
-        +MatchingService
-        +CategoriesController
-    }
-    class PaymentsModule {
-        +StripeService
-        +EscrowController
-    }
-    
-    AppModule --> UsersModule
-    AppModule --> JobsModule
-    AppModule --> PaymentsModule
-```
-
-### 3. Escrow Payment Flow (Stripe Connect)
-
-```mermaid
-sequenceDiagram
-    participant Employer
-    participant JobConnect API
-    participant Stripe
-    participant Candidate
-    
-    Employer->>JobConnect API: Accept Candidate & Pay Mission
-    JobConnect API->>Stripe: Hold Funds in Escrow (Stripe Connect)
-    Stripe-->>JobConnect API: Payment Intent Success
-    JobConnect API-->>Employer: Mission Confirmed
-    
-    Candidate->>JobConnect API: Mission Completed
-    Employer->>JobConnect API: Validate Mission
-    
-    JobConnect API->>Stripe: Release Escrow (Payout Candidate)
-    JobConnect API->>Stripe: Deduct Platform Commission
-    Stripe-->>Candidate: Funds Transferred
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v18+)
-- PostgreSQL (Local or Docker)
-- Yarn or NPM
-
-*(Detailed instructions for running Web, Mobile, and Backend will be provided in their respective directories).*
+> Pour plus de détails techniques, veuillez consulter les `README.md` présents dans chaque sous-dossier (`backend`, `web`, `mobile`).

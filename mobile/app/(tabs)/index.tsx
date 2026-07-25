@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { MapPin, DollarSign, Clock, Search, Filter } from 'lucide-react-native';
 import api from '../../src/api/client';
 
@@ -44,31 +45,33 @@ export default function JobsScreen() {
     );
   }
 
-  const renderJob = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.categoryBadge}>{item.category?.name || 'General'}</Text>
-      </View>
-      
-      <View style={styles.detailsRow}>
-        <View style={styles.detailItem}>
-          <DollarSign size={16} color="#10B981" />
-          <Text style={styles.detailText}>{item.price}</Text>
+  const renderJob = ({ item, index }: { item: any, index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 100).duration(500)}>
+      <TouchableOpacity style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.categoryBadge}>{item.category?.name || 'General'}</Text>
         </View>
-        <View style={styles.detailItem}>
-          <MapPin size={16} color="#888" />
-          <Text style={styles.detailText}>{item.location || 'Remote'}</Text>
+        
+        <View style={styles.detailsRow}>
+          <View style={styles.detailItem}>
+            <DollarSign size={16} color="#10B981" />
+            <Text style={styles.detailText}>{item.price}</Text>
+          </View>
+          <View style={styles.detailItem}>
+            <MapPin size={16} color="#888" />
+            <Text style={styles.detailText}>{item.location || 'Remote'}</Text>
+          </View>
         </View>
-      </View>
-      
-      <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
-      
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Posted by {item.employer?.firstName}</Text>
-        <Text style={styles.applyText}>Tap to Apply</Text>
-      </View>
-    </TouchableOpacity>
+        
+        <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
+        
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Posted by {item.employer?.firstName}</Text>
+          <Text style={styles.applyText}>Tap to Apply</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 
   return (

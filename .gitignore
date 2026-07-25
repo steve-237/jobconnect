@@ -11,3 +11,10 @@ node_modules/
 # Environnement
 .env
 .env.local
+
+# Build outputs
+dist/
+build/
+.next/
+.expo/
+*.log

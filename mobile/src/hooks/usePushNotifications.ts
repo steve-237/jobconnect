@@ -3,7 +3,8 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import api from '@/lib/api';
+import { useRouter } from 'expo-router';
+import api from '../api/client';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -22,9 +23,6 @@ export function usePushNotifications() {
     registerForPushNotificationsAsync().then(token => {
       if (token) {
         setExpoPushToken(token);
-        // Send token to backend if logged in
-        const jwt = localStorage.getItem('token') || ''; // wait, react native uses AsyncStorage, but we used a custom api interceptor that checks AsyncStorage.
-        // Actually we should just call api.patch, and the interceptor adds the token!
         api.patch('/users/push-token', { token }).catch(err => console.log('Not logged in or failed to send push token', err));
       }
     });
@@ -35,6 +33,12 @@ export function usePushNotifications() {
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('User tapped notification:', response);
+      const data = response.notification.request.content.data;
+      if (data?.type === 'application_accepted' && data?.applicationId) {
+        // Redirection with deep linking
+        const router = require('expo-router').router;
+        router.push(`/messages/${data.applicationId}`);
+      }
     });
 
     return () => {

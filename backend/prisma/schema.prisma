@@ -68,6 +68,8 @@ model Job {
   price       Float
   status      JobStatus @default(PENDING)
   location    String?
+  isPaid      Boolean   @default(false)
+  stripeSessionId String?
   
   // Relations
   employerId  String
