@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, ScrollView, Platform } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { MapPin, DollarSign, Clock, Search, Filter } from 'lucide-react-native';
+import { MapPin, DollarSign, Clock, Search, Filter, List, Map as MapIcon, Navigation } from 'lucide-react-native';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import * as Location from 'expo-location';
 import api from '../../src/api/client';
 
 export default function JobsScreen() {
@@ -9,6 +11,8 @@ export default function JobsScreen() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
 
   const fetchJobs = async () => {
     try {
@@ -23,6 +27,16 @@ export default function JobsScreen() {
 
   useEffect(() => {
     fetchJobs();
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === 'granted') {
+        let location = await Location.getCurrentPositionAsync({});
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    })();
   }, []);
 
   const categories = Array.from(new Set(jobs.map(job => job.category?.name).filter(Boolean)));
@@ -86,6 +100,14 @@ export default function JobsScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          <View style={styles.viewToggle}>
+            <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}>
+              <List size={20} color={viewMode === 'list' ? '#fff' : '#888'} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setViewMode('map')} style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}>
+              <MapIcon size={20} color={viewMode === 'map' ? '#fff' : '#888'} />
+            </TouchableOpacity>
+          </View>
         </View>
         
         {categories.length > 0 && (
@@ -128,19 +150,49 @@ export default function JobsScreen() {
         )}
       </View>
 
-      <FlatList
-        data={filteredJobs}
-        keyExtractor={(item) => item.id}
-        renderItem={renderJob}
-        contentContainerStyle={styles.list}
-        onRefresh={fetchJobs}
-        refreshing={loading}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No jobs found matching your criteria.</Text>
-          </View>
-        }
-      />
+      {viewMode === 'map' ? (
+        <View style={styles.mapContainer}>
+          <MapView
+            provider={PROVIDER_DEFAULT}
+            style={styles.map}
+            initialRegion={{
+              latitude: userLocation?.latitude || 46.603354,
+              longitude: userLocation?.longitude || 1.888334,
+              latitudeDelta: userLocation ? 0.05 : 10,
+              longitudeDelta: userLocation ? 0.05 : 10,
+            }}
+            showsUserLocation={true}
+          >
+            {filteredJobs.filter(j => j.latitude && j.longitude).map(job => (
+              <Marker
+                key={job.id}
+                coordinate={{ latitude: job.latitude, longitude: job.longitude }}
+                title={job.title}
+                description={`${job.price}€ - ${job.employer?.firstName}`}
+              />
+            ))}
+          </MapView>
+          {userLocation && (
+            <View style={styles.myLocationBtn}>
+              <Navigation size={24} color="#fff" />
+            </View>
+          )}
+        </View>
+      ) : (
+        <FlatList
+          data={filteredJobs}
+          keyExtractor={(item) => item.id}
+          renderItem={renderJob}
+          contentContainerStyle={styles.list}
+          onRefresh={fetchJobs}
+          refreshing={loading}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No jobs found matching your criteria.</Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -182,6 +234,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     height: '100%',
+  },
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#000',
+    borderRadius: 8,
+    padding: 2,
+    marginLeft: 8,
+  },
+  toggleBtn: {
+    padding: 6,
+    borderRadius: 6,
+  },
+  toggleBtnActive: {
+    backgroundColor: '#10B981',
   },
   categoriesWrapper: {
     marginTop: 16,
@@ -290,5 +356,32 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 16,
     textAlign: 'center',
+  },
+  mapContainer: {
+    flex: 1,
+    overflow: 'hidden',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    marginTop: 8,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  myLocationBtn: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    backgroundColor: '#10B981',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
 });

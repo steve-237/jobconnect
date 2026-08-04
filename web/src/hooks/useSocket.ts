@@ -12,7 +12,7 @@ export function useSocket() {
       return;
     }
 
-    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080', {
+    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', {
       auth: {
         token: `Bearer ${token}`
       }

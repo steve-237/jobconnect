@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
-const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:4000' : 'http://localhost:4000';
 
 export function useSocket() {
   const [socket, setSocket] = useState<Socket | null>(null);

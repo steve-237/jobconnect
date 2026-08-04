@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Instance Axios pointant vers l'API NestJS
 export const api = axios.create({
-  baseURL: 'http://localhost:3000', // Port du backend par défaut
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000', // Port du backend par défaut
   headers: {
     'Content-Type': 'application/json',
   },

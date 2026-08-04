@@ -68,6 +68,8 @@ model Job {
   price       Float
   status      JobStatus @default(PENDING)
   location    String?
+  latitude    Float?
+  longitude   Float?
   isPaid      Boolean   @default(false)
   stripeSessionId String?
   

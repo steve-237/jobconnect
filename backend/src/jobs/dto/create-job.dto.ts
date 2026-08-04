@@ -3,5 +3,7 @@ export class CreateJobDto {
   description!: string;
   price!: number;
   location?: string;
+  latitude?: number;
+  longitude?: number;
   categoryId!: string;
 }

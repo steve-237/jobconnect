@@ -13,9 +13,14 @@ import {
   User,
   ArrowLeft,
   Loader2,
+  Map as MapIcon,
+  List,
 } from 'lucide-react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import api from '@/lib/api';
+
+const MapComponent = dynamic(() => import('@/components/MapComponent'), { ssr: false, loading: () => <div className="w-full h-[600px] rounded-xl glass animate-pulse flex items-center justify-center"><Loader2 className="animate-spin text-primary w-8 h-8" /></div> });
 
 interface Job {
   id: string;
@@ -23,6 +28,8 @@ interface Job {
   description: string;
   price: number;
   location: string;
+  latitude?: number;
+  longitude?: number;
   createdAt: string;
   employer: {
     firstName: string;
@@ -45,6 +52,7 @@ function daysAgo(dateStr: string) {
 export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   
   const [jobs, setJobs] = useState<Job[]>([]);
   const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
@@ -143,9 +151,24 @@ export default function JobsPage() {
             <span className="font-semibold text-foreground">{filteredJobs.length}</span>{' '}
             mission{filteredJobs.length > 1 ? 's' : ''} disponible{filteredJobs.length > 1 ? 's' : ''}
           </p>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Briefcase className="h-4 w-4" />
-            <span>Triées par date</span>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {/* View Toggle */}
+            <div className="flex items-center glass rounded-lg p-1">
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md flex items-center gap-2 transition-all ${viewMode === 'list' ? 'bg-primary text-white shadow-sm' : 'hover:text-foreground'}`}
+              >
+                <List className="w-4 h-4" />
+                <span className="hidden sm:inline">Liste</span>
+              </button>
+              <button 
+                onClick={() => setViewMode('map')}
+                className={`p-1.5 rounded-md flex items-center gap-2 transition-all ${viewMode === 'map' ? 'bg-primary text-white shadow-sm' : 'hover:text-foreground'}`}
+              >
+                <MapIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Carte</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -158,6 +181,9 @@ export default function JobsPage() {
             <p className="text-muted-foreground">Loading jobs...</p>
           </div>
         ) : filteredJobs.length > 0 ? (
+          viewMode === 'map' ? (
+            <MapComponent jobs={filteredJobs} />
+          ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredJobs.map((job) => (
               <div
@@ -206,6 +232,7 @@ export default function JobsPage() {
               </div>
             ))}
           </div>
+          )
         ) : (
           <div className="glass flex flex-col items-center justify-center rounded-2xl py-20 text-center">
             <Search className="mb-4 h-12 w-12 text-muted-foreground/50" />
