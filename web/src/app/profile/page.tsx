@@ -25,6 +25,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 
 interface UserProfile {
+  id?: string;
   firstName: string;
   lastName: string;
   email: string;
