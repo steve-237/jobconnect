@@ -1,16 +1,17 @@
-services:
+databases:
   # 1. Base de données PostgreSQL (Plan Gratuit)
-  - type: postgres
-    name: jobconnect-db
+  - name: jobconnect-db
     plan: free
     ipAllowList: [] # Permet les connexions internes sur Render
 
+services:
   # 2. Service Backend API NestJS (Plan Gratuit)
   - type: web
     name: jobconnect-api
     env: node
     plan: free
     region: frankfurt
+    rootDir: backend
     buildCommand: npm ci && npx prisma generate && npm run build
     startCommand: npx prisma migrate deploy && npm run start:prod
     envVars:
