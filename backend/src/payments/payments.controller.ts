@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Get,
   Param,
   Request,
   UseGuards,
@@ -27,6 +28,12 @@ export class PaymentsController {
       applicationId,
       req.user.userId,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('transactions')
+  getTransactions(@Request() req: any) {
+    return this.paymentsService.getUserTransactions(req.user.userId);
   }
 
   @Post('webhook')

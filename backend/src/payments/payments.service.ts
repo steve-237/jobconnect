@@ -65,6 +65,17 @@ export class PaymentsService {
       data: { stripeSessionId: session.id },
     });
 
+    await prisma.transaction.create({
+      data: {
+        amount: application.job.price,
+        stripeSessionId: session.id,
+        status: 'PENDING',
+        jobId: application.job.id,
+        employerId: employerId,
+        candidateId: application.candidateId,
+      }
+    });
+
     return { url: session.url };
   }
 
@@ -106,6 +117,12 @@ export class PaymentsService {
           data: { isPaid: true, status: 'IN_PROGRESS' },
         });
 
+        // Marquer la transaction comme complétée
+        await prisma.transaction.updateMany({
+          where: { stripeSessionId: session.id },
+          data: { status: 'COMPLETED' },
+        });
+
         // Notifier le candidat
         if (candidateId) {
           const candidate = await prisma.user.findUnique({
@@ -124,5 +141,24 @@ export class PaymentsService {
     }
 
     return { received: true };
+  }
+
+  async getUserTransactions(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.role === 'EMPLOYER') {
+      return prisma.transaction.findMany({
+        where: { employerId: userId },
+        include: { job: true, candidate: { select: { firstName: true, lastName: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+    } else {
+      return prisma.transaction.findMany({
+        where: { candidateId: userId },
+        include: { job: true, employer: { select: { firstName: true, lastName: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
   }
 }

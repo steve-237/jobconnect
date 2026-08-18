@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Briefcase, User, MessageSquare } from 'lucide-react-native';
+import { Briefcase, User, MessageSquare, Wallet } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -34,6 +34,14 @@ export default function TabLayout() {
           title: 'My Profile',
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color }) => <User size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="wallet"
+        options={{
+          title: 'Mon Portefeuille',
+          tabBarLabel: 'Wallet',
+          tabBarIcon: ({ color }) => <Wallet size={24} color={color} />,
         }}
       />
     </Tabs>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut, CheckCircle2, MessageSquare } from 'lucide-react';
+import { FileText, Users, TrendingUp, Search, User, ArrowRight, DollarSign, MapPin, Clock, LogOut, CheckCircle2, MessageSquare, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -56,6 +56,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
     { label: 'Browse Jobs', onClick: () => router.push('/jobs'), icon: Search, color: 'bg-emerald-500/20 text-emerald-400' },
     { label: 'My Applications', onClick: () => {}, icon: FileText, color: 'bg-primary/20 text-primary' },
     { label: 'My Profile', onClick: () => router.push('/profile'), icon: User, color: 'bg-violet-500/20 text-violet-400' },
+    { label: 'Portefeuille', onClick: () => router.push('/wallet'), icon: Wallet, color: 'bg-amber-500/20 text-amber-400' },
     { label: 'Sign Out', onClick: handleLogout, icon: LogOut, color: 'bg-red-500/20 text-red-400' },
   ];
 
