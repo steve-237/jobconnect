@@ -2,6 +2,7 @@ databases:
   # 1. Base de données PostgreSQL (Plan Gratuit)
   - name: jobconnect-db
     plan: free
+    region: frankfurt
     ipAllowList: [] # Permet les connexions internes sur Render
 
 services:
