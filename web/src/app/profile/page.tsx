@@ -168,10 +168,10 @@ export default function ProfilePage() {
             {/* Info */}
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2" title={profile.isVerified ? "Profil Vérifié" : undefined}>
                   {profile.firstName} {profile.lastName}
                   {profile.isVerified && (
-                    <CheckCircle className="text-blue-500 w-6 h-6 fill-blue-500/20" title="Profil Vérifié" />
+                    <CheckCircle className="text-blue-500 w-6 h-6 fill-blue-500/20" />
                   )}
                 </h1>
                 <span

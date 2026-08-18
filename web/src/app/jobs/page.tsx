@@ -219,10 +219,10 @@ export default function JobsPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="h-4 w-4 shrink-0" />
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1" title={job.employer?.isVerified ? "Profil Vérifié" : undefined}>
                       {job.employer?.firstName} {job.employer?.lastName}
                       {job.employer?.isVerified && (
-                        <CheckCircle className="h-3 w-3 text-blue-500 fill-blue-500/20" title="Profil Vérifié" />
+                        <CheckCircle className="h-3 w-3 text-blue-500 fill-blue-500/20" />
                       )}
                     </span>
                   </div>
