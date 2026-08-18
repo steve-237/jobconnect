@@ -37,6 +37,7 @@ model User {
   bio             String?
   avatarUrl       String?
   isVerified      Boolean   @default(false)
+  kycStatus       String    @default("UNVERIFIED") // UNVERIFIED, PENDING, APPROVED, REJECTED
   expoPushToken   String?
   
   // Relations

@@ -15,6 +15,7 @@ import {
   Loader2,
   Map as MapIcon,
   List,
+  CheckCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -34,6 +35,7 @@ interface Job {
   employer: {
     firstName: string;
     lastName: string;
+    isVerified?: boolean;
   };
   category: {
     name: string;
@@ -217,7 +219,12 @@ export default function JobsPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <User className="h-4 w-4 shrink-0" />
-                    <span>{job.employer?.firstName} {job.employer?.lastName}</span>
+                    <span className="flex items-center gap-1">
+                      {job.employer?.firstName} {job.employer?.lastName}
+                      {job.employer?.isVerified && (
+                        <CheckCircle className="h-3 w-3 text-blue-500 fill-blue-500/20" title="Profil Vérifié" />
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4 shrink-0" />

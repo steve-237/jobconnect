@@ -17,8 +17,12 @@ import {
   Trash2,
   FileText,
   ArrowLeft,
+  CheckCircle,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import Link from 'next/link';
+import api from '@/lib/api';
 
 interface UserProfile {
   firstName: string;
@@ -27,6 +31,8 @@ interface UserProfile {
   bio: string;
   role: 'CANDIDATE' | 'EMPLOYER';
   createdAt: string;
+  isVerified: boolean;
+  kycStatus: string;
   jobsApplied: number;
   jobsPosted: number;
   rating: number;
@@ -39,9 +45,11 @@ const mockProfile: UserProfile = {
   bio: 'Passionate software engineer with 5+ years of experience building scalable web applications. Open to new opportunities in full-stack development.',
   role: 'CANDIDATE',
   createdAt: '2025-03-15T10:00:00Z',
-  jobsApplied: 24,
+  isVerified: false,
+  kycStatus: 'UNVERIFIED',
+  jobsApplied: 0,
   jobsPosted: 0,
-  rating: 4.7,
+  rating: 0,
 };
 
 export default function ProfilePage() {
@@ -57,9 +65,14 @@ export default function ProfilePage() {
       router.push('/login');
       return;
     }
-    // Simulate loading
-    const t = setTimeout(() => setLoading(false), 400);
-    return () => clearTimeout(t);
+    
+    api.get('/users/me')
+      .then(res => {
+        setProfile({ ...mockProfile, ...res.data });
+        setDraft({ ...mockProfile, ...res.data });
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [router]);
 
   const initials = `${profile.firstName[0]}${profile.lastName[0]}`.toUpperCase();
@@ -74,9 +87,37 @@ export default function ProfilePage() {
     setEditing(false);
   };
 
-  const handleSave = () => {
-    setProfile({ ...draft });
-    setEditing(false);
+  const handleSave = async () => {
+    try {
+      await api.patch(`/users/${profile.id || 'me'}`, {
+        firstName: draft.firstName,
+        lastName: draft.lastName,
+        bio: draft.bio
+      });
+      setProfile({ ...draft });
+      setEditing(false);
+    } catch(e) {
+      console.error(e);
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const handleKycRequest = async () => {
+    try {
+      await api.post('/users/me/kyc');
+      setProfile(prev => ({ ...prev, kycStatus: 'PENDING' }));
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const simulateAdminApprove = async () => {
+    try {
+      await api.post('/users/me/kyc/simulate-approve');
+      setProfile(prev => ({ ...prev, kycStatus: 'APPROVED', isVerified: true }));
+    } catch(e) {
+      console.error(e);
+    }
   };
 
   const handleChange = (field: keyof UserProfile, value: string) => {
@@ -127,8 +168,11 @@ export default function ProfilePage() {
             {/* Info */}
             <div className="flex-1 text-center sm:text-left space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
                   {profile.firstName} {profile.lastName}
+                  {profile.isVerified && (
+                    <CheckCircle className="text-blue-500 w-6 h-6 fill-blue-500/20" title="Profil Vérifié" />
+                  )}
                 </h1>
                 <span
                   className={`inline-flex items-center gap-1.5 self-center sm:self-auto rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase ${
@@ -155,6 +199,37 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ─── KYC Banner ─── */}
+        {!profile.isVerified && (
+          <div className="glass rounded-xl p-5 border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-500/20 p-2 rounded-full">
+                {profile.kycStatus === 'PENDING' ? <Clock className="text-amber-500" /> : <AlertTriangle className="text-amber-500" />}
+              </div>
+              <div>
+                <h3 className="font-semibold text-amber-500">
+                  {profile.kycStatus === 'PENDING' ? 'Vérification en cours' : 'Profil non vérifié'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {profile.kycStatus === 'PENDING' ? 'Vos documents sont en cours d\'analyse.' : 'Vérifiez votre identité pour obtenir le badge de confiance.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {profile.kycStatus === 'UNVERIFIED' && (
+                <button onClick={handleKycRequest} className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer">
+                  Vérifier mon identité
+                </button>
+              )}
+              {profile.kycStatus === 'PENDING' && (
+                <button onClick={simulateAdminApprove} className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer">
+                  (Simuler Approbation)
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ─── Stats Cards ─── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -34,6 +34,16 @@ export class UsersController {
     return this.usersService.updatePushToken(req.user.userId, token);
   }
 
+  @Post('me/kyc')
+  requestKyc(@Request() req: any) {
+    return this.usersService.requestKyc(req.user.userId);
+  }
+
+  @Post('me/kyc/simulate-approve')
+  simulateApproveKyc(@Request() req: any) {
+    return this.usersService.simulateApproveKyc(req.user.userId);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();

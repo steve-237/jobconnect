@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { LogOut, Star } from 'lucide-react-native';
+import { LogOut, Star, ShieldCheck, AlertTriangle, Clock } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import api from '../../src/api/client';
 
@@ -50,6 +50,24 @@ export default function ProfileScreen() {
 
   const avgRating = calculateAverageRating();
 
+  const handleKycRequest = async () => {
+    try {
+      await api.post('/users/me/kyc');
+      setUser({ ...user, kycStatus: 'PENDING' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const simulateAdminApprove = async () => {
+    try {
+      await api.post('/users/me/kyc/simulate-approve');
+      setUser({ ...user, kycStatus: 'APPROVED', isVerified: true });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -66,7 +84,12 @@ export default function ProfileScreen() {
             {user?.name ? user.name.substring(0, 2).toUpperCase() : 'JC'}
           </Text>
         </View>
-        <Text style={styles.name}>{user?.name || 'Candidate User'}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <Text style={styles.name}>{user?.firstName} {user?.lastName}</Text>
+          {user?.isVerified && (
+            <ShieldCheck color="#3B82F6" fill="rgba(59, 130, 246, 0.2)" size={24} />
+          )}
+        </View>
         <Text style={styles.email}>{user?.email || 'candidate@jobconnect.com'}</Text>
         
         {/* Average Star Rating */}
@@ -76,6 +99,39 @@ export default function ProfileScreen() {
           <Text style={styles.reviewCount}>({reviews.length} reviews)</Text>
         </View>
       </View>
+
+      {/* KYC Section */}
+      {!user?.isVerified && (
+        <View style={styles.kycContainer}>
+          <View style={styles.kycHeader}>
+            {user?.kycStatus === 'PENDING' ? (
+              <Clock color="#F59E0B" size={24} />
+            ) : (
+              <AlertTriangle color="#F59E0B" size={24} />
+            )}
+            <Text style={styles.kycTitle}>
+              {user?.kycStatus === 'PENDING' ? 'Vérification en cours' : 'Profil non vérifié'}
+            </Text>
+          </View>
+          <Text style={styles.kycText}>
+            {user?.kycStatus === 'PENDING' 
+              ? 'Vos documents sont en cours d\'analyse.' 
+              : 'Vérifiez votre identité pour obtenir le badge.'}
+          </Text>
+          
+          {user?.kycStatus !== 'PENDING' && (
+            <TouchableOpacity style={styles.kycButton} onPress={handleKycRequest}>
+              <Text style={styles.kycButtonText}>Vérifier mon identité</Text>
+            </TouchableOpacity>
+          )}
+          
+          {user?.kycStatus === 'PENDING' && (
+            <TouchableOpacity style={[styles.kycButton, { backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3B82F6' }]} onPress={simulateAdminApprove}>
+              <Text style={[styles.kycButtonText, { color: '#3B82F6' }]}>Simuler Approbation</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {/* Reviews List */}
       <View style={styles.reviewsSection}>
@@ -175,6 +231,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginLeft: 4,
+  },
+  kycContainer: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  kycHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  kycTitle: {
+    color: '#F59E0B',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  kycText: {
+    color: '#ccc',
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  kycButton: {
+    backgroundColor: '#F59E0B',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  kycButtonText: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   reviewsSection: {
     flex: 1,

@@ -63,6 +63,20 @@ export class UsersService {
     });
   }
 
+  async requestKyc(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { kycStatus: 'PENDING' },
+    });
+  }
+
+  async simulateApproveKyc(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { kycStatus: 'APPROVED', isVerified: true },
+    });
+  }
+
   async findOne(id: string) {
     return prisma.user.findUnique({
       where: { id },
