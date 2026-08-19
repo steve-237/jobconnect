@@ -24,8 +24,8 @@ Rends-toi sur [Vercel.com](https://vercel.com/) et crée un compte (de préfére
 3. **Root Directory** : Clique sur "Edit" et sélectionne le dossier `web`. (Ceci est capital pour que Vercel sache où se trouve l'application front-end).
 4. **Environment Variables** :
    Déroule cette section et ajoute la variable suivante pour que le frontend puisse communiquer avec le Backend de production (si tu as déjà déployé le backend) :
-   - Name : `NEXT_PUBLIC_API_URL`
-   - Value : `https://ton-url-backend-render.onrender.com/api` *(Remplace par l'URL de ton API Render. Si tu ne l'as pas encore, mets l'URL temporaire ou laisse vide si c'est géré plus tard).*
+   - **Name** : `NEXT_PUBLIC_API_URL`
+   - **Value** : `https://ton-url-backend-render.onrender.com` (Remplace par l'URL de ton API Render, **sans /api à la fin**).*
 
 ## Étape 5 : Déployer
 1. Clique sur le gros bouton **"Deploy"**.
