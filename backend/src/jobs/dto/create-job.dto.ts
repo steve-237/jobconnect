@@ -6,4 +6,6 @@ export class CreateJobDto {
   latitude?: number;
   longitude?: number;
   categoryId!: string;
+  scheduledDate?: string;
+  estimatedDuration?: number;
 }

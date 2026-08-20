@@ -9,6 +9,8 @@ export default function CreateJobScreen() {
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [estimatedDuration, setEstimatedDuration] = useState('');
   
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,8 @@ export default function CreateJobScreen() {
         price,
         location,
         categoryId,
+        scheduledDate: scheduledDate ? new Date(scheduledDate).toISOString() : undefined,
+        estimatedDuration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
       });
       
       Alert.alert('Succès', 'Annonce publiée avec succès !', [
@@ -55,6 +59,8 @@ export default function CreateJobScreen() {
             setDescription('');
             setPrice('');
             setLocation('');
+            setScheduledDate('');
+            setEstimatedDuration('');
             router.push('/(employer_tabs)');
         }}
       ]);
@@ -142,6 +148,29 @@ export default function CreateJobScreen() {
           placeholderTextColor="#666"
           value={location}
           onChangeText={setLocation}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Date prévue (YYYY-MM-DD HH:MM)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="ex: 2026-10-15 14:00"
+          placeholderTextColor="#666"
+          value={scheduledDate}
+          onChangeText={setScheduledDate}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Durée estimée (minutes)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="ex: 120 (pour 2h)"
+          placeholderTextColor="#666"
+          value={estimatedDuration}
+          onChangeText={setEstimatedDuration}
+          keyboardType="numeric"
         />
       </View>
 

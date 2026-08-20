@@ -35,6 +35,13 @@ export class JobsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('candidate/calendar')
+  async getMyCalendar(@Request() req: any) {
+    // Obtenir toutes les applications acceptées pour ce candidat
+    return this.jobsService.findMyCalendar(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('employer/my-jobs')
   findMyJobs(@Request() req: any) {
     return this.jobsService.findMyJobs(req.user.userId);

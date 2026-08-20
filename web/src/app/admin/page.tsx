@@ -79,6 +79,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    try {
+      await api.delete(`/users/${userId}`);
+      setUsersList(usersList.filter(u => u.id !== userId));
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Failed to delete user.');
+    }
+  };
+
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -193,7 +204,11 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         {u.role !== 'ADMIN' && (
-                          <button className="text-muted-foreground hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors">
+                          <button 
+                            onClick={() => handleDeleteUser(u.id)}
+                            className="text-muted-foreground hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                            title="Supprimer cet utilisateur"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}

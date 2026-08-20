@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, MapPin, DollarSign, AlignLeft, List, Loader2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, MapPin, DollarSign, AlignLeft, List, Loader2, Calendar, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Category {
@@ -24,6 +24,8 @@ export default function CreateJobPage() {
     price: '',
     location: '',
     categoryId: '',
+    scheduledDate: '',
+    estimatedDuration: '',
   });
 
   useEffect(() => {
@@ -70,6 +72,8 @@ export default function CreateJobPage() {
         price: parseFloat(formData.price),
         location: formData.location,
         categoryId: formData.categoryId,
+        scheduledDate: formData.scheduledDate ? new Date(formData.scheduledDate).toISOString() : undefined,
+        estimatedDuration: formData.estimatedDuration ? parseInt(formData.estimatedDuration) : undefined,
       });
       router.push('/jobs'); // Redirect to jobs list after successful creation
     } catch (err: any) {
@@ -189,6 +193,43 @@ export default function CreateJobPage() {
                     onChange={handleChange}
                     className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
                     placeholder="e.g. Paris 11e"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Scheduled Date */}
+              <div>
+                <label htmlFor="scheduledDate" className="block text-sm font-medium text-muted-foreground mb-2">Date (Optionnel)</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="datetime-local"
+                    id="scheduledDate"
+                    name="scheduledDate"
+                    value={formData.scheduledDate}
+                    onChange={handleChange}
+                    className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Estimated Duration */}
+              <div>
+                <label htmlFor="estimatedDuration" className="block text-sm font-medium text-muted-foreground mb-2">Durée estimée (minutes)</label>
+                <div className="relative">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="number"
+                    id="estimatedDuration"
+                    name="estimatedDuration"
+                    min="15"
+                    step="15"
+                    value={formData.estimatedDuration}
+                    onChange={handleChange}
+                    className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3.5 text-foreground placeholder:text-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                    placeholder="e.g. 120 (pour 2h)"
                   />
                 </div>
               </div>

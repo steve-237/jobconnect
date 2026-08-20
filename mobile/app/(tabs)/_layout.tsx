@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Briefcase, User, MessageSquare, Wallet } from 'lucide-react-native';
+import { Briefcase, User, MessageSquare, Wallet, Calendar } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -26,6 +26,14 @@ export default function TabLayout() {
           title: 'My Applications',
           tabBarLabel: 'Inbox',
           tabBarIcon: ({ color }) => <MessageSquare size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: 'Mon Planning',
+          tabBarLabel: 'Planning',
+          tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
       <Tabs.Screen

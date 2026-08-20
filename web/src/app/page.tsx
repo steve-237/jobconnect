@@ -47,19 +47,24 @@ const TESTIMONIALS = [
 
 export default function Home() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       router.replace('/dashboard');
+    } else {
+      setIsChecking(false);
     }
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
-  };
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -80,34 +85,15 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            {isLoggedIn ? (
-              <>
-                <Link 
-                  href="/dashboard"
-                  className="flex items-center gap-2 text-sm font-medium bg-primary/10 text-primary px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
-                <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-gray-400 hover:text-red-400 bg-white/5 hover:bg-red-500/10 px-3 py-2 rounded-lg transition-colors">
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors px-4 py-2">
-                  Sign In
-                </Link>
-                <Link 
-                  href="/register"
-                  className="flex items-center gap-1.5 text-sm font-medium bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg transition-all hover:scale-105 active:scale-95"
-                >
-                  Get Started
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </>
-            )}
+            <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors px-4 py-2">
+              Sign In
+            </Link>
+            <Link 
+              href="/register" 
+              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center gap-2"
+            >
+              Get Started <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </nav>
       </header>

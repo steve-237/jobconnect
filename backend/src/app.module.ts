@@ -9,6 +9,8 @@ import { ApplicationsModule } from './applications/applications.module';
 import { MessagesModule } from './messages/messages.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
+import { AvailabilitiesModule } from './availabilities/availabilities.module';
+
 @Module({
   imports: [
     UsersModule,
@@ -19,6 +21,7 @@ import { PaymentsModule } from './payments/payments.module';
     MessagesModule,
     NotificationsModule,
     PaymentsModule,
+    AvailabilitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

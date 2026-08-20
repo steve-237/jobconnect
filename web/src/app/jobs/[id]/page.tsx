@@ -3,7 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, DollarSign, Clock, User, Briefcase, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, MapPin, DollarSign, Clock, User, Briefcase, Loader2, CheckCircle2, Calendar } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Job {
@@ -13,6 +13,8 @@ interface Job {
   price: number;
   location: string;
   createdAt: string;
+  scheduledDate?: string;
+  estimatedDuration?: number;
   employer: {
     id: string;
     firstName: string;
@@ -140,10 +142,20 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
                 <DollarSign className="w-6 h-6" />
                 {job.price}
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mt-2">
                 <MapPin className="w-4 h-4" />
                 {job.location || 'Remote/Anywhere'}
               </div>
+              {job.scheduledDate && (
+                <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mt-1">
+                  <Calendar className="w-4 h-4" />
+                  Prévu le : {new Date(job.scheduledDate).toLocaleString('fr-FR', {
+                    dateStyle: 'long',
+                    timeStyle: 'short'
+                  })}
+                  {job.estimatedDuration && ` (${job.estimatedDuration / 60}h)`}
+                </div>
+              )}
             </div>
           </div>
 

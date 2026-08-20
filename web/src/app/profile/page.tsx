@@ -16,10 +16,10 @@ import {
   Lock,
   Trash2,
   FileText,
-  ArrowLeft,
   CheckCircle,
   AlertTriangle,
-  Clock
+  Clock,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -35,8 +35,16 @@ interface UserProfile {
   isVerified: boolean;
   kycStatus: string;
   jobsApplied: number;
+  jobsApplied: number;
   jobsPosted: number;
   rating: number;
+}
+
+interface Availability {
+  id: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 const mockProfile: UserProfile = {
@@ -60,6 +68,11 @@ export default function ProfilePage() {
   const [draft, setDraft] = useState<UserProfile>(mockProfile);
   const [loading, setLoading] = useState(true);
 
+  // Availabilities
+  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [newAvail, setNewAvail] = useState({ date: '', startTime: '', endTime: '' });
+  const [isAddingAvail, setIsAddingAvail] = useState(false);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -68,9 +81,13 @@ export default function ProfilePage() {
     }
     
     api.get('/users/me')
-      .then(res => {
+      .then(async (res) => {
         setProfile({ ...mockProfile, ...res.data });
         setDraft({ ...mockProfile, ...res.data });
+        if (res.data.role === 'CANDIDATE') {
+          const availRes = await api.get(`/availabilities/user/${res.data.id}`);
+          setAvailabilities(availRes.data);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -107,6 +124,30 @@ export default function ProfilePage() {
     try {
       await api.post('/users/me/kyc');
       setProfile(prev => ({ ...prev, kycStatus: 'PENDING' }));
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddAvailability = async () => {
+    if (!newAvail.date) return;
+    setIsAddingAvail(true);
+    try {
+      const res = await api.post('/availabilities', newAvail);
+      setAvailabilities([...availabilities, res.data]);
+      setNewAvail({ date: '', startTime: '', endTime: '' });
+    } catch(e) {
+      console.error(e);
+      alert('Erreur lors de l\'ajout de la disponibilité');
+    } finally {
+      setIsAddingAvail(false);
+    }
+  };
+
+  const handleDeleteAvailability = async (id: string) => {
+    try {
+      await api.delete(`/availabilities/${id}`);
+      setAvailabilities(availabilities.filter(a => a.id !== id));
     } catch(e) {
       console.error(e);
     }
@@ -280,6 +321,27 @@ export default function ProfilePage() {
           ))}
         </div>
 
+        {/* ─── Admin Action ─── */}
+        {profile.role === 'ADMIN' && (
+          <div className="glass rounded-2xl p-6 sm:p-8 space-y-4 mb-6 border border-red-500/20 bg-red-500/5">
+            <div className="flex items-center gap-3">
+              <div className="bg-red-500/10 rounded-lg p-2">
+                <Shield className="h-5 w-5 text-red-500" />
+              </div>
+              <h2 className="text-lg font-semibold text-red-100">Espace Administration</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Accédez au panneau de contrôle pour gérer les utilisateurs et le contenu de la plateforme.
+            </p>
+            <button 
+              onClick={() => router.push('/admin')}
+              className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              Aller au Panel Admin
+            </button>
+          </div>
+        )}
+
         {/* ─── Personal Information ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
           <div className="flex items-center justify-between">
@@ -379,6 +441,90 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* ─── Availabilities (CANDIDATE only) ─── */}
+        {profile.role === 'CANDIDATE' && (
+          <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-amber-500/10 rounded-lg p-2">
+                <Calendar className="h-5 w-5 text-amber-500" />
+              </div>
+              <h2 className="text-lg font-semibold">Mes Disponibilités</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Indiquez les dates exactes auxquelles vous êtes disponible pour réaliser des missions.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-end bg-black/20 p-4 rounded-xl border border-white/5">
+              <div className="flex-1 w-full space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Date précise</label>
+                <input 
+                  type="date"
+                  value={newAvail.date}
+                  onChange={e => setNewAvail({...newAvail, date: e.target.value})}
+                  className="w-full rounded-lg border border-white/10 bg-card px-4 py-2 text-sm text-foreground focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+              <div className="flex-1 w-full space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Heure de début (opt.)</label>
+                <input 
+                  type="time"
+                  value={newAvail.startTime}
+                  onChange={e => setNewAvail({...newAvail, startTime: e.target.value})}
+                  className="w-full rounded-lg border border-white/10 bg-card px-4 py-2 text-sm text-foreground focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+              <div className="flex-1 w-full space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Heure de fin (opt.)</label>
+                <input 
+                  type="time"
+                  value={newAvail.endTime}
+                  onChange={e => setNewAvail({...newAvail, endTime: e.target.value})}
+                  className="w-full rounded-lg border border-white/10 bg-card px-4 py-2 text-sm text-foreground focus:outline-none focus:border-amber-500/50"
+                />
+              </div>
+              <button 
+                onClick={handleAddAvailability}
+                disabled={!newAvail.date || isAddingAvail}
+                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4 inline mr-1" /> Ajouter
+              </button>
+            </div>
+
+            {availabilities.length > 0 ? (
+              <div className="space-y-3 mt-4">
+                {availabilities.map(av => (
+                  <div key={av.id} className="flex justify-between items-center bg-white/5 border border-white/10 p-4 rounded-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-amber-500/20 text-amber-500 p-2 rounded-lg">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">{new Date(av.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        {(av.startTime || av.endTime) && (
+                          <p className="text-sm text-muted-foreground">
+                            {av.startTime ? `De ${av.startTime}` : ''} {av.endTime ? `à ${av.endTime}` : ''}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteAvailability(av.id)}
+                      className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-6 text-muted-foreground bg-white/5 border border-white/10 rounded-xl">
+                Aucune disponibilité renseignée.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ─── Account Settings ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">

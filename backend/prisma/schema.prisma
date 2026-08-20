@@ -48,9 +48,24 @@ model User {
   reviewsReceived Review[]  @relation("ReviewsReceived")
   employerTransactions  Transaction[] @relation("EmployerTransactions")
   candidateTransactions Transaction[] @relation("CandidateTransactions")
+  availabilities  Availability[]
   
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  date        DateTime // La date précise de disponibilité
+  startTime   String?  // Heure de début (ex: "09:00")
+  endTime     String?  // Heure de fin (ex: "17:00")
+  
+  // Relations
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Category {
@@ -75,6 +90,8 @@ model Job {
   longitude   Float?
   isPaid      Boolean   @default(false)
   stripeSessionId String?
+  scheduledDate DateTime? // Date et heure prévues
+  estimatedDuration Int?  // Durée estimée en minutes
   
   // Relations
   employerId  String

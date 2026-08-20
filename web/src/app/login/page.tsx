@@ -115,6 +115,38 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
+
+          {/* Quick Login for Dev Environment */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <p className="text-xs text-muted-foreground text-center mb-4 uppercase tracking-wider font-semibold">
+                [Dev Only] Connexion Rapide
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setFormData({ email: 'admin@jobconnect.com', password: 'password123' })}
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 rounded-lg transition-colors"
+                >
+                  Admin (admin@jobconnect.com)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' })}
+                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 rounded-lg transition-colors"
+                >
+                  Employeur (jean.dupont)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' })}
+                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 rounded-lg transition-colors"
+                >
+                  Candidat (marc.bricole)
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

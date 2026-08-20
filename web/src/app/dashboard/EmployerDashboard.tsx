@@ -1,6 +1,6 @@
 'use client';
 
-import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet } from 'lucide-react';
+import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet, Trash2, Edit3 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -70,6 +70,17 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     } catch(e) {
       console.error(e);
       alert('Erreur lors de la clôture de la mission');
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) return;
+    try {
+      await api.delete(`/jobs/${jobId}`);
+      setJobs(jobs.filter(j => j.id !== jobId));
+    } catch(e) {
+      console.error(e);
+      alert('Erreur lors de la suppression de l\'annonce');
     }
   };
 
@@ -263,6 +274,24 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                           >
                             <Star className="inline w-4 h-4 mr-1" /> Noter
                           </button>
+                        )}
+                        {(job.status === 'PENDING' || job.status === 'PUBLISHED') && (
+                          <>
+                            <button 
+                              onClick={() => router.push(`/jobs/${job.id}/edit`)}
+                              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded-lg transition-colors mr-2"
+                              title="Modifier"
+                            >
+                              <Edit3 className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteJob(job.id)}
+                              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg transition-colors mr-2"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </>
                         )}
                         <button 
                           onClick={async () => {

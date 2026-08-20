@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { PrismaClient } from '@prisma/client';
@@ -16,6 +16,8 @@ export class JobsService {
         location: createJobDto.location,
         categoryId: createJobDto.categoryId,
         employerId: employerId,
+        scheduledDate: createJobDto.scheduledDate ? new Date(createJobDto.scheduledDate) : null,
+        estimatedDuration: createJobDto.estimatedDuration ? Number(createJobDto.estimatedDuration) : null,
       },
     });
   }
@@ -97,6 +99,26 @@ export class JobsService {
     });
   }
 
+  async findMyCalendar(candidateId: string) {
+    return prisma.job.findMany({
+      where: {
+        applications: {
+          some: {
+            candidateId,
+            isAccepted: true,
+          }
+        },
+        scheduledDate: { not: null },
+      },
+      orderBy: { scheduledDate: 'asc' },
+      include: {
+        employer: {
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true }
+        }
+      }
+    });
+  }
+
   async update(id: string, updateJobDto: UpdateJobDto, userId: string) {
     const job = await this.findOne(id);
     if (job.employerId !== userId) {
@@ -122,7 +144,7 @@ export class JobsService {
   async remove(id: string, userId: string) {
     const job = await this.findOne(id);
     if (job.employerId !== userId) {
-      throw new Error('Unauthorized to delete this job');
+      throw new ForbiddenException('Unauthorized to delete this job');
     }
     return prisma.job.delete({
       where: { id },
