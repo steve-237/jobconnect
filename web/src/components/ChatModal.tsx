@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { X, Send, Loader2, User, MessageSquare, CheckCheck } from 'lucide-react';
+import { X, Send, Loader2, User, MessageSquare, CheckCheck, Lock } from 'lucide-react';
 import api from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
 
@@ -29,6 +29,7 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +44,16 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
 
     // Fetch message history
     api.get(`/messages/${applicationId}`)
-      .then((res) => setMessages(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        if (Array.isArray(res.data)) {
+          setMessages(res.data);
+        } else if (res.data && Array.isArray(res.data.messages)) {
+          setMessages(res.data.messages);
+          if (res.data.isCompleted || res.data.jobStatus === 'COMPLETED') {
+            setIsReadOnly(true);
+          }
+        }
+      })
       .catch((err) => console.error('Failed to load chat history', err))
       .finally(() => setIsLoading(false));
   }, [applicationId]);
@@ -211,25 +221,32 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-4 border-t border-white/10 bg-black/50 backdrop-blur-xl shrink-0 z-10">
-          <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Écrivez votre message..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all text-sm"
-            />
-            <button
-              type="submit"
-              disabled={!inputMessage.trim()}
-              className="bg-primary hover:bg-primary/80 disabled:opacity-40 disabled:cursor-not-allowed text-white p-3.5 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 shrink-0 flex items-center justify-center"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
+        {/* Input Bar or Read-Only Archived Banner */}
+        {isReadOnly ? (
+          <div className="p-4 border-t border-white/10 bg-amber-500/10 backdrop-blur-xl shrink-0 z-10 flex items-center justify-center gap-2 text-amber-400 text-xs font-semibold rounded-b-3xl">
+            <Lock className="w-4 h-4" />
+            <span>Cette mission est terminée. La discussion est archivée en mode lecture seule.</span>
+          </div>
+        ) : (
+          <div className="p-4 border-t border-white/10 bg-black/50 backdrop-blur-xl shrink-0 z-10">
+            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Écrivez votre message..."
+                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all text-sm"
+              />
+              <button
+                type="submit"
+                disabled={!inputMessage.trim()}
+                className="bg-primary hover:bg-primary/80 disabled:opacity-40 disabled:cursor-not-allowed text-white p-3.5 rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 shrink-0 flex items-center justify-center"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

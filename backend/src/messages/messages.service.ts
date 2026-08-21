@@ -47,6 +47,11 @@ export class MessagesService {
   async saveMessage(applicationId: string, senderId: string, content: string) {
     // We already verified access in the gateway before calling this, but keeping it robust
     const application = await this.verifyAccess(applicationId, senderId);
+    if (application.job.status === 'COMPLETED') {
+      throw new ForbiddenException(
+        'Cette mission est terminée. La discussion est archivée en lecture seule.',
+      );
+    }
     const isEmployer = application.job.employerId === senderId;
 
     const savedMessage = await prisma.message.create({
@@ -94,9 +99,9 @@ export class MessagesService {
    * Fetches the entire chat history for a specific application.
    */
   async getHistory(applicationId: string, userId: string) {
-    await this.verifyAccess(applicationId, userId);
+    const application = await this.verifyAccess(applicationId, userId);
 
-    return prisma.message.findMany({
+    const messages = await prisma.message.findMany({
       where: { applicationId },
       orderBy: { createdAt: 'asc' },
       include: {
@@ -110,5 +115,11 @@ export class MessagesService {
         },
       },
     });
+
+    return {
+      messages,
+      isCompleted: application.job.status === 'COMPLETED',
+      jobStatus: application.job.status,
+    };
   }
 }
