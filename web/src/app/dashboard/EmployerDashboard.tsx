@@ -1,6 +1,10 @@
 'use client';
 
-import { Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical, LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet, Trash2, Edit3 } from 'lucide-react';
+import {
+  Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical,
+  LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet,
+  Trash2, Edit3, DollarSign, MapPin, Calendar, Clock, List, AlignLeft
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -12,6 +16,12 @@ import WalletPage from '../wallet/page';
 interface Job {
   id: string;
   title: string;
+  description?: string;
+  price?: number;
+  location?: string;
+  categoryId?: string;
+  scheduledDate?: string | null;
+  estimatedDuration?: number | null;
   status: string;
   createdAt: string;
   _count: { applications: number };
@@ -22,6 +32,8 @@ interface Application {
   message: string;
   isAccepted: boolean;
   createdAt: string;
+  jobId?: string;
+  jobTitle?: string;
   candidate: {
     id: string;
     firstName: string;
@@ -30,25 +42,80 @@ interface Application {
   };
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Modal state
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'candidates' | 'profile' | 'wallet'>('overview');
+
+  // Applicants for a specific job modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoadingApps, setIsLoadingApps] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'candidates' | 'profile' | 'wallet'>('overview');
+  // All candidates applications state (for the Candidates tab)
+  const [allCandidatesApps, setAllCandidatesApps] = useState<Application[]>([]);
+  const [isLoadingAllCandidates, setIsLoadingAllCandidates] = useState(false);
+
   // Review modal state
   const [selectedJobToReview, setSelectedJobToReview] = useState<Job | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
 
+  // Create Job Modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatingJob, setIsCreatingJob] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [createFormData, setCreateFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    location: '',
+    categoryId: '',
+    scheduledDate: '',
+    estimatedDuration: '',
+  });
+
+  // Edit Job Modal state
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
+  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    location: '',
+    categoryId: '',
+    scheduledDate: '',
+    estimatedDuration: '',
+  });
+
   useEffect(() => {
     fetchJobs();
+    fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'candidates' && jobs.length > 0) {
+      fetchAllCandidates();
+    }
+  }, [activeTab, jobs]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories');
+      setCategories(res.data);
+    } catch (e) {
+      console.error('Failed to fetch categories', e);
+    }
+  };
 
   const fetchJobs = async () => {
     try {
@@ -58,6 +125,31 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       console.error('Failed to fetch jobs', e);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchAllCandidates = async () => {
+    setIsLoadingAllCandidates(true);
+    try {
+      const results = await Promise.all(
+        jobs.map(async (job) => {
+          try {
+            const res = await api.get(`/applications/job/${job.id}`);
+            return res.data.map((app: Application) => ({
+              ...app,
+              jobTitle: job.title,
+              jobId: job.id,
+            }));
+          } catch {
+            return [];
+          }
+        })
+      );
+      setAllCandidatesApps(results.flat());
+    } catch (e) {
+      console.error('Failed to fetch all candidates', e);
+    } finally {
+      setIsLoadingAllCandidates(false);
     }
   };
 
@@ -71,7 +163,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     try {
       await api.patch(`/jobs/${jobId}/status`, { status: 'COMPLETED' });
       setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'COMPLETED' } : j));
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       alert('Erreur lors de la clôture de la mission');
     }
@@ -82,7 +174,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     try {
       await api.delete(`/jobs/${jobId}`);
       setJobs(jobs.filter(j => j.id !== jobId));
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       alert('Erreur lors de la suppression de l\'annonce');
     }
@@ -91,17 +183,109 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const submitReview = async () => {
     if (!selectedJobToReview) return;
     try {
-      await api.post('/reviews', { 
-        jobId: selectedJobToReview.id, 
-        rating: reviewRating, 
-        comment: reviewComment 
+      await api.post('/reviews', {
+        jobId: selectedJobToReview.id,
+        rating: reviewRating,
+        comment: reviewComment
       });
       setSelectedJobToReview(null);
       setReviewRating(5);
       setReviewComment('');
       alert('Avis publié avec succès !');
-    } catch(e: any) {
+    } catch (e: any) {
       alert(e.response?.data?.message || 'Erreur lors de la publication de l\'avis');
+    }
+  };
+
+  // Create Job Handler
+  const handleOpenCreateModal = () => {
+    setCreateFormData({
+      title: '',
+      description: '',
+      price: '',
+      location: '',
+      categoryId: categories.length > 0 ? categories[0].id : '',
+      scheduledDate: '',
+      estimatedDuration: '',
+    });
+    setCreateError('');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateJobSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingJob(true);
+    setCreateError('');
+
+    try {
+      await api.post('/jobs', {
+        title: createFormData.title,
+        description: createFormData.description,
+        price: parseFloat(createFormData.price),
+        location: createFormData.location,
+        categoryId: createFormData.categoryId,
+        scheduledDate: createFormData.scheduledDate ? new Date(createFormData.scheduledDate).toISOString() : undefined,
+        estimatedDuration: createFormData.estimatedDuration ? parseInt(createFormData.estimatedDuration) : undefined,
+      });
+      setIsCreateModalOpen(false);
+      await fetchJobs();
+    } catch (err: any) {
+      console.error(err);
+      setCreateError(err.response?.data?.message || 'Erreur lors de la création de l\'annonce');
+    } finally {
+      setIsCreatingJob(false);
+    }
+  };
+
+  // Edit Job Handler
+  const handleOpenEditModal = async (job: Job) => {
+    setEditError('');
+    setEditingJob(job);
+    try {
+      const res = await api.get(`/jobs/${job.id}`);
+      const fullJob = res.data;
+      let formattedDate = '';
+      if (fullJob.scheduledDate) {
+        const d = new Date(fullJob.scheduledDate);
+        formattedDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      }
+      setEditFormData({
+        title: fullJob.title || '',
+        description: fullJob.description || '',
+        price: fullJob.price ? fullJob.price.toString() : '',
+        location: fullJob.location || '',
+        categoryId: fullJob.categoryId || (categories.length > 0 ? categories[0].id : ''),
+        scheduledDate: formattedDate,
+        estimatedDuration: fullJob.estimatedDuration ? fullJob.estimatedDuration.toString() : '',
+      });
+    } catch (e) {
+      console.error('Failed to load job details', e);
+    }
+  };
+
+  const handleEditJobSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJob) return;
+    setIsUpdatingJob(true);
+    setEditError('');
+
+    try {
+      await api.patch(`/jobs/${editingJob.id}`, {
+        title: editFormData.title,
+        description: editFormData.description,
+        price: parseFloat(editFormData.price),
+        location: editFormData.location,
+        categoryId: editFormData.categoryId,
+        scheduledDate: editFormData.scheduledDate ? new Date(editFormData.scheduledDate).toISOString() : null,
+        estimatedDuration: editFormData.estimatedDuration ? parseInt(editFormData.estimatedDuration) : null,
+      });
+      setEditingJob(null);
+      await fetchJobs();
+    } catch (err: any) {
+      console.error(err);
+      setEditError(err.response?.data?.message || 'Erreur lors de la modification');
+    } finally {
+      setIsUpdatingJob(false);
     }
   };
 
@@ -117,55 +301,65 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             Employer Hub
           </h2>
         </div>
-        
+
         <div className="p-4 flex-1">
           <nav className="space-y-2">
-            <button 
-              onClick={() => setActiveTab('overview')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              }`}
             >
               <LayoutGrid className="w-5 h-5" />
-              Overview
+              Vue d'ensemble
             </button>
-            <button 
-              onClick={() => setActiveTab('jobs')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'jobs' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            <button
+              onClick={() => setActiveTab('jobs')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'jobs' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              }`}
             >
               <Briefcase className="w-5 h-5" />
-              Manage Jobs
+              Toutes les annonces
             </button>
-            <button 
-              onClick={() => setActiveTab('candidates')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'candidates' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            <button
+              onClick={() => setActiveTab('candidates')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'candidates' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              }`}
             >
               <Users className="w-5 h-5" />
-              Candidates
+              Candidats & Postulants
             </button>
-            <button 
-              onClick={() => setActiveTab('profile')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'profile' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'profile' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              }`}
             >
               <User className="w-5 h-5" />
-              Company Profile
+              Profil Entreprise
             </button>
-            <button 
-              onClick={() => setActiveTab('wallet')} 
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'wallet' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            <button
+              onClick={() => setActiveTab('wallet')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                activeTab === 'wallet' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              }`}
             >
               <Wallet className="w-5 h-5" />
               Portefeuille
             </button>
             <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all mt-4 border border-transparent hover:border-red-500/20">
               <LogOut className="w-5 h-5" />
-              Sign Out
+              Déconnexion
             </button>
           </nav>
         </div>
 
         <div className="p-6 border-t border-white/5">
-          <button onClick={() => router.push('/jobs/create')} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95">
+          <button onClick={handleOpenCreateModal} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95">
             <Plus className="w-5 h-5" />
-            Post New Job
+            Créer une annonce
           </button>
         </div>
       </aside>
@@ -181,7 +375,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               </span>
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Track your active listings and incoming applications.
+              Gérez vos annonces et suivez les candidatures reçues.
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
@@ -195,188 +389,257 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         {activeTab === 'overview' && (
           <>
             {/* Top Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-            <div className="flex justify-between items-start">
-              <div className="bg-amber-500/20 text-amber-500 p-3 rounded-xl"><Briefcase className="w-6 h-6" /></div>
-              <span className="text-emerald-400 text-sm font-medium flex items-center gap-1">+2 this week</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
+                <div className="flex justify-between items-start">
+                  <div className="bg-amber-500/20 text-amber-500 p-3 rounded-xl"><Briefcase className="w-6 h-6" /></div>
+                </div>
+                <h3 className="text-4xl font-bold mt-4 mb-1">{jobs.length}</h3>
+                <p className="text-muted-foreground font-medium">Missions créées</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
+                <div className="flex justify-between items-start">
+                  <div className="bg-blue-500/20 text-blue-400 p-3 rounded-xl"><Users className="w-6 h-6" /></div>
+                </div>
+                <h3 className="text-4xl font-bold mt-4 mb-1">
+                  {jobs.reduce((acc, job) => acc + (job._count?.applications || 0), 0)}
+                </h3>
+                <p className="text-muted-foreground font-medium">Total Candidatures</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
+                <div className="flex justify-between items-start">
+                  <div className="bg-emerald-500/20 text-emerald-400 p-3 rounded-xl"><CheckCircle className="w-6 h-6" /></div>
+                </div>
+                <h3 className="text-4xl font-bold mt-4 mb-1">
+                  {jobs.filter(j => j.status === 'COMPLETED').length}
+                </h3>
+                <p className="text-muted-foreground font-medium">Missions Terminées</p>
+              </div>
             </div>
-            <h3 className="text-4xl font-bold mt-4 mb-1">3</h3>
-            <p className="text-muted-foreground font-medium">Active Jobs</p>
-          </div>
 
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-            <div className="flex justify-between items-start">
-              <div className="bg-blue-500/20 text-blue-400 p-3 rounded-xl"><Users className="w-6 h-6" /></div>
-            </div>
-            <h3 className="text-4xl font-bold mt-4 mb-1">
-              {jobs.reduce((acc, job) => acc + job._count.applications, 0)}
-            </h3>
-            <p className="text-muted-foreground font-medium">Total Applicants</p>
-          </div>
+            {/* Detailed Job List */}
+            <div>
+              <div className="flex justify-between items-end mb-6">
+                <h2 className="text-2xl font-bold text-foreground">Vos Annonces Actives</h2>
+                <button onClick={() => setActiveTab('jobs')} className="text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1">
+                  Voir tout <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
 
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-            <div className="flex justify-between items-start">
-              <div className="bg-emerald-500/20 text-emerald-400 p-3 rounded-xl"><CheckCircle className="w-6 h-6" /></div>
-            </div>
-            <h3 className="text-4xl font-bold mt-4 mb-1">12</h3>
-            <p className="text-muted-foreground font-medium">Hires Made</p>
-          </div>
-        </div>
-
-        {/* Detailed Job List (Kanban-ish) */}
-        <div>
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Active Listings Pipeline</h2>
-            <Link href="/jobs" className="text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1">
-              View all <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-black/20 text-muted-foreground text-sm">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">Job Title</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold">Applicants</th>
-                  <th className="px-6 py-4 font-semibold">Posted</th>
-                  <th className="px-6 py-4 text-right font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {isLoading ? (
-                  <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Loading jobs...</td></tr>
-                ) : jobs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center">
-                      <p className="text-muted-foreground mb-4">You haven't posted any jobs yet.</p>
-                      <button onClick={() => router.push('/jobs/create')} className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
-                        Post your first Job
-                      </button>
-                    </td>
-                  </tr>
-                ) : (
-                  jobs.map((job) => (
-                    <tr key={job.id} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="px-6 py-5">
-                        <div className="font-bold text-foreground">{job.title}</div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${
-                          job.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                          'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}>
-                          {job.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{job._count.applications}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground text-sm">
-                        {new Date(job.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-5 text-right whitespace-nowrap">
-                        {job.status === 'IN_PROGRESS' && (
-                          <button 
-                            onClick={() => handleCompleteJob(job.id)}
-                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
-                          >
-                            <CheckCircle className="inline w-4 h-4 mr-1" /> Terminer
-                          </button>
-                        )}
-                        {job.status === 'COMPLETED' && (
-                          <button 
-                            onClick={() => setSelectedJobToReview(job)}
-                            className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
-                          >
-                            <Star className="inline w-4 h-4 mr-1" /> Noter
-                          </button>
-                        )}
-                        {(job.status === 'PENDING' || job.status === 'PUBLISHED') && (
-                          <>
-                            <button 
-                              onClick={() => router.push(`/jobs/${job.id}/edit`)}
-                              className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded-lg transition-colors mr-2"
-                              title="Modifier"
-                            >
-                              <Edit3 className="w-5 h-5" />
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteJob(job.id)}
-                              className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg transition-colors mr-2"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </>
-                        )}
-                        <button 
-                          onClick={async () => {
-                            setSelectedJob(job);
-                            setIsLoadingApps(true);
-                            try {
-                              const res = await api.get(`/applications/job/${job.id}`);
-                              setApplications(res.data);
-                            } catch (e) {
-                              console.error(e);
-                            } finally {
-                              setIsLoadingApps(false);
-                            }
-                          }}
-                          className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          View Applicants
-                        </button>
-                      </td>
+              <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-black/20 text-muted-foreground text-sm">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">Titre</th>
+                      <th className="px-6 py-4 font-semibold">Statut</th>
+                      <th className="px-6 py-4 font-semibold">Candidats</th>
+                      <th className="px-6 py-4 font-semibold">Publié le</th>
+                      <th className="px-6 py-4 text-right font-semibold">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {isLoading ? (
+                      <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Chargement des annonces...</td></tr>
+                    ) : jobs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center">
+                          <p className="text-muted-foreground mb-4">Vous n'avez pas encore publié d'annonce.</p>
+                          <button onClick={handleOpenCreateModal} className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                            Publier votre première annonce
+                          </button>
+                        </td>
+                      </tr>
+                    ) : (
+                      jobs.map((job) => (
+                        <tr key={job.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-6 py-5">
+                            <div className="font-bold text-foreground">{job.title}</div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${
+                              job.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                              job.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                              'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            }`}>
+                              {job.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-medium">{job._count?.applications || 0}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5 text-muted-foreground text-sm">
+                            {new Date(job.createdAt).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td className="px-6 py-5 text-right whitespace-nowrap">
+                            {job.status === 'IN_PROGRESS' && (
+                              <button
+                                onClick={() => handleCompleteJob(job.id)}
+                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
+                              >
+                                <CheckCircle className="inline w-4 h-4 mr-1" /> Terminer
+                              </button>
+                            )}
+                            {job.status === 'COMPLETED' && (
+                              <button
+                                onClick={() => setSelectedJobToReview(job)}
+                                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
+                              >
+                                <Star className="inline w-4 h-4 mr-1" /> Noter
+                              </button>
+                            )}
+                            {(job.status === 'PENDING' || job.status === 'PUBLISHED') && (
+                              <>
+                                <button
+                                  onClick={() => handleOpenEditModal(job)}
+                                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 p-2 rounded-lg transition-colors mr-2"
+                                  title="Modifier"
+                                >
+                                  <Edit3 className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteJob(job.id)}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 p-2 rounded-lg transition-colors mr-2"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                            <button
+                              onClick={async () => {
+                                setSelectedJob(job);
+                                setIsLoadingApps(true);
+                                try {
+                                  const res = await api.get(`/applications/job/${job.id}`);
+                                  setApplications(res.data);
+                                } catch (e) {
+                                  console.error(e);
+                                } finally {
+                                  setIsLoadingApps(false);
+                                }
+                              }}
+                              className="bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Voir les candidats
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </>
         )}
 
+        {/* Tab 2: Jobs Listing */}
         {activeTab === 'jobs' && (
           <div className="w-full -mt-10">
             <JobsPage isEmbedded={true} />
           </div>
         )}
 
+        {/* Tab 3: Candidates Pool & Applications */}
         {activeTab === 'candidates' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-foreground mb-6">Candidates Pool</h2>
-            <div className="p-8 text-center bg-white/5 border border-white/10 rounded-xl">
-              <p className="text-muted-foreground mb-4">La liste de tous les candidats (recherche globale) arrivera ici.</p>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">Toutes les Candidatures Reçues</h2>
+                <p className="text-muted-foreground text-sm mt-1">Consultez et gérez les candidats ayant postulé à vos annonces.</p>
+              </div>
             </div>
+
+            {isLoadingAllCandidates ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+              </div>
+            ) : allCandidatesApps.length === 0 ? (
+              <div className="p-12 text-center bg-white/5 border border-white/10 rounded-2xl text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                <p className="text-lg font-medium">Aucune candidature reçue pour le moment.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allCandidatesApps.map((app) => (
+                  <div key={app.id} className="bg-white/5 border border-white/10 p-6 rounded-2xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+                    <div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <h4 className="font-bold text-lg text-foreground">{app.candidate.firstName} {app.candidate.lastName}</h4>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 font-medium">
+                          {app.jobTitle}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{app.candidate.email} • Postulé le {new Date(app.createdAt).toLocaleDateString('fr-FR')}</p>
+                      <div className="bg-black/40 border border-white/5 p-3 rounded-xl text-sm italic text-gray-300">
+                        "{app.message || "Je suis très intéressé par cette mission."}"
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-3">
+                      {app.isAccepted ? (
+                        <>
+                          <span className="inline-flex items-center gap-2 text-emerald-400 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm font-semibold">
+                            <CheckCircle className="w-4 h-4" /> Candidat Accepté
+                          </span>
+                          <button
+                            onClick={() => window.open(`/messages/${app.id}`, '_blank')}
+                            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
+                          >
+                            <MessageSquare className="w-4 h-4" /> Discuter
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const res = await api.post(`/payments/checkout/${app.id}`);
+                              if (res.data.url) {
+                                window.location.href = res.data.url;
+                              }
+                            } catch (e) {
+                              alert('Erreur lors du paiement');
+                            }
+                          }}
+                          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
+                        >
+                          <Check className="w-4 h-4" /> Accepter le candidat
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Tab 4: Profile */}
         {activeTab === 'profile' && (
           <div className="w-full -mt-10">
             <ProfilePage isEmbedded={true} />
           </div>
         )}
 
+        {/* Tab 5: Wallet */}
         {activeTab === 'wallet' && (
           <div className="w-full -mt-10">
             <WalletPage isEmbedded={true} />
           </div>
         )}
 
-        {/* Modal for Applicants */}
+        {/* Modal for Applicants of a specific job */}
         {selectedJob && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
               <div className="flex justify-between items-center p-6 border-b border-white/10">
                 <div>
-                  <h3 className="text-xl font-bold">Applicants for "{selectedJob.title}"</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{applications.length} total candidates</p>
+                  <h3 className="text-xl font-bold">Candidats pour "{selectedJob.title}"</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{applications.length} candidat(s) au total</p>
                 </div>
                 <button onClick={() => setSelectedJob(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
                   <X className="w-5 h-5" />
@@ -387,7 +650,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                 {isLoadingApps ? (
                   <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>
                 ) : applications.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">No applicants yet.</div>
+                  <div className="text-center py-12 text-muted-foreground">Aucun candidat pour le moment.</div>
                 ) : (
                   <div className="space-y-4">
                     {applications.map(app => (
@@ -396,24 +659,24 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                           <h4 className="font-bold text-lg">{app.candidate.firstName} {app.candidate.lastName}</h4>
                           <p className="text-sm text-muted-foreground mb-2">{app.candidate.email}</p>
                           <div className="bg-black/30 p-3 rounded-lg text-sm italic text-gray-300">
-                            "{app.message || "I am very interested in this opportunity."}"
+                            "{app.message || "Je suis très intéressé par cette opportunité."}"
                           </div>
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
                           {app.isAccepted ? (
                             <>
                               <span className="hidden sm:inline-flex items-center gap-2 text-emerald-400 px-2 text-sm font-semibold">
-                                <CheckCircle className="w-4 h-4" /> Accepted
+                                <CheckCircle className="w-4 h-4" /> Accepté
                               </span>
-                              <button 
+                              <button
                                 onClick={() => window.open(`/messages/${app.id}`, '_blank')}
-                                className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
+                                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
                               >
                                 <MessageSquare className="w-4 h-4" /> Discuter
                               </button>
                             </>
                           ) : (
-                            <button 
+                            <button
                               onClick={async () => {
                                 try {
                                   const res = await api.post(`/payments/checkout/${app.id}`);
@@ -421,12 +684,12 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                                     window.location.href = res.data.url;
                                   }
                                 } catch (e) {
-                                  alert('Failed to initiate payment');
+                                  alert('Erreur lors de l\'initiation du paiement');
                                 }
                               }}
                               className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
                             >
-                              <Check className="w-4 h-4" /> Accept Candidate
+                              <Check className="w-4 h-4" /> Accepter le candidat
                             </button>
                           )}
                         </div>
@@ -439,10 +702,299 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           </div>
         )}
 
+        {/* Create Job Modal */}
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setIsCreateModalOpen(false)}>
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-amber-500" /> Publier une nouvelle annonce
+                </h3>
+                <button onClick={() => setIsCreateModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {createError && (
+                  <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                    {createError}
+                  </div>
+                )}
+
+                <form onSubmit={handleCreateJobSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Titre de l'annonce</label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        required
+                        value={createFormData.title}
+                        onChange={e => setCreateFormData({ ...createFormData, title: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        placeholder="ex: Déménagement appartement 3 pièces"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Catégorie</label>
+                    <div className="relative">
+                      <List className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <select
+                        required
+                        value={createFormData.categoryId}
+                        onChange={e => setCreateFormData({ ...createFormData, categoryId: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-[#111] pl-12 pr-4 py-3 text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id} className="bg-[#111] text-white">
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Budget (€)</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          step="0.01"
+                          value={createFormData.price}
+                          onChange={e => setCreateFormData({ ...createFormData, price: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          placeholder="ex: 150"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Localisation</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="text"
+                          value={createFormData.location}
+                          onChange={e => setCreateFormData({ ...createFormData, location: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          placeholder="ex: Paris 11e"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Date prévue (Optionnel)</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="datetime-local"
+                          value={createFormData.scheduledDate}
+                          onChange={e => setCreateFormData({ ...createFormData, scheduledDate: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Durée estimée (minutes)</label>
+                      <div className="relative">
+                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="number"
+                          min="15"
+                          step="15"
+                          value={createFormData.estimatedDuration}
+                          onChange={e => setCreateFormData({ ...createFormData, estimatedDuration: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          placeholder="ex: 120 (pour 2h)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Description détaillée</label>
+                    <div className="relative">
+                      <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
+                      <textarea
+                        required
+                        rows={4}
+                        value={createFormData.description}
+                        onChange={e => setCreateFormData({ ...createFormData, description: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
+                        placeholder="Décrivez les détails de la mission, matériel nécessaire, etc."
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isCreatingJob}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 mt-4"
+                  >
+                    {isCreatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier la mission'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Job Modal */}
+        {editingJob && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setEditingJob(null)}>
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-amber-500" /> Modifier l'annonce
+                </h3>
+                <button onClick={() => setEditingJob(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                {editError && (
+                  <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                    {editError}
+                  </div>
+                )}
+
+                <form onSubmit={handleEditJobSubmit} className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Titre de l'annonce</label>
+                    <div className="relative">
+                      <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        required
+                        value={editFormData.title}
+                        onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Catégorie</label>
+                    <div className="relative">
+                      <List className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <select
+                        required
+                        value={editFormData.categoryId}
+                        onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-[#111] pl-12 pr-4 py-3 text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      >
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id} className="bg-[#111] text-white">
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Budget (€)</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="number"
+                          required
+                          min="1"
+                          step="0.01"
+                          value={editFormData.price}
+                          onChange={e => setEditFormData({ ...editFormData, price: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Localisation</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="text"
+                          value={editFormData.location}
+                          onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Date prévue (Optionnel)</label>
+                      <div className="relative">
+                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="datetime-local"
+                          value={editFormData.scheduledDate}
+                          onChange={e => setEditFormData({ ...editFormData, scheduledDate: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2">Durée estimée (minutes)</label>
+                      <div className="relative">
+                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <input
+                          type="number"
+                          min="15"
+                          step="15"
+                          value={editFormData.estimatedDuration}
+                          onChange={e => setEditFormData({ ...editFormData, estimatedDuration: e.target.value })}
+                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">Description détaillée</label>
+                    <div className="relative">
+                      <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
+                      <textarea
+                        required
+                        rows={4}
+                        value={editFormData.description}
+                        onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
+                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingJob}
+                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 mt-4"
+                  >
+                    {isUpdatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Review Modal */}
         {selectedJobToReview && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md flex flex-col shadow-2xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedJobToReview(null)}>
+            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center p-6 border-b border-white/10">
                 <h3 className="text-xl font-bold">Évaluer le candidat</h3>
                 <button onClick={() => setSelectedJobToReview(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
@@ -454,9 +1006,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                   Comment s'est passée la mission "{selectedJobToReview.title}" ?
                 </p>
                 <div className="flex gap-2 justify-center mb-6">
-                  {[1,2,3,4,5].map((star) => (
-                    <button 
-                      key={star} 
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
                       onClick={() => setReviewRating(star)}
                       className={`p-2 rounded-full transition-colors ${reviewRating >= star ? 'text-amber-500' : 'text-white/20'}`}
                     >
@@ -470,7 +1022,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                   onChange={(e) => setReviewComment(e.target.value)}
                   className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none resize-none mb-6"
                 />
-                <button 
+                <button
                   onClick={submitReview}
                   className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold transition-all"
                 >
