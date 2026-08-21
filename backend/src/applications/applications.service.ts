@@ -106,7 +106,7 @@ export class ApplicationsService {
 
     const updated = await prisma.application.update({
       where: { id },
-      data: { isAccepted: true },
+      data: { isAccepted: true, status: 'ACCEPTED' },
     });
 
     // Automatically set job to IN_PROGRESS when candidate is accepted
@@ -125,6 +125,41 @@ export class ApplicationsService {
         'Candidature Acceptée ! 🎉',
         `Votre candidature pour "${application.job.title}" a été acceptée. Vous pouvez maintenant discuter avec l'employeur !`,
         { type: 'application_accepted', applicationId: id },
+      );
+    }
+
+    return updated;
+  }
+
+  async rejectApplication(id: string, employerId: string) {
+    const application = await prisma.application.findUnique({
+      where: { id },
+      include: { job: true },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    if (application.job.employerId !== employerId) {
+      throw new ForbiddenException('You do not own this job');
+    }
+
+    const updated = await prisma.application.update({
+      where: { id },
+      data: { isAccepted: false, status: 'REJECTED' },
+    });
+
+    // Notify the candidate
+    const candidate = await prisma.user.findUnique({
+      where: { id: application.candidateId },
+    });
+    if (candidate?.expoPushToken) {
+      await this.notificationsService.sendPushNotification(
+        candidate.expoPushToken,
+        'Mise à jour candidature',
+        `Votre candidature pour "${application.job.title}" a été refusée.`,
+        { type: 'application_rejected', applicationId: id },
       );
     }
 

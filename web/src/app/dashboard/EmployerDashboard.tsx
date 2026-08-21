@@ -33,6 +33,7 @@ interface Application {
   id: string;
   message: string;
   isAccepted: boolean;
+  status?: string;
   createdAt: string;
   jobId?: string;
   jobTitle?: string;
@@ -237,9 +238,15 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       setSelectedJobToReview(null);
       setReviewRating(5);
       setReviewComment('');
-      alert('Avis publié avec succès !');
-    } catch (e: any) {
-      alert(e.response?.data?.message || 'Erreur lors de la publication de l\'avis');
+  const handleRejectApplication = async (appId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir refuser cette candidature ?')) return;
+    try {
+      await api.patch(`/applications/${appId}/reject`);
+      setApplications(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
+      setAllCandidatesApps(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
+    } catch (e) {
+      console.error(e);
+      alert('Erreur lors du refus de la candidature');
     }
   };
 
@@ -637,7 +644,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                       </div>
                     </div>
                     <div className="shrink-0 flex items-center gap-3">
-                      {app.isAccepted ? (
+                      {app.isAccepted || app.status === 'ACCEPTED' ? (
                         <>
                           <span className="inline-flex items-center gap-2 text-emerald-400 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm font-semibold">
                             <CheckCircle className="w-4 h-4" /> Candidat Accepté
@@ -649,22 +656,34 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                             <MessageSquare className="w-4 h-4" /> Discuter
                           </button>
                         </>
+                      ) : app.status === 'REJECTED' ? (
+                        <span className="inline-flex items-center gap-2 text-red-400 px-3.5 py-2 bg-red-500/10 border border-red-500/20 rounded-xl text-sm font-semibold">
+                          <X className="w-4 h-4" /> Candidature Refusée
+                        </span>
                       ) : (
-                        <button
-                          onClick={async () => {
-                            try {
-                              const res = await api.post(`/payments/checkout/${app.id}`);
-                              if (res.data.url) {
-                                window.location.href = res.data.url;
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await api.post(`/payments/checkout/${app.id}`);
+                                if (res.data.url) {
+                                  window.location.href = res.data.url;
+                                }
+                              } catch (e) {
+                                alert('Erreur lors du paiement');
                               }
-                            } catch (e) {
-                              alert('Erreur lors du paiement');
-                            }
-                          }}
-                          className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
-                        >
-                          <Check className="w-4 h-4" /> Accepter le candidat
-                        </button>
+                            }}
+                            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors text-sm"
+                          >
+                            <Check className="w-4 h-4" /> Accepter
+                          </button>
+                          <button
+                            onClick={() => handleRejectApplication(app.id)}
+                            className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2.5 rounded-xl font-semibold transition-colors text-sm"
+                          >
+                            <X className="w-4 h-4" /> Refuser
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -719,7 +738,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                           </div>
                         </div>
                         <div className="shrink-0 flex items-center gap-2">
-                          {app.isAccepted ? (
+                          {app.isAccepted || app.status === 'ACCEPTED' ? (
                             <>
                               <span className="hidden sm:inline-flex items-center gap-2 text-emerald-400 px-2 text-sm font-semibold">
                                 <CheckCircle className="w-4 h-4" /> Accepté
@@ -731,22 +750,34 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                                 <MessageSquare className="w-4 h-4" /> Discuter
                               </button>
                             </>
+                          ) : app.status === 'REJECTED' ? (
+                            <span className="inline-flex items-center gap-2 text-red-400 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-sm font-semibold">
+                              <X className="w-4 h-4" /> Refusée
+                            </span>
                           ) : (
-                            <button
-                              onClick={async () => {
-                                try {
-                                  const res = await api.post(`/payments/checkout/${app.id}`);
-                                  if (res.data.url) {
-                                    window.location.href = res.data.url;
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const res = await api.post(`/payments/checkout/${app.id}`);
+                                    if (res.data.url) {
+                                      window.location.href = res.data.url;
+                                    }
+                                  } catch (e) {
+                                    alert('Erreur lors de l\'initiation du paiement');
                                   }
-                                } catch (e) {
-                                  alert('Erreur lors de l\'initiation du paiement');
-                                }
-                              }}
-                              className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
-                            >
-                              <Check className="w-4 h-4" /> Accepter le candidat
-                            </button>
+                                }}
+                                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+                              >
+                                <Check className="w-4 h-4" /> Accepter
+                              </button>
+                              <button
+                                onClick={() => handleRejectApplication(app.id)}
+                                className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+                              >
+                                <X className="w-4 h-4" /> Refuser
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>

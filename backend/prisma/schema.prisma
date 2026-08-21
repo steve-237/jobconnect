@@ -112,6 +112,7 @@ model Application {
   id          String   @id @default(uuid())
   message     String?
   isAccepted  Boolean  @default(false)
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
   
   // Relations
   jobId       String

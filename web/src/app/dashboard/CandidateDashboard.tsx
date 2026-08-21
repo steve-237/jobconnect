@@ -20,6 +20,7 @@ import { useSocket } from '@/hooks/useSocket';
 interface Application {
   id: string;
   isAccepted: boolean;
+  status?: string;
   createdAt: string;
   job: {
     title: string;
@@ -297,11 +298,13 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                           </td>
                           <td className="px-6 py-5">
                             <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${
-                              app.isAccepted
+                              app.isAccepted || app.status === 'ACCEPTED'
                                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : app.status === 'REJECTED'
+                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
                                 : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                             }`}>
-                              {app.isAccepted ? 'Acceptée' : 'En attente'}
+                              {app.isAccepted || app.status === 'ACCEPTED' ? 'Acceptée' : app.status === 'REJECTED' ? 'Refusée' : 'En attente'}
                             </span>
                           </td>
                           <td className="px-6 py-5">

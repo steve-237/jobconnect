@@ -57,4 +57,12 @@ export class ApplicationsController {
     }
     return this.applicationsService.acceptApplication(id, req.user.userId);
   }
+
+  @Patch(':id/reject')
+  rejectApplication(@Param('id') id: string, @Request() req: any) {
+    if (req.user.role !== 'EMPLOYER') {
+      throw new ForbiddenException('Only employers can reject applications');
+    }
+    return this.applicationsService.rejectApplication(id, req.user.userId);
+  }
 }
