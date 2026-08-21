@@ -46,11 +46,12 @@ export class MessagesGateway
       client.disconnect();
       return;
     }
-    // console.log(`Client connected: ${client.id} (User: ${user.userId})`);
+    // Auto-join user-specific room for real-time notifications
+    client.join(`user_${user.userId}`);
   }
 
   handleDisconnect(client: Socket) {
-    // console.log(`Client disconnected: ${client.id}`);
+    // Client disconnected
   }
 
   @SubscribeMessage('joinRoom')
@@ -67,10 +68,6 @@ export class MessagesGateway
 
       // Join the socket.io room
       client.join(`chat_${data.applicationId}`);
-      // console.log(`User ${user.userId} joined room chat_${data.applicationId}`);
-
-      // Optional: notify others in room
-      // client.to(`chat_${data.applicationId}`).emit('userJoined', { userId: user.userId });
     } catch (e) {
       client.emit('error', { message: 'Unauthorized or room not found' });
     }
@@ -85,17 +82,32 @@ export class MessagesGateway
     if (!user) return;
 
     try {
-      // 1. Save to DB (this also verifies access again just in case)
+      // 1. Save to DB (this also verifies access again)
       const savedMessage = await this.messagesService.saveMessage(
         data.applicationId,
         user.userId,
         data.content,
       );
 
-      // 2. Broadcast to everyone in the room (including the sender, so they get the DB-confirmed message with ID and Timestamp)
+      // 2. Broadcast to application chat room (for active chat modals)
       this.server
         .to(`chat_${data.applicationId}`)
         .emit('newMessage', savedMessage);
+
+      // 3. Emit real-time notification to the receiver's personal user room
+      if (savedMessage.receiverId) {
+        this.server
+          .to(`user_${savedMessage.receiverId}`)
+          .emit('notification', {
+            id: `notif-${Date.now()}`,
+            type: 'NEW_MESSAGE',
+            applicationId: data.applicationId,
+            jobTitle: savedMessage.jobTitle,
+            senderName: `${savedMessage.sender.firstName} ${savedMessage.sender.lastName}`,
+            content: savedMessage.content,
+            createdAt: savedMessage.createdAt,
+          });
+      }
     } catch (e) {
       client.emit('error', { message: 'Failed to send message' });
     }

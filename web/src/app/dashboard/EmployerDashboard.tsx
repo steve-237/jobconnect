@@ -13,6 +13,7 @@ import JobsPage from '../jobs/page';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
+import { useSocket } from '@/hooks/useSocket';
 
 interface Job {
   id: string;
@@ -58,6 +59,39 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
   // Chat Modal state
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
+
+  // Real-time Notifications state
+  const { socket, isConnected } = useSocket();
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
+  const [activeToast, setActiveToast] = useState<{
+    id: string;
+    senderName: string;
+    jobTitle: string;
+    content: string;
+    applicationId: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleNotification = (notif: any) => {
+        if (notif.type === 'NEW_MESSAGE') {
+          setUnreadNotifsCount(prev => prev + 1);
+          setActiveToast({
+            id: notif.id,
+            senderName: notif.senderName,
+            jobTitle: notif.jobTitle,
+            content: notif.content,
+            applicationId: notif.applicationId,
+          });
+        }
+      };
+
+      socket.on('notification', handleNotification);
+      return () => {
+        socket.off('notification', handleNotification);
+      };
+    }
+  }, [socket, isConnected]);
 
   // Applicants for a specific job modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -391,9 +425,19 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
-            <button className="p-2 bg-white/5 border border-white/10 rounded-full text-muted-foreground hover:text-white transition-colors relative">
+            <button
+              onClick={() => setUnreadNotifsCount(0)}
+              className="p-2 bg-white/5 border border-white/10 rounded-full text-muted-foreground hover:text-white transition-colors relative"
+              title="Notifications"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-background"></span>
+              {unreadNotifsCount > 0 ? (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background animate-bounce">
+                  {unreadNotifsCount}
+                </span>
+              ) : (
+                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-background"></span>
+              )}
             </button>
           </div>
         </header>
@@ -1054,6 +1098,35 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           />
         )}
 
+        {/* Real-time Notification Toast */}
+        {activeToast && (
+          <div className="fixed bottom-6 right-6 z-50 bg-[#1a1a1a] border border-amber-500/40 rounded-2xl p-4 shadow-2xl shadow-amber-500/20 max-w-sm w-full animate-in slide-in-from-bottom-5 duration-300 flex flex-col gap-3">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-2 text-amber-400 text-sm font-semibold">
+                <MessageSquare className="w-4 h-4" />
+                Nouveau message
+              </div>
+              <button onClick={() => setActiveToast(null)} className="text-muted-foreground hover:text-white p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">{activeToast.senderName}</p>
+              <p className="text-xs text-muted-foreground mb-1">{activeToast.jobTitle}</p>
+              <p className="text-xs text-gray-300 line-clamp-2 bg-white/5 p-2 rounded-lg italic">"{activeToast.content}"</p>
+            </div>
+            <button
+              onClick={() => {
+                setActiveChatApp({ id: activeToast.applicationId, title: `Chat — ${activeToast.senderName}` });
+                setActiveToast(null);
+                setUnreadNotifsCount(prev => Math.max(0, prev - 1));
+              }}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2 rounded-xl transition-colors"
+            >
+              Répondre au message
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -83,7 +83,11 @@ export class MessagesService {
       );
     }
 
-    return savedMessage;
+    return {
+      ...savedMessage,
+      receiverId,
+      jobTitle: application.job.title,
+    };
   }
 
   /**
