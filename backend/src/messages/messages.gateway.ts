@@ -60,7 +60,10 @@ export class MessagesGateway
     @ConnectedSocket() client: Socket,
   ) {
     const user = this.authenticateSocket(client);
-    if (!user) return;
+    if (!user) {
+      client.emit('chat_error', { message: 'Session non authentifiée' });
+      return;
+    }
 
     try {
       // Verify they have access to this room
@@ -68,8 +71,8 @@ export class MessagesGateway
 
       // Join the socket.io room
       client.join(`chat_${data.applicationId}`);
-    } catch (e) {
-      client.emit('error', { message: 'Unauthorized or room not found' });
+    } catch (e: any) {
+      client.emit('chat_error', { message: e?.message || 'Accès au chat non autorisé' });
     }
   }
 
@@ -79,7 +82,10 @@ export class MessagesGateway
     @ConnectedSocket() client: Socket,
   ) {
     const user = this.authenticateSocket(client);
-    if (!user) return;
+    if (!user) {
+      client.emit('chat_error', { message: 'Session non authentifiée' });
+      return;
+    }
 
     try {
       // 1. Save to DB (this also verifies access again)
@@ -108,8 +114,8 @@ export class MessagesGateway
             createdAt: savedMessage.createdAt,
           });
       }
-    } catch (e) {
-      client.emit('error', { message: 'Failed to send message' });
+    } catch (e: any) {
+      client.emit('chat_error', { message: e?.message || 'Échec de l’envoi du message' });
     }
   }
 }

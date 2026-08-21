@@ -77,13 +77,17 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
 
       socket.on('newMessage', handleNewMessage);
 
-      socket.on('error', (err) => {
-        console.error('Socket error:', err);
-      });
+      const handleChatError = (err: any) => {
+        if (err?.message) {
+          console.warn('Chat Notice:', err.message);
+        }
+      };
+
+      socket.on('chat_error', handleChatError);
 
       return () => {
         socket.off('newMessage', handleNewMessage);
-        socket.off('error');
+        socket.off('chat_error', handleChatError);
       };
     }
   }, [socket, isConnected, applicationId]);
