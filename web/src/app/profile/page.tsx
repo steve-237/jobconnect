@@ -289,25 +289,30 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
         )}
 
         {/* ─── Stats Cards ─── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`grid grid-cols-1 ${profile.role === 'EMPLOYER' ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-4`}>
           {[
+            ...(profile.role === 'CANDIDATE'
+              ? [
+                  {
+                    label: 'Missions postulées',
+                    value: profile.jobsApplied,
+                    icon: FileText,
+                    color: 'text-blue-400',
+                    bg: 'bg-blue-500/10',
+                  },
+                ]
+              : [
+                  {
+                    label: 'Missions publiées',
+                    value: profile.jobsPosted,
+                    icon: Briefcase,
+                    color: 'text-emerald-400',
+                    bg: 'bg-emerald-500/10',
+                  },
+                ]),
             {
-              label: 'Jobs Applied',
-              value: profile.jobsApplied,
-              icon: FileText,
-              color: 'text-blue-400',
-              bg: 'bg-blue-500/10',
-            },
-            {
-              label: 'Jobs Posted',
-              value: profile.jobsPosted,
-              icon: Briefcase,
-              color: 'text-emerald-400',
-              bg: 'bg-emerald-500/10',
-            },
-            {
-              label: 'Rating',
-              value: profile.rating.toFixed(1),
+              label: 'Note globale',
+              value: profile.rating ? profile.rating.toFixed(1) : '0.0',
               icon: Star,
               color: 'text-amber-400',
               bg: 'bg-amber-500/10',

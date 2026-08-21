@@ -56,11 +56,13 @@ export default function JobsPage({
   onJobClick,
   theme = 'primary',
   excludeJobIds = [],
+  onlyMyJobs = false,
 }: {
   isEmbedded?: boolean;
   onJobClick?: (jobId: string) => void;
   theme?: 'primary' | 'amber';
   excludeJobIds?: string[];
+  onlyMyJobs?: boolean;
 } = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
@@ -74,7 +76,8 @@ export default function JobsPage({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const promises: Promise<any>[] = [api.get('/jobs'), api.get('/categories')];
+        const endpoint = onlyMyJobs ? '/jobs/employer/my-jobs' : '/jobs';
+        const promises: Promise<any>[] = [api.get(endpoint), api.get('/categories')];
 
         const token = localStorage.getItem('token');
         let isCandidate = false;
@@ -87,7 +90,7 @@ export default function JobsPage({
           } catch (e) {}
         }
 
-        if (isCandidate) {
+        if (isCandidate && !onlyMyJobs) {
           promises.push(api.get('/applications/my-applications'));
         }
 
@@ -106,7 +109,7 @@ export default function JobsPage({
       }
     };
     fetchData();
-  }, []);
+  }, [onlyMyJobs]);
 
   const isAmber = theme === 'amber';
   const badgeColor = isAmber ? 'bg-amber-500/15 text-amber-400' : 'bg-primary/15 text-primary';

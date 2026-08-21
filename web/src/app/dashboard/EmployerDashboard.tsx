@@ -553,7 +553,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         {/* Tab 2: Jobs Listing */}
         {activeTab === 'jobs' && (
           <div className="w-full -mt-10">
-            <JobsPage isEmbedded={true} theme="amber" />
+            <JobsPage isEmbedded={true} theme="amber" onlyMyJobs={true} />
           </div>
         )}
 
