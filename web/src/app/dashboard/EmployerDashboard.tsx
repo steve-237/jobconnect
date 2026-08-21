@@ -104,6 +104,14 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   useEffect(() => {
     fetchJobs();
     fetchCategories();
+
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('payment_success') === 'true' || urlParams.get('success') === 'true') {
+        alert('🎉 Paiement validé avec succès ! La candidature a été acceptée et la mission est maintenant en cours.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
   }, []);
 
   useEffect(() => {
