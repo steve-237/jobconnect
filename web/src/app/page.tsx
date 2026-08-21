@@ -48,15 +48,15 @@ const TESTIMONIALS = [
 export default function Home() {
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      router.replace('/dashboard');
-    } else {
-      setIsChecking(false);
+      setIsLoggedIn(true);
     }
-  }, [router]);
+    setIsChecking(false);
+  }, []);
 
   if (isChecking) {
     return (
