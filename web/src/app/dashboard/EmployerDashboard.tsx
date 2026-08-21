@@ -9,7 +9,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
-import JobsPage from '../jobs/page';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
@@ -56,7 +55,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'candidates' | 'profile' | 'wallet'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'profile' | 'wallet'>('overview');
 
   // Chat Modal state
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
@@ -373,15 +372,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               Vue d'ensemble
             </button>
             <button
-              onClick={() => setActiveTab('jobs')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'jobs' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
-              }`}
-            >
-              <Briefcase className="w-5 h-5" />
-              Toutes les annonces
-            </button>
-            <button
               onClick={() => setActiveTab('candidates')}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
                 activeTab === 'candidates' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
@@ -492,9 +482,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             <div>
               <div className="flex justify-between items-end mb-6">
                 <h2 className="text-2xl font-bold text-foreground">Vos Annonces Actives</h2>
-                <button onClick={() => setActiveTab('jobs')} className="text-amber-500 font-medium hover:text-amber-400 transition-colors flex items-center gap-1">
-                  Voir tout <ArrowRight className="w-4 h-4" />
-                </button>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
@@ -607,14 +594,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           </>
         )}
 
-        {/* Tab 2: Jobs Listing */}
-        {activeTab === 'jobs' && (
-          <div className="w-full -mt-10">
-            <JobsPage isEmbedded={true} theme="amber" onlyMyJobs={true} />
-          </div>
-        )}
-
-        {/* Tab 3: Candidates Pool & Applications */}
+        {/* Tab 2: Candidates Pool & Applications */}
         {activeTab === 'candidates' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
