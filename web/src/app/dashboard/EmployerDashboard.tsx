@@ -238,6 +238,12 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       setSelectedJobToReview(null);
       setReviewRating(5);
       setReviewComment('');
+      alert('Avis publié avec succès !');
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Erreur lors de la publication de l\'avis');
+    }
+  };
+
   const handleRejectApplication = async (appId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir refuser cette candidature ?')) return;
     try {
