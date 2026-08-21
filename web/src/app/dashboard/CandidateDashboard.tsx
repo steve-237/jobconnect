@@ -14,6 +14,7 @@ import JobsPage from '../jobs/page';
 import CalendarPage from '../calendar/page';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
+import ChatModal from '@/components/ChatModal';
 
 interface Application {
   id: string;
@@ -43,6 +44,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   const [applyMessage, setApplyMessage] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
+
+  // Chat Modal state
+  const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
 
   const openModal = (title: string, content: React.ReactNode) => {
     setModalContent({ title, content });
@@ -271,7 +275,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                           <td className="px-6 py-5 text-right whitespace-nowrap">
                             {app.isAccepted ? (
                               <button
-                                onClick={() => window.open(`/messages/${app.id}`, '_blank')}
+                                onClick={() => setActiveChatApp({ id: app.id, title: app.job.title })}
                                 className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
                               >
                                 <MessageSquare className="w-4 h-4" /> Discuter
@@ -434,6 +438,14 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               </div>
             </div>
           </div>
+        )}
+        {/* ─── Chat Modal ─── */}
+        {activeChatApp && (
+          <ChatModal
+            applicationId={activeChatApp.id}
+            title={activeChatApp.title}
+            onClose={() => setActiveChatApp(null)}
+          />
         )}
       </main>
     </div>

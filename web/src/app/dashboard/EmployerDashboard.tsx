@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import JobsPage from '../jobs/page';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
+import ChatModal from '@/components/ChatModal';
 
 interface Job {
   id: string;
@@ -54,6 +55,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [categories, setCategories] = useState<Category[]>([]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'candidates' | 'profile' | 'wallet'>('overview');
+
+  // Chat Modal state
+  const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
 
   // Applicants for a specific job modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -587,7 +591,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                             <CheckCircle className="w-4 h-4" /> Candidat Accepté
                           </span>
                           <button
-                            onClick={() => window.open(`/messages/${app.id}`, '_blank')}
+                            onClick={() => setActiveChatApp({ id: app.id, title: `Chat — ${app.candidate.firstName} (${app.jobTitle || 'Mission'})` })}
                             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors"
                           >
                             <MessageSquare className="w-4 h-4" /> Discuter
@@ -669,7 +673,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                                 <CheckCircle className="w-4 h-4" /> Accepté
                               </span>
                               <button
-                                onClick={() => window.open(`/messages/${app.id}`, '_blank')}
+                                onClick={() => setActiveChatApp({ id: app.id, title: `Chat — ${app.candidate.firstName} ${app.candidate.lastName}` })}
                                 className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
                               >
                                 <MessageSquare className="w-4 h-4" /> Discuter
@@ -1031,6 +1035,15 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               </div>
             </div>
           </div>
+        )}
+
+        {/* Chat Modal */}
+        {activeChatApp && (
+          <ChatModal
+            applicationId={activeChatApp.id}
+            title={activeChatApp.title}
+            onClose={() => setActiveChatApp(null)}
+          />
         )}
 
       </main>
