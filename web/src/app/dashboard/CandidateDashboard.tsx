@@ -356,7 +356,13 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
         {/* ─── Embedded Pages ─── */}
         {activeTab === 'jobs' && <JobsPage isEmbedded={true} onJobClick={handleJobClick} excludeJobIds={applications.map(a => a.job?.id || '').filter(Boolean)} />}
-        {activeTab === 'calendar' && <CalendarPage isEmbedded={true} onJobClick={handleJobClick} />}
+        {activeTab === 'calendar' && (
+          <CalendarPage
+            isEmbedded={true}
+            onJobClick={handleJobClick}
+            onChatClick={(appId, title) => setActiveChatApp({ id: appId, title: `Chat — ${title}` })}
+          />
+        )}
         {activeTab === 'profile' && <ProfilePage isEmbedded={true} />}
         {activeTab === 'wallet' && <WalletPage isEmbedded={true} />}
 

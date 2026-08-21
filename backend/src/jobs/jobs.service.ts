@@ -117,12 +117,15 @@ export class JobsService {
             isAccepted: true,
           }
         },
-        scheduledDate: { not: null },
       },
-      orderBy: { scheduledDate: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: {
         employer: {
           select: { id: true, firstName: true, lastName: true, avatarUrl: true }
+        },
+        applications: {
+          where: { candidateId, isAccepted: true },
+          select: { id: true, isAccepted: true, status: true }
         }
       }
     });
