@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
+import JobsPage from '../jobs/page';
+import ProfilePage from '../profile/page';
+import WalletPage from '../wallet/page';
 
 interface Job {
   id: string;
@@ -37,6 +40,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoadingApps, setIsLoadingApps] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'candidates' | 'profile' | 'wallet'>('overview');
   // Review modal state
   const [selectedJobToReview, setSelectedJobToReview] = useState<Job | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -116,23 +120,38 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         
         <div className="p-4 flex-1">
           <nav className="space-y-2">
-            <button className="w-full flex items-center gap-3 px-4 py-3 bg-amber-500/10 text-amber-400 rounded-xl font-medium border border-amber-500/20 transition-all">
+            <button 
+              onClick={() => setActiveTab('overview')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            >
               <LayoutGrid className="w-5 h-5" />
               Overview
             </button>
-            <button onClick={() => router.push('/jobs')} className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl font-medium transition-all">
+            <button 
+              onClick={() => setActiveTab('jobs')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'jobs' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            >
               <Briefcase className="w-5 h-5" />
               Manage Jobs
             </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl font-medium transition-all">
+            <button 
+              onClick={() => setActiveTab('candidates')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'candidates' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            >
               <Users className="w-5 h-5" />
               Candidates
             </button>
-            <button onClick={() => router.push('/profile')} className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl font-medium transition-all">
+            <button 
+              onClick={() => setActiveTab('profile')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'profile' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            >
               <User className="w-5 h-5" />
               Company Profile
             </button>
-            <button onClick={() => router.push('/wallet')} className="w-full flex items-center gap-3 px-4 py-3 text-muted-foreground hover:bg-white/5 hover:text-foreground rounded-xl font-medium transition-all">
+            <button 
+              onClick={() => setActiveTab('wallet')} 
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${activeTab === 'wallet' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'}`}
+            >
               <Wallet className="w-5 h-5" />
               Portefeuille
             </button>
@@ -173,7 +192,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           </div>
         </header>
 
-        {/* Top Stats */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Top Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
           <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
             <div className="flex justify-between items-start">
@@ -318,6 +339,35 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </table>
           </div>
         </div>
+          </>
+        )}
+
+        {activeTab === 'jobs' && (
+          <div className="w-full -mt-10">
+            <JobsPage isEmbedded={true} />
+          </div>
+        )}
+
+        {activeTab === 'candidates' && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground mb-6">Candidates Pool</h2>
+            <div className="p-8 text-center bg-white/5 border border-white/10 rounded-xl">
+              <p className="text-muted-foreground mb-4">La liste de tous les candidats (recherche globale) arrivera ici.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="w-full -mt-10">
+            <ProfilePage isEmbedded={true} />
+          </div>
+        )}
+
+        {activeTab === 'wallet' && (
+          <div className="w-full -mt-10">
+            <WalletPage isEmbedded={true} />
+          </div>
+        )}
 
         {/* Modal for Applicants */}
         {selectedJob && (
@@ -356,7 +406,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                                 <CheckCircle className="w-4 h-4" /> Accepted
                               </span>
                               <button 
-                                onClick={() => router.push(`/messages/${app.id}`)}
+                                onClick={() => window.open(`/messages/${app.id}`, '_blank')}
                                 className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
                               >
                                 <MessageSquare className="w-4 h-4" /> Discuter

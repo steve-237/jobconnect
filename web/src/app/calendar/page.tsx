@@ -20,7 +20,7 @@ interface Job {
   };
 }
 
-export default function CalendarPage() {
+export default function CalendarPage({ isEmbedded, onJobClick }: { isEmbedded?: boolean; onJobClick?: (jobId: string) => void } = {}) {
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,16 +50,16 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative Blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
-
-      <div className="mx-auto max-w-4xl relative z-10">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          Retour au Dashboard
-        </Link>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      <div className={isEmbedded ? "w-full" : "mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8"}>
+        {!isEmbedded && (
+          <div className="mb-8 flex items-center justify-between">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Retour au Dashboard
+            </Link>
+          </div>
+        )}
 
         <div className="mb-10 flex items-center gap-4">
           <div className="bg-blue-500/20 text-blue-400 p-4 rounded-2xl">
@@ -140,9 +140,15 @@ export default function CalendarPage() {
                       <DollarSign className="w-5 h-5" />
                       {job.price}
                     </div>
-                    <button onClick={() => router.push(`/jobs/${job.id}`)} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/5 hover:border-white/20">
-                      Voir la mission
-                    </button>
+                    {isEmbedded && onJobClick ? (
+                      <button onClick={() => onJobClick(job.id)} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/5 hover:border-white/20">
+                        Voir la mission
+                      </button>
+                    ) : (
+                      <button onClick={() => router.push(`/jobs/${job.id}`)} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/5 hover:border-white/20">
+                        Voir la mission
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

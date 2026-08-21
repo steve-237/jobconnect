@@ -19,7 +19,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Clock,
-  Plus
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -61,7 +62,7 @@ const mockProfile: UserProfile = {
   rating: 0,
 };
 
-export default function ProfilePage() {
+export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {}) {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile>(mockProfile);
   const [editing, setEditing] = useState(false);
@@ -72,6 +73,9 @@ export default function ProfilePage() {
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [newAvail, setNewAvail] = useState({ date: '', startTime: '', endTime: '' });
   const [isAddingAvail, setIsAddingAvail] = useState(false);
+
+  // Reviews
+  const [reviews, setReviews] = useState<{id: string, rating: number, comment: string, createdAt: string, reviewer: {firstName: string, lastName: string}}[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -87,6 +91,13 @@ export default function ProfilePage() {
         if (res.data.role === 'CANDIDATE') {
           const availRes = await api.get(`/availabilities/user/${res.data.id}`);
           setAvailabilities(availRes.data);
+          
+          try {
+            const reviewsRes = await api.get(`/reviews/user/${res.data.id}`);
+            setReviews(reviewsRes.data);
+          } catch (e) {
+            console.error('Error fetching reviews:', e);
+          }
         }
       })
       .catch(console.error)
@@ -184,18 +195,22 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Decorative blobs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
-        <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[120px]" />
-        <div className="absolute -bottom-40 -left-40 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[100px]" />
-      </div>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* ─── Background Elements ─── */}
+      {!isEmbedded && (
+        <>
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[120px] pointer-events-none" />
+        </>
+      )}
 
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Home
-        </Link>
+      <div className={isEmbedded ? "w-full space-y-8" : "mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-8"}>
+        {!isEmbedded && (
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Link>
+        )}
         {/* ─── Profile Header ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -525,6 +540,58 @@ export default function ProfilePage() {
             )}
           </div>
         )}
+
+        {/* ─── Reviews Section ─── */}
+        <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-amber-500/10 rounded-lg p-2">
+              <Star className="h-5 w-5 text-amber-500" />
+            </div>
+            <h2 className="text-lg font-semibold">Mes Avis</h2>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star 
+                  key={star} 
+                  className={`w-6 h-6 ${star <= Math.round(profile.rating) ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} 
+                />
+              ))}
+            </div>
+            <span className="font-medium">{profile.rating.toFixed(1)}/5 ({reviews.length} avis)</span>
+          </div>
+
+          <div className="space-y-4">
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <div key={review.id} className="glass rounded-xl p-5 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{review.reviewer?.firstName} {review.reviewer?.lastName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star 
+                          key={star} 
+                          className={`w-4 h-4 ${star <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-foreground/80">{review.comment}</p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center p-6 text-muted-foreground bg-white/5 border border-white/10 rounded-xl">
+                Aucun avis pour le moment
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* ─── Account Settings ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">

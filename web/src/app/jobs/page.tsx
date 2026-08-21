@@ -51,7 +51,7 @@ function daysAgo(dateStr: string) {
   return `Il y a ${diff} jours`;
 }
 
-export default function JobsPage() {
+export default function JobsPage({ isEmbedded, onJobClick }: { isEmbedded?: boolean; onJobClick?: (jobId: string) => void } = {}) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -91,15 +91,18 @@ export default function JobsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={isEmbedded ? "w-full" : "mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"}>
+      {!isEmbedded && (
+        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Retour à l'accueil
+        </Link>
+      )}
+
       {/* Header Section */}
       <section className="relative overflow-hidden border-b border-white/5">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/5" />
         <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-6">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
           <div className="mb-8 text-center">
             <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl">
               Browse{' '}
@@ -233,9 +236,15 @@ export default function JobsPage() {
                 </div>
 
                 {/* Action Button */}
-                <Link href={`/jobs/${job.id}`} className="block text-center w-full rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary hover:text-white hover:shadow-md hover:shadow-primary/25 active:scale-[0.98]">
-                  Voir les détails
-                </Link>
+                {isEmbedded && onJobClick ? (
+                  <button onClick={() => onJobClick(job.id)} className="block text-center w-full rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary hover:text-white hover:shadow-md hover:shadow-primary/25 active:scale-[0.98]">
+                    Voir les détails
+                  </button>
+                ) : (
+                  <Link href={`/jobs/${job.id}`} className="block text-center w-full rounded-xl bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary hover:text-white hover:shadow-md hover:shadow-primary/25 active:scale-[0.98]">
+                    Voir les détails
+                  </Link>
+                )}
               </div>
             ))}
           </div>

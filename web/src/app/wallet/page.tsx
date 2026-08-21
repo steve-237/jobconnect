@@ -27,7 +27,7 @@ function decodeRole(): string {
   }
 }
 
-export default function WalletPage() {
+export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}) {
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,9 +60,6 @@ export default function WalletPage() {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">Mon Portefeuille</h1>
             <p className="text-muted-foreground mt-2">Gérez vos transactions et paiements.</p>
           </div>
-          <Link href="/dashboard" className="glass px-4 py-2 rounded-xl text-sm hover:bg-white/10 transition-colors">
-            Retour au Dashboard
-          </Link>
         </div>
 
         {/* Balance Card */}
