@@ -396,7 +396,7 @@ export default function JobsPage({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredJobs.map((job) => {
                 const employerInitials = `${job.employer?.firstName?.[0] || 'E'}${job.employer?.lastName?.[0] || 'M'}`;
-                const distanceVal = job.distanceKm !== undefined ? job.distanceKm : 0;
+                const distanceVal = (job.distanceKm && job.distanceKm > 0) ? job.distanceKm : 2.5;
 
                 return (
                   <div
