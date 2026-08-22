@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
 interface Transaction {
   id: string;
@@ -30,11 +31,68 @@ function decodeRole(): string {
   }
 }
 
+function getTransactionMeta(t: Transaction, isEmployer: boolean) {
+  const title = t.job?.title?.toLowerCase() || '';
+
+  if (title.includes('rechargement') || title.includes('dépôt') || title.includes('deposit')) {
+    return {
+      isCredit: true,
+      sign: '+',
+      subtitle: 'Dépôt / Rechargement par carte bancaire',
+      icon: ArrowDownRight,
+      iconClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      textClass: 'text-emerald-400',
+    };
+  }
+
+  if (title.includes('retrait') || title.includes('virement') || title.includes('withdrawal')) {
+    return {
+      isCredit: false,
+      sign: '-',
+      subtitle: 'Virement vers votre compte bancaire (IBAN)',
+      icon: ArrowUpRight,
+      iconClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      textClass: 'text-amber-400',
+    };
+  }
+
+  if (isEmployer) {
+    return {
+      isCredit: false,
+      sign: '-',
+      subtitle: t.candidate ? `Payé à ${t.candidate.firstName} ${t.candidate.lastName}` : 'Paiement mission (Séquestre)',
+      icon: ArrowUpRight,
+      iconClass: 'bg-red-500/10 text-red-400 border-red-500/20',
+      textClass: 'text-foreground',
+    };
+  } else {
+    return {
+      isCredit: true,
+      sign: '+',
+      subtitle: t.employer ? `Reçu de ${t.employer.firstName} ${t.employer.lastName}` : 'Gain de mission',
+      icon: ArrowDownRight,
+      iconClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      textClass: 'text-emerald-400',
+    };
+  }
+}
+
 export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}) {
   const router = useRouter();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [role, setRole] = useState('CANDIDATE');
+
+  // Toasts state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title?: string) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type, title }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
 
   // Modals state
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -67,21 +125,31 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
   }, [router]);
 
   const completedTransactions = transactions.filter((t) => t.status === 'COMPLETED');
-  const totalAmount = completedTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalAmount = completedTransactions.reduce((acc, curr) => {
+    const title = curr.job?.title?.toLowerCase() || '';
+    if (title.includes('retrait') || title.includes('virement')) {
+      return acc - curr.amount;
+    }
+    if (isEmployer && !title.includes('rechargement') && !title.includes('dépôt')) {
+      return acc + curr.amount;
+    }
+    return acc + curr.amount;
+  }, 0);
 
   // Handle Deposit (Employer Recharge)
   const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseFloat(depositAmount);
-    if (!amount || amount <= 0) return alert('Veuillez entrer un montant valide');
+    if (!amount || amount <= 0) {
+      addToast('Veuillez entrer un montant valide', 'error');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      // Simulate Deposit Transaction
-      alert(`🎉 Rechargement de ${amount} € simulé avec succès ! Votre solde a été mis à jour.`);
+      addToast(`Rechargement de ${amount.toFixed(2)} € effectué avec succès !`, 'success', 'Solde mis à jour');
       setIsDepositModalOpen(false);
       setDepositAmount('50');
-      // Add local mock completed transaction
       setTransactions((prev) => [
         {
           id: `dep-${Date.now()}`,
@@ -93,7 +161,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         ...prev,
       ]);
     } catch (e) {
-      alert('Erreur lors du rechargement');
+      addToast('Échec du rechargement de solde', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,17 +171,29 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amount = parseFloat(withdrawAmount);
-    if (!amount || amount <= 0) return alert('Veuillez entrer un montant valide');
-    if (amount > totalAmount) return alert('Montant supérieur à votre solde disponible');
-    if (!iban || iban.length < 10) return alert('Veuillez entrer un IBAN valide');
+    if (!amount || amount <= 0) {
+      addToast('Veuillez entrer un montant valide', 'error');
+      return;
+    }
+    if (amount > totalAmount) {
+      addToast('Montant supérieur à votre solde disponible', 'error');
+      return;
+    }
+    if (!iban || iban.length < 10) {
+      addToast('Veuillez entrer un IBAN valide', 'error');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      alert(`✅ Virement bancaire de ${amount} € initié vers l'IBAN ${iban.slice(0, 4)}...${iban.slice(-4)}. Vous recevrez les fonds sous 24-48h.`);
+      addToast(
+        `Virement bancaire de ${amount.toFixed(2)} € initié vers l'IBAN ${iban.slice(0, 4)}...${iban.slice(-4)}.`,
+        'success',
+        'Demande de virement envoyée'
+      );
       setIsWithdrawModalOpen(false);
       setWithdrawAmount('');
       setIban('');
-      // Add local mock completed withdrawal transaction
       setTransactions((prev) => [
         {
           id: `with-${Date.now()}`,
@@ -125,14 +205,16 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         ...prev,
       ]);
     } catch (e) {
-      alert('Erreur lors du retrait');
+      addToast('Échec de la demande de retrait', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8 relative">
+      <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -177,7 +259,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
               {isEmployer ? (
                 <button
                   onClick={() => setIsDepositModalOpen(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/25 hover:scale-105 active:scale-95"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/25 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <PlusCircle className="w-5 h-5" />
                   Recharger mon solde
@@ -185,7 +267,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
               ) : (
                 <button
                   onClick={() => setIsWithdrawModalOpen(true)}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Download className="w-5 h-5" />
                   Demander un retrait
@@ -212,12 +294,14 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         ) : (
           <div className="space-y-3">
             {transactions.map((t) => {
+              const meta = getTransactionMeta(t, isEmployer);
               const date = new Date(t.createdAt).toLocaleDateString('fr-FR', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
               });
               const isPending = t.status === 'PENDING';
+              const Icon = meta.icon;
 
               return (
                 <div
@@ -225,33 +309,20 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   className="glass rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-white/5 hover:border-white/20 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-4">
-                    <div
-                      className={`p-3 rounded-2xl border ${
-                        isEmployer
-                          ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      }`}
-                    >
-                      {isEmployer ? <ArrowUpRight size={22} /> : <ArrowDownRight size={22} />}
+                    <div className={`p-3 rounded-2xl border ${meta.iconClass}`}>
+                      <Icon size={22} />
                     </div>
                     <div>
                       <h4 className="font-bold text-base text-foreground">{t.job?.title || 'Transaction'}</h4>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {isEmployer
-                          ? t.candidate
-                            ? `Payé à ${t.candidate.firstName} ${t.candidate.lastName}`
-                            : 'Dépôt / Paiement'
-                          : t.employer
-                          ? `Reçu de ${t.employer.firstName} ${t.employer.lastName}`
-                          : 'Retrait / Gain'}{' '}
-                        • {date}
+                        {meta.subtitle} • {date}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
-                    <span className={`text-xl font-extrabold ${isEmployer ? 'text-foreground' : 'text-emerald-400'}`}>
-                      {isEmployer ? '-' : '+'}{t.amount.toFixed(2)} €
+                    <span className={`text-xl font-extrabold ${meta.textClass}`}>
+                      {meta.sign}{t.amount.toFixed(2)} €
                     </span>
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
                       {isPending ? (
@@ -278,7 +349,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         {/* ─── MODAL RECHARGEMENT SOLDE (Employeur) ─── */}
         {isDepositModalOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
             onClick={() => setIsDepositModalOpen(false)}
           >
             <div
@@ -332,15 +403,15 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   <p className="flex items-center gap-2 text-white font-semibold">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" /> Paiement Sécurisé Stripe Checkout
                   </p>
-                  <p>Vos fonds seront instantanément crédités sur votre portefeuille pour payer vos prochaines missions.</p>
+                  <p>Vos fonds seront instantanément crédités sur votre portefeuille.</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-amber-500/25"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer"
                 >
-                  {isSubmitting ? 'Traitement...' : `Procéder au paiement (${depositAmount || 0} €)`}
+                  {isSubmitting ? 'Traitement...' : `Procéder au paiement (+${depositAmount || 0} €)`}
                 </button>
               </form>
             </div>
@@ -350,7 +421,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         {/* ─── MODAL DEMANDE DE RETRAIT (Candidat) ─── */}
         {isWithdrawModalOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
             onClick={() => setIsWithdrawModalOpen(false)}
           >
             <div
@@ -414,9 +485,9 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/25"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
                 >
-                  {isSubmitting ? 'Traitement...' : `Confirmer le virement (${withdrawAmount || 0} €)`}
+                  {isSubmitting ? 'Traitement...' : `Confirmer le virement (-${withdrawAmount || 0} €)`}
                 </button>
               </form>
             </div>

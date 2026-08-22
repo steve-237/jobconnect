@@ -13,6 +13,7 @@ import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
 import { useSocket } from '@/hooks/useSocket';
+import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
 
 interface Job {
   id: string;
@@ -56,6 +57,18 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [categories, setCategories] = useState<Category[]>([]);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'profile' | 'wallet'>('overview');
+
+  // Toast & Confirm states
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title?: string) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type, title }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
 
   // Chat Modal state
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
@@ -142,7 +155,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('payment_success') === 'true' || urlParams.get('success') === 'true') {
-        alert('🎉 Paiement validé avec succès ! La candidature a été acceptée et la mission est maintenant en cours.');
+        addToast('Paiement validé ! Candidature acceptée et mission en cours 🎉', 'success', 'Succès');
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
@@ -204,26 +217,42 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     router.replace('/login');
   };
 
-  const handleCompleteJob = async (jobId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir terminer cette mission ?')) return;
-    try {
-      await api.patch(`/jobs/${jobId}/status`, { status: 'COMPLETED' });
-      setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'COMPLETED' } : j));
-    } catch (e) {
-      console.error(e);
-      alert('Erreur lors de la clôture de la mission');
-    }
+  const handleCompleteJob = (jobId: string) => {
+    setConfirmDialog({
+      title: 'Terminer la mission ?',
+      message: 'Voulez-vous marquer cette mission comme terminée ? Cette action est irréversible.',
+      type: 'warning',
+      confirmText: 'Terminer',
+      onConfirm: async () => {
+        try {
+          await api.patch(`/jobs/${jobId}/status`, { status: 'COMPLETED' });
+          setJobs(jobs.map(j => j.id === jobId ? { ...j, status: 'COMPLETED' } : j));
+          addToast('Mission clôturée avec succès', 'success');
+        } catch (e) {
+          console.error(e);
+          addToast('Erreur lors de la clôture de la mission', 'error');
+        }
+      },
+    });
   };
 
-  const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) return;
-    try {
-      await api.delete(`/jobs/${jobId}`);
-      setJobs(jobs.filter(j => j.id !== jobId));
-    } catch (e) {
-      console.error(e);
-      alert('Erreur lors de la suppression de l\'annonce');
-    }
+  const handleDeleteJob = (jobId: string) => {
+    setConfirmDialog({
+      title: 'Supprimer l\'annonce ?',
+      message: 'Voulez-vous vraiment supprimer cette annonce ?',
+      type: 'danger',
+      confirmText: 'Supprimer',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/jobs/${jobId}`);
+          setJobs(jobs.filter(j => j.id !== jobId));
+          addToast('Annonce supprimée', 'info');
+        } catch (e) {
+          console.error(e);
+          addToast('Erreur lors de la suppression de l\'annonce', 'error');
+        }
+      },
+    });
   };
 
   const submitReview = async () => {
@@ -237,22 +266,30 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       setSelectedJobToReview(null);
       setReviewRating(5);
       setReviewComment('');
-      alert('Avis publié avec succès !');
+      addToast('Avis publié avec succès !', 'success');
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Erreur lors de la publication de l\'avis');
+      addToast(e.response?.data?.message || 'Erreur lors de la publication de l\'avis', 'error');
     }
   };
 
-  const handleRejectApplication = async (appId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir refuser cette candidature ?')) return;
-    try {
-      await api.patch(`/applications/${appId}/reject`);
-      setApplications(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
-      setAllCandidatesApps(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
-    } catch (e) {
-      console.error(e);
-      alert('Erreur lors du refus de la candidature');
-    }
+  const handleRejectApplication = (appId: string) => {
+    setConfirmDialog({
+      title: 'Refuser la candidature ?',
+      message: 'Êtes-vous sûr de vouloir refuser cette candidature ?',
+      type: 'danger',
+      confirmText: 'Refuser',
+      onConfirm: async () => {
+        try {
+          await api.patch(`/applications/${appId}/reject`);
+          setApplications(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
+          setAllCandidatesApps(prev => prev.map(a => a.id === appId ? { ...a, isAccepted: false, status: 'REJECTED' } : a));
+          addToast('Candidature refusée', 'info');
+        } catch (e) {
+          console.error(e);
+          addToast('Erreur lors du refus de la candidature', 'error');
+        }
+      },
+    });
   };
 
   // Create Job Handler
@@ -1144,6 +1181,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </button>
           </div>
         )}
+        {/* Confirm Modal & Toast Notifications */}
+        <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+        {confirmDialog && <ConfirmModal dialog={confirmDialog} onClose={() => setConfirmDialog(null)} />}
       </main>
     </div>
   );

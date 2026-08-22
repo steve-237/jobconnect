@@ -16,6 +16,7 @@ import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
 import { useSocket } from '@/hooks/useSocket';
+import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
 interface Application {
   id: string;
@@ -49,6 +50,17 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
   // Chat Modal state
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
+
+  // Toast notifications state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title?: string) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type, title }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
 
   // Real-time Notifications state
   const { socket, isConnected } = useSocket();
@@ -111,14 +123,16 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
     try {
       await api.post('/applications', { jobId: jobDetail.id, message: applyMessage });
       setHasApplied(true);
+      addToast('Candidature envoyée avec succès !', 'success', 'Candidature enregistrée');
       // Refresh applications list
       const res = await api.get('/applications/my-applications');
       setApplications(res.data);
     } catch (err: any) {
       if (err.response?.status === 409) {
         setHasApplied(true);
+        addToast('Vous avez déjà postulé à cette mission.', 'info');
       } else {
-        alert(err.response?.data?.message || 'Erreur lors de la candidature');
+        addToast(err.response?.data?.message || 'Erreur lors de la candidature', 'error');
       }
     } finally {
       setIsApplying(false);
@@ -501,7 +515,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
           />
         )}
 
-        {/* ─── Real-time Notification Toast ─── */}
+        {/* Real-time Notification Toast & App Toasts */}
+        <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+
         {activeToast && (
           <div className="fixed bottom-6 right-6 z-50 bg-[#1a1a1a] border border-primary/40 rounded-2xl p-4 shadow-2xl shadow-primary/20 max-w-sm w-full animate-in slide-in-from-bottom-5 duration-300 flex flex-col gap-3">
             <div className="flex justify-between items-start">

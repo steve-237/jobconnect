@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
 interface UserProfile {
   id?: string;
@@ -69,6 +70,17 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   const [draft, setDraft] = useState<UserProfile>(mockProfile);
   const [loading, setLoading] = useState(true);
 
+  // Toast notifications state
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'success', title?: string) => {
+    const id = `toast-${Date.now()}`;
+    setToasts((prev) => [...prev, { id, message, type, title }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  };
+
   // Availabilities
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [newAvail, setNewAvail] = useState({ date: '', startTime: '', endTime: '' });
@@ -86,8 +98,15 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
     
     api.get('/users/me')
       .then(async (res) => {
-        setProfile({ ...mockProfile, ...res.data });
-        setDraft({ ...mockProfile, ...res.data });
+        const defaultEmployerBio = 'Entreprise / Employeur proposant des missions et opportunités de travail sur JobConnect.';
+        const defaultCandidateBio = 'Prestataire / Candidat qualifié prêt à effectuer des missions sur JobConnect.';
+        const defaultBio = res.data.role === 'EMPLOYER' ? defaultEmployerBio : defaultCandidateBio;
+        const userBio = res.data.bio || defaultBio;
+
+        const updatedData = { ...mockProfile, ...res.data, bio: userBio };
+        setProfile(updatedData);
+        setDraft(updatedData);
+
         if (res.data.role === 'CANDIDATE') {
           const availRes = await api.get(`/availabilities/user/${res.data.id}`);
           setAvailabilities(availRes.data);
@@ -125,9 +144,10 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
       });
       setProfile({ ...draft });
       setEditing(false);
+      addToast('Profil mis à jour avec succès', 'success');
     } catch(e) {
       console.error(e);
-      alert('Erreur lors de la sauvegarde');
+      addToast('Erreur lors de la sauvegarde du profil', 'error');
     }
   };
 
@@ -147,9 +167,10 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
       const res = await api.post('/availabilities', newAvail);
       setAvailabilities([...availabilities, res.data]);
       setNewAvail({ date: '', startTime: '', endTime: '' });
+      addToast('Disponibilité ajoutée', 'success');
     } catch(e) {
       console.error(e);
-      alert('Erreur lors de l\'ajout de la disponibilité');
+      addToast('Erreur lors de l\'ajout de la disponibilité', 'error');
     } finally {
       setIsAddingAvail(false);
     }
@@ -159,8 +180,10 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
     try {
       await api.delete(`/availabilities/${id}`);
       setAvailabilities(availabilities.filter(a => a.id !== id));
+      addToast('Disponibilité supprimée', 'info');
     } catch(e) {
       console.error(e);
+      addToast('Erreur lors de la suppression', 'error');
     }
   };
 
@@ -196,6 +219,7 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
       {/* ─── Background Elements ─── */}
       {!isEmbedded && (
         <>
