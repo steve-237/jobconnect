@@ -49,29 +49,29 @@ export default function LoginPage() {
               </div>
               <span className="font-bold text-2xl tracking-tight">JobConnect</span>
             </Link>
-            <h1 className="text-3xl font-bold mb-2 tracking-tight">Welcome back</h1>
+            <h1 className="text-3xl font-bold mb-2 tracking-tight">Connexion</h1>
             <p className="text-muted-foreground text-sm text-center">
-              Sign in to your account to continue
+              Connectez-vous à votre compte pour continuer
             </p>
           </div>
 
           {error && (
-            <div className="bg-danger/10 border border-danger/20 text-danger p-4 rounded-xl mb-6 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-danger flex-shrink-0" />
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Email Address</label>
+              <label className="text-sm font-medium text-gray-300">Adresse Email</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="email"
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
-                  placeholder="hello@example.com"
+                  placeholder="exemple@email.com"
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                 />
@@ -79,7 +79,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Password</label>
+              <label className="text-sm font-medium text-gray-300">Mot de passe</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
@@ -96,13 +96,13 @@ export default function LoginPage() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-4 rounded-xl mt-4 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full bg-primary hover:bg-primary/80 text-white font-semibold py-4 rounded-xl mt-4 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  Se connecter
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -110,43 +110,53 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center text-sm text-gray-400">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-primary hover:text-primary-hover transition-colors font-medium">
-              Sign up
+            Pas encore de compte ?{' '}
+            <Link href="/register" className="text-primary hover:underline transition-colors font-medium">
+              S'inscrire
             </Link>
           </div>
 
-          {/* Quick Login for Dev Environment */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 border-t border-white/10 pt-6">
-              <p className="text-xs text-muted-foreground text-center mb-4 uppercase tracking-wider font-semibold">
-                [Dev Only] Connexion Rapide
-              </p>
-              <div className="grid grid-cols-1 gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'admin@jobconnect.com', password: 'password123' })}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 rounded-lg transition-colors"
-                >
-                  Admin (admin@jobconnect.com)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' })}
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 rounded-lg transition-colors"
-                >
-                  Employeur (jean.dupont)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' })}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 rounded-lg transition-colors"
-                >
-                  Candidat (marc.bricole)
-                </button>
-              </div>
+          {/* Quick Login Buttons */}
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
+              Connexion Rapide Démo
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                type="button"
+                onClick={() => setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' })}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
+              >
+                Employeur (Jean)
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' })}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
+              >
+                Candidat (Marc)
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFormData({ email: 'employer@test.com', password: 'password123' })}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
+              >
+                Employeur Test
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFormData({ email: 'candidate@test.com', password: 'password123' })}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
+              >
+                Candidat Test
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
         </div>
       </div>
     </div>
