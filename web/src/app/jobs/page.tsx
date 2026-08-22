@@ -80,7 +80,8 @@ export default function JobsPage({
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  // Geolocation & Radius Filter
+  // Geolocation & Location Reference Filter
+  const [userCity, setUserCity] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(50);
   const [isLocating, setIsLocating] = useState(false);
@@ -130,8 +131,19 @@ export default function JobsPage({
       setIsLoading(true);
       try {
         let endpoint = onlyMyJobs ? '/jobs/employer/my-jobs' : '/jobs';
-        if (!onlyMyJobs && userCoords) {
-          endpoint += `?lat=${userCoords.lat}&lng=${userCoords.lng}&radius=${radiusKm}`;
+        if (!onlyMyJobs) {
+          const params = new URLSearchParams();
+          if (userCoords) {
+            params.append('lat', userCoords.lat.toString());
+            params.append('lng', userCoords.lng.toString());
+          } else if (userCity.trim()) {
+            params.append('userLocation', userCity.trim());
+          }
+          if (radiusKm) {
+            params.append('radius', radiusKm.toString());
+          }
+          const queryString = params.toString();
+          if (queryString) endpoint += `?${queryString}`;
         }
         const promises: Promise<any>[] = [api.get(endpoint), api.get('/categories')];
 
@@ -165,7 +177,7 @@ export default function JobsPage({
       }
     };
     fetchData();
-  }, [onlyMyJobs, userCoords, radiusKm]);
+  }, [onlyMyJobs, userCoords, userCity, radiusKm]);
 
   const isAmber = theme === 'amber';
   const badgeColor = isAmber ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-primary/15 text-primary border-primary/30';
@@ -258,42 +270,69 @@ export default function JobsPage({
             </div>
           </div>
 
-          {/* Geolocation & Radius Filter Bar */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Location Reference & Distance Radius Filter Bar */}
+          <div className="mt-4 flex flex-col md:flex-row items-center justify-between gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+              <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+                Position / Ville candidat :
+              </span>
+
+              {/* City Input */}
+              <div className="relative w-full sm:w-60">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="ex: Paris, Lyon, Lille, Marseille..."
+                  value={userCity}
+                  onChange={(e) => {
+                    setUserCity(e.target.value);
+                    if (userCoords) setUserCoords(null);
+                  }}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-all font-medium"
+                />
+              </div>
+
+              {/* GPS Button */}
               <button
                 type="button"
                 onClick={handleGeolocation}
                 disabled={isLocating}
-                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50 border ${
+                  userCoords
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                    : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-transparent'
+                }`}
               >
                 {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
-                {userCoords ? 'Ma Position Actuelle 📍' : 'Autour de moi (GPS) 📍'}
+                {userCoords ? 'GPS Actif 📍' : 'Ma Position GPS 📍'}
               </button>
 
-              {userCoords && (
+              {(userCoords || userCity) && (
                 <button
                   type="button"
-                  onClick={() => setUserCoords(null)}
+                  onClick={() => {
+                    setUserCoords(null);
+                    setUserCity('');
+                  }}
                   className="text-xs text-red-400 hover:underline font-semibold cursor-pointer"
                 >
-                  Effacer
+                  Réinitialiser
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
-                Rayon de recherche : <span className="text-amber-400 font-extrabold">{radiusKm} km</span>
+                Rayon max : <span className="text-amber-400 font-extrabold">{radiusKm} km</span>
               </span>
               <input
                 type="range"
                 min="5"
-                max="100"
+                max="150"
                 step="5"
                 value={radiusKm}
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
-                className="w-full sm:w-40 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                className="w-full md:w-44 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
               />
             </div>
           </div>

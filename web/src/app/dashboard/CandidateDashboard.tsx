@@ -468,10 +468,13 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
                         <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
-                          <MapPin className="w-4 h-4 text-primary shrink-0" />
-                          <span className="truncate">{jobDetail.location || 'Sur place'}</span>
+                          <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span className="truncate">
+                            {jobDetail.location || 'Sur place'}
+                            {jobDetail.distanceKm !== undefined ? ` (📍 ${jobDetail.distanceKm} km)` : ''}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Localisation</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Localisation & Distance</p>
                       </div>
 
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">

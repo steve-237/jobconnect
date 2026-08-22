@@ -22,6 +22,20 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   grenoble: { lat: 45.1885, lng: 5.7245 },
   dijon: { lat: 47.322, lng: 5.0415 },
   angers: { lat: 47.4784, lng: -0.5632 },
+  nîmes: { lat: 43.8367, lng: 4.3601 },
+  nimes: { lat: 43.8367, lng: 4.3601 },
+  aix: { lat: 43.5297, lng: 5.4474 },
+  saint-étienne: { lat: 45.4397, lng: 4.3872 },
+  brest: { lat: 48.3904, lng: -4.4861 },
+  tours: { lat: 47.3941, lng: 0.6848 },
+  limoges: { lat: 45.8336, lng: 1.2611 },
+  clermont: { lat: 45.7772, lng: 3.087 },
+  orléans: { lat: 47.9029, lng: 1.909 },
+  orleans: { lat: 47.9029, lng: 1.909 },
+  metz: { lat: 49.1193, lng: 6.1757 },
+  rouen: { lat: 49.4431, lng: 1.0993 },
+  nancy: { lat: 48.6921, lng: 6.1844 },
+  caen: { lat: 49.1828, lng: -0.3707 },
 };
 
 function getHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -53,6 +67,21 @@ function getJobCoordinates(job: any): { lat: number; lng: number } {
   return { lat: 48.8566, lng: 2.3522 };
 }
 
+function getLocationCoordinates(userLocation?: string, lat?: string, lng?: string): { lat: number; lng: number } {
+  if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+    return { lat: parseFloat(lat), lng: parseFloat(lng) };
+  }
+  if (userLocation) {
+    const locLower = userLocation.toLowerCase().trim();
+    for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
+      if (locLower.includes(city) || city.includes(locLower)) {
+        return coords;
+      }
+    }
+  }
+  return { lat: 48.8566, lng: 2.3522 }; // Paris default reference
+}
+
 @Injectable()
 export class JobsService {
   async create(createJobDto: CreateJobDto, employerId: string) {
@@ -71,7 +100,7 @@ export class JobsService {
   }
 
   async findAll(query: any = {}) {
-    const { search, categoryId, location, minPrice, maxPrice, lat, lng, radius } = query;
+    const { search, categoryId, location, userLocation, minPrice, maxPrice, lat, lng, radius } = query;
     const where: any = {};
 
     if (search) {
@@ -83,7 +112,7 @@ export class JobsService {
     if (categoryId) {
       where.categoryId = categoryId;
     }
-    if (location) {
+    if (location && !userLocation && !lat && !lng) {
       where.location = { contains: location, mode: 'insensitive' };
     }
     if (minPrice || maxPrice) {
@@ -112,26 +141,25 @@ export class JobsService {
       },
     });
 
-    if (lat && lng) {
-      const userLat = parseFloat(lat);
-      const userLng = parseFloat(lng);
-      const maxRadius = radius ? parseFloat(radius) : 50;
+    const refCoords = getLocationCoordinates(userLocation || location, lat, lng);
+    const maxRadius = radius ? parseFloat(radius) : 100;
 
-      const jobsWithDistance = jobs.map((job) => {
-        const coords = getJobCoordinates(job);
-        const distanceKm = getHaversineDistanceKm(userLat, userLng, coords.lat, coords.lng);
-        return {
-          ...job,
-          distanceKm: Math.round(distanceKm * 10) / 10,
-        };
-      });
+    const jobsWithDistance = jobs.map((job) => {
+      const coords = getJobCoordinates(job);
+      const distanceKm = getHaversineDistanceKm(refCoords.lat, refCoords.lng, coords.lat, coords.lng);
+      return {
+        ...job,
+        distanceKm: Math.round(distanceKm * 10) / 10,
+      };
+    });
 
+    if (lat || lng || userLocation || (location && radius)) {
       return jobsWithDistance
         .filter((j) => j.distanceKm <= maxRadius)
         .sort((a, b) => a.distanceKm - b.distanceKm);
     }
 
-    return jobs;
+    return jobsWithDistance;
   }
 
   async findOne(id: string) {
