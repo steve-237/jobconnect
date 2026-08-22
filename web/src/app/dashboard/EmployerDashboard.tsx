@@ -812,147 +812,163 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           </div>
         )}
 
-        {/* Create Job Modal */}
+        {/* Create Job Modal (No Scrollbar Layout) */}
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setIsCreateModalOpen(false)}>
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-amber-500" /> Publier une nouvelle annonce
-                </h3>
-                <button onClick={() => setIsCreateModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsCreateModalOpen(false)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center pb-5 mb-5 border-b border-white/10 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Publier une nouvelle annonce</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Remplissez les informations pour trouver un candidat qualifié</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsCreateModalOpen(false)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6">
+              {/* Form Content - 2 Columns Compact */}
+              <div className="relative z-10">
                 {createError && (
-                  <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                  <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 font-medium">
                     {createError}
                   </div>
                 )}
 
-                <form onSubmit={handleCreateJobSubmit} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Titre de l'annonce</label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <input
-                        type="text"
-                        required
-                        value={createFormData.title}
-                        onChange={e => setCreateFormData({ ...createFormData, title: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        placeholder="ex: Déménagement appartement 3 pièces"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Catégorie</label>
-                    <div className="relative">
-                      <List className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <select
-                        required
-                        value={createFormData.categoryId}
-                        onChange={e => setCreateFormData({ ...createFormData, categoryId: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-[#111] pl-12 pr-4 py-3 text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id} className="bg-[#111] text-white">
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleCreateJobSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Essential Fields */}
+                  <div className="space-y-3.5">
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Budget (€)</label>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Titre de l'annonce</label>
                       <div className="relative">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          step="0.01"
-                          value={createFormData.price}
-                          onChange={e => setCreateFormData({ ...createFormData, price: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          placeholder="ex: 150"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Localisation</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                           type="text"
-                          value={createFormData.location}
-                          onChange={e => setCreateFormData({ ...createFormData, location: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          placeholder="ex: Paris 11e"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Date prévue (Optionnel)</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="datetime-local"
-                          value={createFormData.scheduledDate}
-                          onChange={e => setCreateFormData({ ...createFormData, scheduledDate: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          required
+                          value={createFormData.title}
+                          onChange={e => setCreateFormData({ ...createFormData, title: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                          placeholder="ex: Déménagement appartement 3 pièces"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Durée estimée (minutes)</label>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Catégorie</label>
                       <div className="relative">
-                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="number"
-                          min="15"
-                          step="15"
-                          value={createFormData.estimatedDuration}
-                          onChange={e => setCreateFormData({ ...createFormData, estimatedDuration: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          placeholder="ex: 120 (pour 2h)"
-                        />
+                        <List className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        <select
+                          required
+                          value={createFormData.categoryId}
+                          onChange={e => setCreateFormData({ ...createFormData, categoryId: e.target.value })}
+                          className="w-full appearance-none rounded-xl border border-white/10 bg-[#141414] pl-10 pr-8 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium cursor-pointer"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id} className="bg-[#141414] text-white">
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Budget (€)</label>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            step="0.01"
+                            value={createFormData.price}
+                            onChange={e => setCreateFormData({ ...createFormData, price: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-emerald-400 font-bold focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            placeholder="150"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Localisation</label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={createFormData.location}
+                            onChange={e => setCreateFormData({ ...createFormData, location: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                            placeholder="Paris 11e"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Date prévue</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="datetime-local"
+                            value={createFormData.scheduledDate}
+                            onChange={e => setCreateFormData({ ...createFormData, scheduledDate: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-2 py-2 text-[11px] text-foreground focus:border-amber-500 focus:outline-none font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Durée (min)</label>
+                        <div className="relative">
+                          <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={createFormData.estimatedDuration}
+                            onChange={e => setCreateFormData({ ...createFormData, estimatedDuration: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none font-medium"
+                            placeholder="120 min"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Description détaillée</label>
-                    <div className="relative">
-                      <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
-                      <textarea
-                        required
-                        rows={4}
-                        value={createFormData.description}
-                        onChange={e => setCreateFormData({ ...createFormData, description: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
-                        placeholder="Décrivez les détails de la mission, matériel nécessaire, etc."
-                      />
+                  {/* Right Column: Description & Publish Button */}
+                  <div className="flex flex-col justify-between space-y-3.5">
+                    <div className="flex-1 flex flex-col">
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Description détaillée</label>
+                      <div className="relative flex-1 flex flex-col">
+                        <AlignLeft className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground" />
+                        <textarea
+                          required
+                          value={createFormData.description}
+                          onChange={e => setCreateFormData({ ...createFormData, description: e.target.value })}
+                          className="w-full flex-1 min-h-[145px] rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none leading-relaxed font-normal"
+                          placeholder="Décrivez précisément la mission, le matériel nécessaire et les consignes particulières..."
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={isCreatingJob}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 mt-4"
-                  >
-                    {isCreatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier la mission'}
-                  </button>
+                    <button
+                      type="submit"
+                      disabled={isCreatingJob}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                    >
+                      {isCreatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier l\'annonce maintenant'}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
