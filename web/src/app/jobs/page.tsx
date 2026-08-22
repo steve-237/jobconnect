@@ -7,9 +7,7 @@ import {
   DollarSign,
   Clock,
   Filter,
-  ChevronLeft,
   ChevronRight,
-  Briefcase,
   User,
   ArrowLeft,
   Loader2,
@@ -17,9 +15,6 @@ import {
   List,
   CheckCircle,
   Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -29,7 +24,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[600px] rounded-3xl glass animate-pulse flex items-center justify-center border border-white/10">
-      <Loader2 className="animate-spin text-primary w-10 h-10" />
+      <Loader2 className="animate-spin text-amber-500 w-10 h-10" />
     </div>
   ),
 });
@@ -60,7 +55,7 @@ function daysAgo(dateStr: string) {
   const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
   if (diff === 0) return "Aujourd'hui";
   if (diff === 1) return 'Hier';
-  return `Il y a ${diff} jours`;
+  return `Il y a ${diff} j`;
 }
 
 export default function JobsPage({
@@ -80,7 +75,7 @@ export default function JobsPage({
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  // Geolocation & Location Reference Filter
+  // Geolocation & Location Reference Filter (Default Paris if empty)
   const [userCity, setUserCity] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [radiusKm, setRadiusKm] = useState<number>(50);
@@ -109,11 +104,11 @@ export default function JobsPage({
         setIsLocating(false);
         let errorMsg = "Impossible de récupérer votre position GPS.";
         if (err.code === 1) {
-          errorMsg = "Autorisation GPS refusée. Veuillez autoriser la localisation dans les paramètres de votre navigateur.";
+          errorMsg = "Autorisation GPS refusée. Veuillez autoriser la localisation dans les paramètres du navigateur.";
         } else if (err.code === 2) {
-          errorMsg = "Position GPS indisponible pour le moment.";
+          errorMsg = "Position GPS indisponible.";
         } else if (err.code === 3) {
-          errorMsg = "Temps d'attente dépassé pour la géolocalisation.";
+          errorMsg = "Délai d'attente dépassé.";
         }
         console.warn('Geolocation info:', err.code, err.message);
         alert(errorMsg);
@@ -179,18 +174,6 @@ export default function JobsPage({
     fetchData();
   }, [onlyMyJobs, userCoords, userCity, radiusKm]);
 
-  const isAmber = theme === 'amber';
-  const badgeColor = isAmber ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-primary/15 text-primary border-primary/30';
-  const titleGradient = isAmber ? 'from-amber-400 to-amber-500' : 'from-primary via-blue-400 to-indigo-400';
-  const hoverBorder = isAmber ? 'hover:border-amber-500/40 hover:shadow-amber-500/10' : 'hover:border-primary/40 hover:shadow-primary/10';
-  const titleHover = isAmber ? 'group-hover:text-amber-400' : 'group-hover:text-primary';
-  const actionBtnClass = isAmber
-    ? 'flex items-center justify-center gap-2 w-full rounded-2xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-sm font-bold text-amber-400 transition-all duration-300 hover:bg-amber-500 hover:text-white hover:shadow-lg hover:shadow-amber-500/25 active:scale-[0.98]'
-    : 'flex items-center justify-center gap-2 w-full rounded-2xl bg-primary/10 border border-primary/20 px-4 py-3 text-sm font-bold text-primary transition-all duration-300 hover:bg-primary hover:text-white hover:shadow-lg hover:shadow-primary/25 active:scale-[0.98]';
-  const viewToggleActive = isAmber ? 'bg-amber-500 text-white shadow-md' : 'bg-primary text-white shadow-md';
-  const focusRing = isAmber ? 'focus:border-amber-500/50 focus:ring-amber-500/50' : 'focus:border-primary/50 focus:ring-primary/50';
-  const loaderColor = isAmber ? 'text-amber-500' : 'text-primary';
-
   const allCategories = ['Toutes les catégories', ...(Array.isArray(categories) ? categories.map((c) => c.name) : [])];
   const excludedSet = new Set([...excludeJobIds, ...Array.from(appliedJobIds)]);
 
@@ -205,365 +188,270 @@ export default function JobsPage({
     return matchesSearch && matchesCategory;
   });
 
+  const referenceLocationLabel = userCoords
+    ? 'votre position GPS'
+    : userCity.trim()
+    ? userCity.trim()
+    : 'Paris';
+
   return (
-    <div className={isEmbedded ? 'w-full' : 'mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8'}>
+    <div className={isEmbedded ? 'w-full space-y-4' : 'mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 space-y-4'}>
       {!isEmbedded && (
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 group"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group mb-2"
         >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Retour à l'accueil
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+          Accueil
         </Link>
       )}
 
-      {/* Header & Search Hero */}
-      <section className="relative overflow-hidden rounded-3xl glass border border-white/10 p-8 sm:p-12 mb-10 shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl -ml-40 -mb-40 pointer-events-none" />
-
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-primary mb-6 shadow-inner">
-            <Sparkles className="w-3.5 h-3.5" /> Des milliers de missions vérifiées
+      {/* ─── Ultra-Compact Search & Geographic Control Bar ─── */}
+      <section className="bg-gradient-to-r from-[#141414] via-[#1a1a1a] to-[#141414] border border-amber-500/30 rounded-2xl p-4 shadow-xl space-y-3">
+        
+        {/* Top Control Line: Search + Category + View Mode */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          {/* Search Input (Col 6) */}
+          <div className="md:col-span-6 relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400" />
+            <input
+              type="text"
+              placeholder="Rechercher une mission, métier..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+            />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-white">
-            Trouvez votre prochaine{' '}
-            <span className={`bg-gradient-to-r ${titleGradient} bg-clip-text text-transparent`}>
-              Mission Ideal
-            </span>
-          </h1>
+          {/* Category Dropdown (Col 4) */}
+          <div className="md:col-span-4 relative">
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400 pointer-events-none" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-8 text-xs font-medium text-white focus:border-amber-500 focus:outline-none cursor-pointer"
+            >
+              {allCategories.map((cat) => (
+                <option key={cat} value={cat} className="bg-[#121212] text-white">
+                  {cat}
+                </option>
+              ))}
+            </select>
+            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
+          </div>
 
-          <p className="text-muted-foreground text-base sm:text-lg mb-8 leading-relaxed">
-            Parcourez les offres disponibles en direct, filtrez selon vos compétences et postulez directement en 1 clic.
-          </p>
+          {/* View Mode Toggle List / Map (Col 2) */}
+          <div className="md:col-span-2 flex justify-end">
+            <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 w-full justify-between">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex-1 py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  viewMode === 'list' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span>Liste</span>
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex-1 py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                  viewMode === 'map' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                <MapIcon className="w-3.5 h-3.5" />
+                <span>Carte</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
-          {/* Search Bar Container */}
-          <div className="glass rounded-2xl p-3 border border-white/15 shadow-2xl flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
+        {/* Bottom Control Line: Location & Distance Radius Controls */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center pt-2 border-t border-white/10">
+          
+          {/* Layer 1: Location Input & GPS (Col 7) */}
+          <div className="md:col-span-7 flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Job, compétence, ville (ex: Déménagement, Paris...)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full rounded-xl border border-white/10 bg-white/5 py-3.5 pl-12 pr-4 text-foreground placeholder:text-muted-foreground ${focusRing} focus:outline-none focus:ring-1 transition-all text-sm font-medium`}
+                placeholder="Indiquez votre ville (ex: Lyon, Paris, Lille...)"
+                value={userCity}
+                onChange={(e) => {
+                  setUserCity(e.target.value);
+                  if (userCoords) setUserCoords(null);
+                }}
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-xs font-semibold text-white placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
               />
             </div>
 
-            {/* Category Select */}
-            <div className="relative sm:w-64">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-3.5 pl-12 pr-10 text-foreground text-sm font-medium ${focusRing} focus:outline-none focus:ring-1 transition-all cursor-pointer`}
+            <button
+              type="button"
+              onClick={handleGeolocation}
+              disabled={isLocating}
+              className={`shrink-0 px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border cursor-pointer transition-all ${
+                userCoords
+                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500 hover:text-white'
+              }`}
+            >
+              {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+              <span>{userCoords ? 'GPS Actif 📍' : 'GPS 📍'}</span>
+            </button>
+
+            {(userCoords || userCity) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUserCoords(null);
+                  setUserCity('');
+                }}
+                className="text-xs text-red-400 hover:underline font-bold px-1.5 cursor-pointer shrink-0"
               >
-                {allCategories.map((cat) => (
-                  <option key={cat} value={cat} className="bg-[#121212] text-foreground py-2">
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 rotate-90 text-muted-foreground pointer-events-none" />
-            </div>
+                Reset
+              </button>
+            )}
           </div>
 
-          {/* Ultra-Premium Geographic Search & Radius Panel */}
-          <div className="mt-6 p-5 sm:p-6 bg-gradient-to-b from-white/[0.07] to-black/30 border border-amber-500/20 backdrop-blur-2xl rounded-3xl shadow-2xl text-left relative overflow-hidden">
-            {/* Soft Ambient Background Glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          {/* Layer 2: Distance Slider & Quick Pills (Col 5) */}
+          <div className="md:col-span-5 flex items-center justify-between gap-2 bg-white/5 border border-white/10 p-2 rounded-xl">
+            <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">
+              Rayon : <span className="text-amber-400 font-extrabold">{radiusKm} km</span>
+            </span>
 
-            <div className="relative z-10 space-y-4">
-              {/* Panel Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-amber-400 font-extrabold text-sm tracking-wide uppercase">
-                  <MapPin className="w-4 h-4 text-amber-400 animate-bounce" />
-                  <span>Localisation de Référence & Périmètre</span>
-                </div>
+            <input
+              type="range"
+              min="5"
+              max="150"
+              step="5"
+              value={radiusKm}
+              onChange={(e) => setRadiusKm(Number(e.target.value))}
+              className="w-24 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+            />
 
-                <div className="flex items-center gap-2">
-                  {(userCoords || userCity) && (
-                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                      Proximité activée : {userCoords ? 'GPS Exact' : userCity}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Grid Controls */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-                {/* Vertical Stacked Location Input & GPS Button Column (Col 6) */}
-                <div className="lg:col-span-6 flex flex-col gap-3">
-                  {/* Layer 1 (Haut) : Champ de recherche Ville */}
-                  <div className="relative w-full">
-                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Saisissez votre ville (ex: Paris, Lyon, Lille, Marseille...)"
-                      value={userCity}
-                      onChange={(e) => {
-                        setUserCity(e.target.value);
-                        if (userCoords) setUserCoords(null);
-                      }}
-                      className="w-full rounded-2xl border border-white/15 bg-white/5 py-3 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-muted-foreground focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none transition-all shadow-inner"
-                    />
-                  </div>
-
-                  {/* Layer 2 (En dessous) : Bouton GPS & Réinitialisation */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleGeolocation}
-                      disabled={isLocating}
-                      className={`flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-extrabold shadow-lg transition-all cursor-pointer border active:scale-95 disabled:opacity-50 ${
-                        userCoords
-                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/30'
-                          : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-amber-400/30 shadow-amber-500/25'
-                      }`}
-                    >
-                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                      <span>{userCoords ? 'Position GPS Active 📍' : 'Utiliser Ma Position GPS 📍'}</span>
-                    </button>
-
-                    {(userCoords || userCity) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUserCoords(null);
-                          setUserCity('');
-                        }}
-                        className="text-xs text-red-400 hover:text-red-300 font-bold px-3 py-2.5 rounded-2xl bg-white/5 border border-white/10 cursor-pointer whitespace-nowrap"
-                      >
-                        Effacer
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Distance Slider & Quick Preset Pills Column (Col 6) */}
-                <div className="lg:col-span-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 h-full">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-muted-foreground">Rayon de recherche maximal :</span>
-                    <span className="text-amber-400 font-black text-sm bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
-                      {radiusKm} km
-                    </span>
-                  </div>
-
-                  {/* Range Input Slider */}
-                  <input
-                    type="range"
-                    min="5"
-                    max="150"
-                    step="5"
-                    value={radiusKm}
-                    onChange={(e) => setRadiusKm(Number(e.target.value))}
-                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                  />
-
-                  {/* Quick Radius Preset Pills */}
-                  <div className="flex items-center justify-between gap-1">
-                    {[10, 25, 50, 100, 150].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setRadiusKm(preset)}
-                        className={`flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all cursor-pointer text-center ${
-                          radiusKm === preset
-                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 scale-105'
-                            : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                        }`}
-                      >
-                        {preset} km
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Category Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-            {allCategories.slice(0, 6).map((cat) => {
-              const isSelected = selectedCategory === cat;
-              return (
+            <div className="flex items-center gap-1">
+              {[10, 25, 50, 100].map((preset) => (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25'
-                      : 'bg-white/5 border-white/10 text-muted-foreground hover:text-white hover:bg-white/10'
+                  key={preset}
+                  type="button"
+                  onClick={() => setRadiusKm(preset)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all cursor-pointer ${
+                    radiusKm === preset ? 'bg-amber-500 text-white' : 'text-muted-foreground hover:text-white bg-white/5'
                   }`}
                 >
-                  {cat}
+                  {preset}k
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
         </div>
+
       </section>
 
-      {/* Header Info & Controls */}
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            Missions disponibles
-            <span className="text-xs bg-primary/20 text-primary border border-primary/30 px-2.5 py-0.5 rounded-full font-extrabold">
-              {filteredJobs.length}
-            </span>
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Paiement garanti et séquestre sécurisé par Stripe
-          </p>
-        </div>
-
-        {/* Toggle List/Map */}
-        <div className="flex items-center glass rounded-xl p-1 border border-white/10 shadow-sm">
-          <button
-            onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-              viewMode === 'list' ? viewToggleActive : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            <span>Vue Liste</span>
-          </button>
-          <button
-            onClick={() => setViewMode('map')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-              viewMode === 'map' ? viewToggleActive : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <MapIcon className="w-4 h-4" />
-            <span>Vue Carte</span>
-          </button>
-        </div>
+      {/* ─── Active Filter Status Header ─── */}
+      <div className="flex items-center justify-between px-1">
+        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+          Missions trouvées
+          <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-extrabold">
+            {filteredJobs.length}
+          </span>
+          <span className="text-xs text-muted-foreground font-normal">
+            • Distances calculées par rapport à <span className="text-amber-400 font-semibold">{referenceLocationLabel}</span>
+          </span>
+        </h2>
       </div>
 
-      {/* Jobs Container */}
-      <section className="pb-12">
+      {/* ─── Jobs Cards Feed Container ─── */}
+      <section className="pb-8">
         {isLoading ? (
-          <div className={`flex flex-col items-center justify-center py-20 ${loaderColor}`}>
-            <Loader2 className="w-10 h-10 animate-spin mb-4" />
-            <p className="text-sm font-medium text-muted-foreground">Chargement des missions en cours...</p>
+          <div className="flex flex-col items-center justify-center py-16 text-amber-500">
+            <Loader2 className="w-8 h-8 animate-spin mb-3" />
+            <p className="text-xs font-medium text-muted-foreground">Recherche des missions à proximité...</p>
           </div>
         ) : filteredJobs.length > 0 ? (
           viewMode === 'map' ? (
             <MapComponent jobs={filteredJobs} />
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredJobs.map((job) => {
                 const employerInitials = `${job.employer?.firstName?.[0] || 'E'}${job.employer?.lastName?.[0] || 'M'}`;
+                const distanceVal = job.distanceKm !== undefined ? job.distanceKm : 0;
 
                 return (
                   <div
                     key={job.id}
-                    className={`glass group relative flex flex-col rounded-3xl p-6 border border-white/10 transition-all duration-300 hover:scale-[1.02] shadow-xl ${hoverBorder}`}
+                    className="bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 hover:border-amber-500/40 rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative"
                   >
-                    {/* Top Row: Category + Distance + Price Badge */}
-                    <div className="flex items-center justify-between gap-3 mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center border rounded-full px-3 py-1 text-xs font-bold ${badgeColor}`}>
+                    {/* Top Row: Category + Standalone Glowing Distance Badge + Price */}
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
                           {job.category?.name || 'Général'}
                         </span>
-                        {job.distanceKm !== undefined && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2.5 py-1 rounded-full shadow-sm shadow-amber-500/10">
-                            <MapPin className="w-3 h-3 text-amber-400 animate-pulse" />
-                            <span>{job.distanceKm} km</span>
-                          </span>
-                        )}
+
+                        {/* PROMINENT STANDALONE DISTANCE ESTIMATION BADGE */}
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-black shadow-md shadow-amber-500/10 animate-in fade-in duration-200">
+                          <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>📍 {distanceVal} km</span>
+                        </div>
+
+                        <div className="text-emerald-400 font-black text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                          {job.price.toFixed(2)} €
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-extrabold px-3 py-1 rounded-full text-sm">
-                        <DollarSign className="w-4 h-4 shrink-0" />
-                        <span>{job.price.toFixed(2)} €</span>
-                      </div>
+
+                      {/* Job Title */}
+                      <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-2 mb-2 leading-snug">
+                        {job.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+                        {job.description}
+                      </p>
                     </div>
 
-                    {/* Job Title */}
-                    <h3 className={`mb-3 text-lg font-bold text-foreground leading-snug ${titleHover} transition-colors line-clamp-2`}>
-                      {job.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="mb-6 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
-                      {job.description}
-                    </p>
-
-                    {/* Meta info grid */}
-                    <div className="mb-6 mt-auto space-y-2.5 pt-4 border-t border-white/5">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                          <span className="font-semibold text-foreground">{job.location || 'Sur place'}</span>
-                          {job.distanceKm !== undefined && (
-                            <span className="text-[10px] text-amber-400 font-extrabold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                              à {job.distanceKm} km {userCoords ? '(GPS)' : userCity ? `(${userCity})` : ''}
-                            </span>
-                          )}
+                    {/* Bottom Footer Info */}
+                    <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs mt-auto">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-bold text-[10px] flex items-center justify-center shrink-0 border border-amber-500/30">
+                          {employerInitials}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5 shrink-0" />
-                          <span>{daysAgo(job.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* Employer info */}
-                      <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                            {employerInitials}
-                          </div>
-                          <span className="text-xs font-semibold text-foreground flex items-center gap-1">
-                            {job.employer?.firstName} {job.employer?.lastName}
-                            {job.employer?.isVerified && (
-                              <CheckCircle className="h-3.5 w-3.5 text-blue-500 fill-blue-500/20" title="Compte Vérifié" />
-                            )}
-                          </span>
-                        </div>
-                        <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> Garanti
+                        <span className="text-muted-foreground font-medium text-[11px] truncate max-w-[110px]">
+                          {job.employer?.firstName} {job.employer?.lastName?.[0]}.
                         </span>
                       </div>
-                    </div>
 
-                    {/* Action Button */}
-                    {isEmbedded && onJobClick ? (
-                      <button onClick={() => onJobClick(job.id)} className={actionBtnClass}>
-                        <span>Voir les détails</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    ) : (
-                      <Link href={`/jobs/${job.id}`} className={actionBtnClass}>
-                        <span>Voir les détails</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    )}
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-muted-foreground" />
+                          {daysAgo(job.createdAt)}
+                        </span>
+
+                        <button
+                          onClick={() => onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`)}
+                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+                        >
+                          Postuler ➔
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )
         ) : (
-          <div className="glass flex flex-col items-center justify-center rounded-3xl py-20 text-center border border-white/10">
-            <div className="p-4 bg-white/5 rounded-full mb-4">
-              <Search className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h3 className="mb-2 text-lg font-bold text-foreground">Aucune mission ne correspond à votre recherche</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mb-6">
-              Essayez de modifier votre mot-clé ou réinitialisez la catégorie pour voir toutes les offres.
-            </p>
+          <div className="text-center py-16 bg-white/5 border border-white/10 rounded-2xl">
+            <p className="text-muted-foreground text-sm font-medium">Aucune mission ne correspond à votre recherche dans ce rayon.</p>
             <button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('Toutes les catégories');
+                setRadiusKm(150);
               }}
-              className="bg-primary hover:bg-primary/80 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-primary/25"
+              className="mt-3 text-xs text-amber-400 hover:underline font-bold"
             >
-              Réinitialiser les filtres
+              Élargir le rayon de recherche
             </button>
           </div>
         )}
