@@ -579,6 +579,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               Répondre au message
             </button>
           </div>
+        )}
+
         {/* Review Modal for Candidate */}
         {selectedJobToReview && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedJobToReview(null)}>
