@@ -42,8 +42,14 @@ export default function ChatRoomPage({ params }: { params: Promise<{ application
 
     // Fetch history
     api.get(`/messages/${applicationId}`)
-      .then(res => setMessages(res.data))
-      .catch(err => console.error('Failed to load history', err))
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setMessages(res.data);
+        } else if (res.data && Array.isArray(res.data.messages)) {
+          setMessages(res.data.messages);
+        }
+      })
+      .catch(err => console.warn('Failed to load history:', err.response?.data?.message || err.message))
       .finally(() => setIsLoading(false));
   }, [applicationId, router]);
 
