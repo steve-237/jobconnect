@@ -295,27 +295,39 @@ export default function JobsPage({
 
               {/* Grid Controls */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-                {/* Unified Integrated Location Input & GPS Button (Col 7) */}
-                <div className="lg:col-span-7">
-                  <div className="relative flex items-center bg-white/5 border border-white/15 rounded-2xl p-1.5 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-inner">
-                    {/* Lead Map Pin Icon */}
-                    <div className="pl-3 text-amber-400 shrink-0">
-                      <MapPin className="h-4.5 w-4.5" />
-                    </div>
-
-                    {/* City Search Text Input */}
+                {/* Vertical Stacked Location Input & GPS Button Column (Col 6) */}
+                <div className="lg:col-span-6 flex flex-col gap-3">
+                  {/* Layer 1 (Haut) : Champ de recherche Ville */}
+                  <div className="relative w-full">
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400 pointer-events-none" />
                     <input
                       type="text"
-                      placeholder="Saisissez une ville ou activez le GPS (ex: Paris, Lyon, Lille...)"
+                      placeholder="Saisissez votre ville (ex: Paris, Lyon, Lille, Marseille...)"
                       value={userCity}
                       onChange={(e) => {
                         setUserCity(e.target.value);
                         if (userCoords) setUserCoords(null);
                       }}
-                      className="w-full bg-transparent py-2.5 pl-2.5 pr-2 text-xs font-semibold text-white placeholder:text-muted-foreground focus:outline-none"
+                      className="w-full rounded-2xl border border-white/15 bg-white/5 py-3 pl-10 pr-4 text-xs font-semibold text-white placeholder:text-muted-foreground focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 focus:outline-none transition-all shadow-inner"
                     />
+                  </div>
 
-                    {/* Reset Button (If location or GPS is active) */}
+                  {/* Layer 2 (En dessous) : Bouton GPS & Réinitialisation */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleGeolocation}
+                      disabled={isLocating}
+                      className={`flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-extrabold shadow-lg transition-all cursor-pointer border active:scale-95 disabled:opacity-50 ${
+                        userCoords
+                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/30'
+                          : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-amber-400/30 shadow-amber-500/25'
+                      }`}
+                    >
+                      {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                      <span>{userCoords ? 'Position GPS Active 📍' : 'Utiliser Ma Position GPS 📍'}</span>
+                    </button>
+
                     {(userCoords || userCity) && (
                       <button
                         type="button"
@@ -323,33 +335,18 @@ export default function JobsPage({
                           setUserCoords(null);
                           setUserCity('');
                         }}
-                        className="text-[11px] text-red-400 hover:text-red-300 hover:underline font-bold px-2 py-1 cursor-pointer whitespace-nowrap shrink-0"
+                        className="text-xs text-red-400 hover:text-red-300 font-bold px-3 py-2.5 rounded-2xl bg-white/5 border border-white/10 cursor-pointer whitespace-nowrap"
                       >
                         Effacer
                       </button>
                     )}
-
-                    {/* Integrated GPS Action Button */}
-                    <button
-                      type="button"
-                      onClick={handleGeolocation}
-                      disabled={isLocating}
-                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold shadow-md transition-all cursor-pointer border active:scale-95 disabled:opacity-50 ${
-                        userCoords
-                          ? 'bg-emerald-500 text-white border-emerald-400 shadow-emerald-500/30'
-                          : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white border-amber-400/30 shadow-amber-500/25'
-                      }`}
-                    >
-                      {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
-                      <span>{userCoords ? 'GPS Actif 📍' : 'GPS 📍'}</span>
-                    </button>
                   </div>
                 </div>
 
-                {/* Distance Slider & Quick Preset Pills (Col 5) */}
-                <div className="lg:col-span-5 bg-white/5 border border-white/10 p-3 rounded-2xl flex flex-col gap-2">
+                {/* Distance Slider & Quick Preset Pills Column (Col 6) */}
+                <div className="lg:col-span-6 bg-white/5 border border-white/10 p-4 rounded-2xl flex flex-col justify-between gap-3 h-full">
                   <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-muted-foreground">Rayon de recherche :</span>
+                    <span className="text-muted-foreground">Rayon de recherche maximal :</span>
                     <span className="text-amber-400 font-black text-sm bg-amber-500/10 px-2.5 py-0.5 rounded-lg border border-amber-500/20">
                       {radiusKm} km
                     </span>
@@ -367,13 +364,13 @@ export default function JobsPage({
                   />
 
                   {/* Quick Radius Preset Pills */}
-                  <div className="flex items-center justify-between gap-1 pt-1">
+                  <div className="flex items-center justify-between gap-1">
                     {[10, 25, 50, 100, 150].map((preset) => (
                       <button
                         key={preset}
                         type="button"
                         onClick={() => setRadiusKm(preset)}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
+                        className={`flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all cursor-pointer text-center ${
                           radiusKm === preset
                             ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 scale-105'
                             : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
