@@ -42,6 +42,7 @@ interface Job {
   location: string;
   latitude?: number;
   longitude?: number;
+  distanceKm?: number;
   createdAt: string;
   employer: {
     firstName: string;
@@ -79,15 +80,46 @@ export default function JobsPage({
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  // Geolocation & Radius Filter
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState<number>(50);
+  const [isLocating, setIsLocating] = useState(false);
+
   const [jobs, setJobs] = useState<Job[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setIsLocating(false);
+      },
+      (err) => {
+        console.error(err);
+        setIsLocating(false);
+        alert("Impossible de récupérer votre position actuelle.");
+      }
+    );
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const endpoint = onlyMyJobs ? '/jobs/employer/my-jobs' : '/jobs';
+        let endpoint = onlyMyJobs ? '/jobs/employer/my-jobs' : '/jobs';
+        if (!onlyMyJobs && userCoords) {
+          endpoint += `?lat=${userCoords.lat}&lng=${userCoords.lng}&radius=${radiusKm}`;
+        }
         const promises: Promise<any>[] = [api.get(endpoint), api.get('/categories')];
 
         const token = localStorage.getItem('token');
@@ -120,7 +152,7 @@ export default function JobsPage({
       }
     };
     fetchData();
-  }, [onlyMyJobs]);
+  }, [onlyMyJobs, userCoords, radiusKm]);
 
   const isAmber = theme === 'amber';
   const badgeColor = isAmber ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-primary/15 text-primary border-primary/30';
@@ -213,6 +245,46 @@ export default function JobsPage({
             </div>
           </div>
 
+          {/* Geolocation & Radius Filter Bar */}
+          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleGeolocation}
+                disabled={isLocating}
+                className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+                {userCoords ? 'Ma Position Actuelle 📍' : 'Autour de moi (GPS) 📍'}
+              </button>
+
+              {userCoords && (
+                <button
+                  type="button"
+                  onClick={() => setUserCoords(null)}
+                  className="text-xs text-red-400 hover:underline font-semibold cursor-pointer"
+                >
+                  Effacer
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+                Rayon de recherche : <span className="text-amber-400 font-extrabold">{radiusKm} km</span>
+              </span>
+              <input
+                type="range"
+                min="5"
+                max="100"
+                step="5"
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="w-full sm:w-40 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              />
+            </div>
+          </div>
+
           {/* Quick Category Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
             {allCategories.slice(0, 6).map((cat) => {
@@ -292,11 +364,18 @@ export default function JobsPage({
                     key={job.id}
                     className={`glass group relative flex flex-col rounded-3xl p-6 border border-white/10 transition-all duration-300 hover:scale-[1.02] shadow-xl ${hoverBorder}`}
                   >
-                    {/* Top Row: Category + Price Badge */}
+                    {/* Top Row: Category + Distance + Price Badge */}
                     <div className="flex items-center justify-between gap-3 mb-4">
-                      <span className={`inline-flex items-center border rounded-full px-3 py-1 text-xs font-bold ${badgeColor}`}>
-                        {job.category?.name || 'Général'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center border rounded-full px-3 py-1 text-xs font-bold ${badgeColor}`}>
+                          {job.category?.name || 'Général'}
+                        </span>
+                        {job.distanceKm !== undefined && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+                            📍 {job.distanceKm} km
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-extrabold px-3 py-1 rounded-full text-sm">
                         <DollarSign className="w-4 h-4 shrink-0" />
                         <span>{job.price.toFixed(2)} €</span>

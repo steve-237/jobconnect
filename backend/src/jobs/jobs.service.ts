@@ -5,6 +5,54 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  paris: { lat: 48.8566, lng: 2.3522 },
+  lyon: { lat: 45.764, lng: 4.8357 },
+  marseille: { lat: 43.2965, lng: 5.3698 },
+  toulouse: { lat: 43.6047, lng: 1.4442 },
+  nice: { lat: 43.7102, lng: 7.262 },
+  nantes: { lat: 47.2184, lng: -1.5536 },
+  strasbourg: { lat: 48.5734, lng: 7.7521 },
+  montpellier: { lat: 43.6108, lng: 3.8767 },
+  bordeaux: { lat: 44.8378, lng: -0.5792 },
+  lille: { lat: 50.6292, lng: 3.0573 },
+  rennes: { lat: 48.1173, lng: -1.6778 },
+  reims: { lat: 49.2583, lng: 4.0317 },
+  toulon: { lat: 43.1242, lng: 5.928 },
+  grenoble: { lat: 45.1885, lng: 5.7245 },
+  dijon: { lat: 47.322, lng: 5.0415 },
+  angers: { lat: 47.4784, lng: -0.5632 },
+};
+
+function getHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function getJobCoordinates(job: any): { lat: number; lng: number } {
+  if (job.latitude && job.longitude) {
+    return { lat: job.latitude, lng: job.longitude };
+  }
+  if (job.location) {
+    const locLower = job.location.toLowerCase();
+    for (const [city, coords] of Object.entries(CITY_COORDINATES)) {
+      if (locLower.includes(city)) {
+        return coords;
+      }
+    }
+  }
+  return { lat: 48.8566, lng: 2.3522 };
+}
+
 @Injectable()
 export class JobsService {
   async create(createJobDto: CreateJobDto, employerId: string) {
@@ -23,7 +71,7 @@ export class JobsService {
   }
 
   async findAll(query: any = {}) {
-    const { search, categoryId, location, minPrice, maxPrice } = query;
+    const { search, categoryId, location, minPrice, maxPrice, lat, lng, radius } = query;
     const where: any = {};
 
     if (search) {
@@ -47,7 +95,7 @@ export class JobsService {
     // Hide completed and cancelled jobs from public browse feed
     where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
 
-    return prisma.job.findMany({
+    const jobs = await prisma.job.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -63,6 +111,27 @@ export class JobsService {
         },
       },
     });
+
+    if (lat && lng) {
+      const userLat = parseFloat(lat);
+      const userLng = parseFloat(lng);
+      const maxRadius = radius ? parseFloat(radius) : 50;
+
+      const jobsWithDistance = jobs.map((job) => {
+        const coords = getJobCoordinates(job);
+        const distanceKm = getHaversineDistanceKm(userLat, userLng, coords.lat, coords.lng);
+        return {
+          ...job,
+          distanceKm: Math.round(distanceKm * 10) / 10,
+        };
+      });
+
+      return jobsWithDistance
+        .filter((j) => j.distanceKm <= maxRadius)
+        .sort((a, b) => a.distanceKm - b.distanceKm);
+    }
+
+    return jobs;
   }
 
   async findOne(id: string) {
