@@ -124,6 +124,13 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-2">
               <button 
                 type="button"
+                onClick={() => setFormData({ email: 'admin@jobconnect.com', password: 'password123' })}
+                className="col-span-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
+              >
+                Admin (admin@jobconnect.com)
+              </button>
+              <button 
+                type="button"
                 onClick={() => setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' })}
                 className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
               >
