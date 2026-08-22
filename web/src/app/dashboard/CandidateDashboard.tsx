@@ -399,70 +399,73 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
         {/* ─── Job Detail Modal ─── */}
         {isJobModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setIsJobModalOpen(false)}>
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsJobModalOpen(false)}>
+            <div className="bg-[#121212] border border-white/15 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative" onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
               {/* Header */}
-              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
-                <h3 className="text-xl font-bold">{isLoadingJob ? 'Chargement...' : jobDetail?.title || 'Détails'}</h3>
-                <button onClick={() => setIsJobModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 relative z-10">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full bg-primary/20 border border-primary/30 px-3 py-0.5 text-xs font-bold text-primary">
+                    {jobDetail?.category?.name || 'Général'}
+                  </span>
+                  <h3 className="text-xl font-bold text-white line-clamp-1">{isLoadingJob ? 'Chargement...' : jobDetail?.title || 'Détails de la mission'}</h3>
+                </div>
+                <button onClick={() => setIsJobModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-muted-foreground hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 overflow-y-auto p-6 relative z-10 space-y-6">
                 {isLoadingJob ? (
                   <div className="flex justify-center py-12">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
                 ) : jobDetail ? (
                   <div className="space-y-6">
-                    {/* Category + Meta */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="inline-flex items-center rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-                        {jobDetail.category?.name || 'Non catégorisé'}
-                      </span>
-                    </div>
-
                     {/* Info Grid */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-emerald-400 font-bold text-lg">
-                          <DollarSign className="w-5 h-5" />
-                          {jobDetail.price} €
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5">
+                        <div className="flex items-center gap-1 text-emerald-400 font-extrabold text-lg">
+                          <DollarSign className="w-4 h-4 shrink-0" />
+                          {jobDetail.price.toFixed(2)} €
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Rémunération</p>
+                        <p className="text-[11px] text-emerald-400/80 font-semibold mt-0.5">Rémunération</p>
                       </div>
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-foreground font-medium">
-                          <MapPin className="w-5 h-5 text-muted-foreground" />
-                          {jobDetail.location || 'Remote'}
+
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
+                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
+                          <MapPin className="w-4 h-4 text-primary shrink-0" />
+                          <span className="truncate">{jobDetail.location || 'Sur place'}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Localisation</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Localisation</p>
                       </div>
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-foreground font-medium">
-                          <User className="w-5 h-5 text-muted-foreground" />
-                          {jobDetail.employer?.firstName} {jobDetail.employer?.lastName}
+
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
+                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
+                          <User className="w-4 h-4 text-blue-400 shrink-0" />
+                          <span className="truncate">{jobDetail.employer?.firstName} {jobDetail.employer?.lastName[0]}.</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Employeur</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Employeur</p>
                       </div>
-                      <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                        <div className="flex items-center gap-2 text-foreground font-medium">
-                          <Clock className="w-5 h-5 text-muted-foreground" />
-                          {new Date(jobDetail.createdAt).toLocaleDateString('fr-FR')}
+
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
+                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
+                          <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>{new Date(jobDetail.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Date de publication</p>
+                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Publication</p>
                       </div>
                     </div>
 
                     {/* Description */}
                     <div>
-                      <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
                         <Briefcase className="w-4 h-4 text-primary" />
                         Description de la mission
                       </h4>
-                      <div className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap bg-white/5 p-4 rounded-xl border border-white/5">
+                      <div className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap bg-white/5 p-4 rounded-2xl border border-white/5 font-normal">
                         {jobDetail.description}
                       </div>
                     </div>
@@ -470,24 +473,24 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                     {/* Apply Section */}
                     <div className="border-t border-white/10 pt-6">
                       {hasApplied ? (
-                        <div className="flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 px-6 py-4 rounded-xl font-semibold border border-emerald-500/20">
+                        <div className="flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 px-6 py-4 rounded-2xl font-bold border border-emerald-500/30 text-sm">
                           <CheckCircle className="w-5 h-5" />
                           Candidature envoyée avec succès !
                         </div>
                       ) : (
                         <>
-                          <label className="text-sm font-medium text-gray-300 mb-2 block">Message à l'employeur (optionnel)</label>
+                          <label className="text-xs font-semibold text-muted-foreground mb-2 block">Message à l'employeur (optionnel)</label>
                           <textarea
                             value={applyMessage}
                             onChange={(e) => setApplyMessage(e.target.value)}
-                            placeholder="Pourquoi êtes-vous le bon candidat pour cette mission ?"
+                            placeholder="Présentez brièvement vos compétences pour cette mission..."
                             rows={3}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 transition-colors resize-none mb-4"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors resize-none mb-4"
                           />
                           <button
                             onClick={handleApplyFromModal}
                             disabled={isApplying}
-                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-white px-6 py-3.5 rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-white px-6 py-3.5 rounded-2xl font-bold text-sm transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl shadow-primary/25 disabled:opacity-50 cursor-pointer"
                           >
                             {isApplying ? (
                               <><Loader2 className="w-5 h-5 animate-spin" /> Envoi en cours...</>
@@ -500,7 +503,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">Impossible de charger les détails.</p>
+                  <div className="text-center py-12 text-muted-foreground text-xs">
+                    Impossible de charger les détails de cette mission.
+                  </div>
                 )}
               </div>
             </div>
