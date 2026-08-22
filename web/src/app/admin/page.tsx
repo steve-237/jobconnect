@@ -21,6 +21,7 @@ import {
   UserCheck,
   Building,
   User,
+  FileText,
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
