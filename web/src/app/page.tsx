@@ -71,11 +71,9 @@ export default function Home() {
       {/* ========== NAVBAR ========== */}
       <header className="w-full sticky top-0 z-50 glass">
         <nav className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">JobConnect</span>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <Image src="/icon.svg" alt="JobConnect Logo" width={36} height={36} className="rounded-xl shadow-md group-hover:scale-105 transition-transform" />
+            <span className="font-extrabold text-xl tracking-tight text-white">JobConnect</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">

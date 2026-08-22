@@ -8,8 +8,51 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "JobConnect - Platform for Punctual Jobs",
-  description: "The ultimate platform bridging the gap between talented freelancers and forward-thinking employers. Instant matching, secure escrow payments, and verified profiles.",
+  title: "JobConnect — Plateforme de Recrutement & Missions Ponctuelles",
+  description:
+    "Trouvez rapidement des prestataires qualifiés pour vos missions ou postulez à des offres près de chez vous. Paiement sécurisé Stripe, profils vérifiés et messagerie en temps réel.",
+  keywords: [
+    "JobConnect",
+    "Missions ponctuelles",
+    "Recrutement",
+    "Jobbing",
+    "Déménagement",
+    "Bricolage",
+    "Jardinage",
+    "Paiement sécurisé",
+    "Prestataires qualifiés",
+  ],
+  authors: [{ name: "JobConnect Team" }],
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
+  openGraph: {
+    title: "JobConnect — Plateforme de Recrutement & Missions Ponctuelles",
+    description:
+      "Trouvez rapidement des prestataires qualifiés pour vos missions ou postulez à des offres près de chez vous. Paiement sécurisé Stripe, profils vérifiés et messagerie en temps réel.",
+    siteName: "JobConnect",
+    locale: "fr_FR",
+    type: "website",
+    images: [
+      {
+        url: "/icon.svg",
+        width: 512,
+        height: 512,
+        alt: "JobConnect Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JobConnect — Plateforme de Recrutement & Missions Ponctuelles",
+    description:
+      "Trouvez rapidement des prestataires qualifiés pour vos missions ou postulez à des offres près de chez vous avec paiement sécurisé Stripe.",
+    images: ["/icon.svg"],
+  },
 };
 
 export default function RootLayout({
@@ -18,11 +61,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">{children}</body>
+    <html lang="fr" className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
+        {children}
+      </body>
     </html>
   );
 }
