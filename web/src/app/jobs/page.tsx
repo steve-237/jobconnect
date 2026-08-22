@@ -24,7 +24,7 @@ const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[600px] rounded-3xl glass animate-pulse flex items-center justify-center border border-white/10">
-      <Loader2 className="animate-spin text-amber-500 w-10 h-10" />
+      <Loader2 className="animate-spin text-primary w-10 h-10" />
     </div>
   ),
 });
@@ -85,6 +85,26 @@ export default function JobsPage({
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+
+  // Theme configuration (Candidate default = Primary Blue)
+  const isAmber = theme === 'amber';
+  const iconColor = isAmber ? 'text-amber-400' : 'text-primary';
+  const containerBorder = isAmber ? 'border-amber-500/30' : 'border-primary/30';
+  const focusRingClass = isAmber ? 'focus:border-amber-500 focus:ring-amber-500/30' : 'focus:border-primary focus:ring-primary/30';
+  const toggleActive = isAmber ? 'bg-amber-500 text-white shadow-sm' : 'bg-primary text-white shadow-sm';
+  const primaryBtnClass = isAmber
+    ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'
+    : 'bg-primary hover:bg-primary/80 text-white shadow-primary/20';
+  const gpsBtnClass = isAmber
+    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500 hover:text-white'
+    : 'bg-primary/20 text-blue-300 border-primary/40 hover:bg-primary hover:text-white';
+  const textHighlight = isAmber ? 'text-amber-400' : 'text-primary';
+  const distanceBadgeClass = isAmber
+    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-amber-500/10'
+    : 'bg-primary/15 text-blue-400 border-primary/30 shadow-primary/10';
+  const cardHoverBorder = isAmber ? 'hover:border-amber-500/40' : 'hover:border-primary/40';
+  const accentPillClass = isAmber ? 'bg-amber-500 text-white' : 'bg-primary text-white';
+  const employerAvatarBg = isAmber ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-primary/20 text-primary border-primary/30';
 
   const handleGeolocation = () => {
     if (typeof window === 'undefined' || !navigator?.geolocation) {
@@ -206,30 +226,30 @@ export default function JobsPage({
         </Link>
       )}
 
-      {/* ─── Ultra-Compact Search & Geographic Control Bar ─── */}
-      <section className="bg-gradient-to-r from-[#141414] via-[#1a1a1a] to-[#141414] border border-amber-500/30 rounded-2xl p-4 shadow-xl space-y-3">
+      {/* ─── Ultra-Compact Search & Geographic Control Bar (Candidate Blue Theme) ─── */}
+      <section className={`bg-gradient-to-r from-[#141414] via-[#1a1a1a] to-[#141414] border ${containerBorder} rounded-2xl p-4 shadow-xl space-y-3`}>
         
         {/* Top Control Line: Search + Category + View Mode */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           {/* Search Input (Col 6) */}
           <div className="md:col-span-6 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400" />
+            <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${iconColor}`} />
             <input
               type="text"
               placeholder="Rechercher une mission, métier..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
+              className={`w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white placeholder:text-muted-foreground ${focusRingClass} focus:outline-none focus:ring-1 transition-all`}
             />
           </div>
 
           {/* Category Dropdown (Col 4) */}
           <div className="md:col-span-4 relative">
-            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400 pointer-events-none" />
+            <Filter className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 ${iconColor} pointer-events-none`} />
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-8 text-xs font-medium text-white focus:border-amber-500 focus:outline-none cursor-pointer"
+              className={`w-full appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-8 text-xs font-medium text-white ${focusRingClass} focus:outline-none cursor-pointer`}
             >
               {allCategories.map((cat) => (
                 <option key={cat} value={cat} className="bg-[#121212] text-white">
@@ -246,7 +266,7 @@ export default function JobsPage({
               <button
                 onClick={() => setViewMode('list')}
                 className={`flex-1 py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  viewMode === 'list' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-white'
+                  viewMode === 'list' ? toggleActive : 'text-muted-foreground hover:text-white'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -255,7 +275,7 @@ export default function JobsPage({
               <button
                 onClick={() => setViewMode('map')}
                 className={`flex-1 py-1 rounded-lg text-xs font-bold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                  viewMode === 'map' ? 'bg-amber-500 text-white shadow-sm' : 'text-muted-foreground hover:text-white'
+                  viewMode === 'map' ? toggleActive : 'text-muted-foreground hover:text-white'
                 }`}
               >
                 <MapIcon className="w-3.5 h-3.5" />
@@ -269,9 +289,9 @@ export default function JobsPage({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center pt-2 border-t border-white/10">
           
           {/* Layer 1: Location Input & GPS (Col 7) */}
-          <div className="md:col-span-7 flex items-center gap-2">
-            <div className="relative flex-1">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-400 pointer-events-none" />
+          <div className="md:col-span-7 flex flex-col sm:flex-row items-center gap-2">
+            <div className="relative flex-1 w-full">
+              <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 ${iconColor} pointer-events-none`} />
               <input
                 type="text"
                 placeholder="Indiquez votre ville (ex: Lyon, Paris, Lille...)"
@@ -280,42 +300,44 @@ export default function JobsPage({
                   setUserCity(e.target.value);
                   if (userCoords) setUserCoords(null);
                 }}
-                className="w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-xs font-semibold text-white placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none"
+                className={`w-full rounded-xl border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-xs font-semibold text-white placeholder:text-muted-foreground ${focusRingClass} focus:outline-none`}
               />
             </div>
 
-            <button
-              type="button"
-              onClick={handleGeolocation}
-              disabled={isLocating}
-              className={`shrink-0 px-3 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 border cursor-pointer transition-all ${
-                userCoords
-                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
-                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500 hover:text-white'
-              }`}
-            >
-              {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
-              <span>{userCoords ? 'GPS Actif 📍' : 'GPS 📍'}</span>
-            </button>
-
-            {(userCoords || userCity) && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
-                onClick={() => {
-                  setUserCoords(null);
-                  setUserCity('');
-                }}
-                className="text-xs text-red-400 hover:underline font-bold px-1.5 cursor-pointer shrink-0"
+                onClick={handleGeolocation}
+                disabled={isLocating}
+                className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 border cursor-pointer transition-all ${
+                  userCoords
+                    ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/20'
+                    : gpsBtnClass
+                }`}
               >
-                Reset
+                {isLocating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+                <span>{userCoords ? 'GPS Actif 📍' : 'GPS 📍'}</span>
               </button>
-            )}
+
+              {(userCoords || userCity) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUserCoords(null);
+                    setUserCity('');
+                  }}
+                  className="text-xs text-red-400 hover:underline font-bold px-1.5 cursor-pointer shrink-0"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Layer 2: Distance Slider & Quick Pills (Col 5) */}
           <div className="md:col-span-5 flex items-center justify-between gap-2 bg-white/5 border border-white/10 p-2 rounded-xl">
             <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">
-              Rayon : <span className="text-amber-400 font-extrabold">{radiusKm} km</span>
+              Rayon : <span className={`${textHighlight} font-extrabold`}>{radiusKm} km</span>
             </span>
 
             <input
@@ -325,7 +347,7 @@ export default function JobsPage({
               step="5"
               value={radiusKm}
               onChange={(e) => setRadiusKm(Number(e.target.value))}
-              className="w-24 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              className={`w-24 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer ${isAmber ? 'accent-amber-500' : 'accent-blue-500'}`}
             />
 
             <div className="flex items-center gap-1">
@@ -335,7 +357,7 @@ export default function JobsPage({
                   type="button"
                   onClick={() => setRadiusKm(preset)}
                   className={`px-1.5 py-0.5 rounded text-[10px] font-black transition-all cursor-pointer ${
-                    radiusKm === preset ? 'bg-amber-500 text-white' : 'text-muted-foreground hover:text-white bg-white/5'
+                    radiusKm === preset ? accentPillClass : 'text-muted-foreground hover:text-white bg-white/5'
                   }`}
                 >
                   {preset}k
@@ -351,11 +373,11 @@ export default function JobsPage({
       <div className="flex items-center justify-between px-1">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           Missions trouvées
-          <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-extrabold">
+          <span className={`text-xs bg-primary/20 ${textHighlight} border ${containerBorder} px-2 py-0.5 rounded-full font-extrabold`}>
             {filteredJobs.length}
           </span>
           <span className="text-xs text-muted-foreground font-normal">
-            • Distances calculées par rapport à <span className="text-amber-400 font-semibold">{referenceLocationLabel}</span>
+            • Distances par rapport à <span className={`${textHighlight} font-semibold`}>{referenceLocationLabel}</span>
           </span>
         </h2>
       </div>
@@ -363,7 +385,7 @@ export default function JobsPage({
       {/* ─── Jobs Cards Feed Container ─── */}
       <section className="pb-8">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-amber-500">
+          <div className="flex flex-col items-center justify-center py-16 text-primary">
             <Loader2 className="w-8 h-8 animate-spin mb-3" />
             <p className="text-xs font-medium text-muted-foreground">Recherche des missions à proximité...</p>
           </div>
@@ -379,18 +401,18 @@ export default function JobsPage({
                 return (
                   <div
                     key={job.id}
-                    className="bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 hover:border-amber-500/40 rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative"
+                    className={`bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 ${cardHoverBorder} rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative`}
                   >
-                    {/* Top Row: Category + Standalone Glowing Distance Badge + Price */}
+                    {/* Top Row: Category + Candidate Blue Distance Badge + Price */}
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
                           {job.category?.name || 'Général'}
                         </span>
 
-                        {/* PROMINENT STANDALONE DISTANCE ESTIMATION BADGE */}
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-black shadow-md shadow-amber-500/10 animate-in fade-in duration-200">
-                          <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        {/* CANDIDATE BLUE DISTANCE ESTIMATION BADGE */}
+                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black shadow-md ${distanceBadgeClass}`}>
+                          <MapPin className={`w-3.5 h-3.5 ${iconColor} shrink-0 animate-pulse`} />
                           <span>📍 {distanceVal} km</span>
                         </div>
 
@@ -400,7 +422,7 @@ export default function JobsPage({
                       </div>
 
                       {/* Job Title */}
-                      <h3 className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-2 mb-2 leading-snug">
+                      <h3 className={`text-sm font-bold text-white group-hover:${textHighlight} transition-colors line-clamp-2 mb-2 leading-snug`}>
                         {job.title}
                       </h3>
 
@@ -413,7 +435,7 @@ export default function JobsPage({
                     {/* Bottom Footer Info */}
                     <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs mt-auto">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-bold text-[10px] flex items-center justify-center shrink-0 border border-amber-500/30">
+                        <div className={`w-6 h-6 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 border ${employerAvatarBg}`}>
                           {employerInitials}
                         </div>
                         <span className="text-muted-foreground font-medium text-[11px] truncate max-w-[110px]">
@@ -429,7 +451,7 @@ export default function JobsPage({
 
                         <button
                           onClick={() => onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`)}
-                          className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition-all shadow-md shadow-amber-500/20 cursor-pointer"
+                          className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer`}
                         >
                           Postuler ➔
                         </button>
@@ -449,7 +471,7 @@ export default function JobsPage({
                 setSelectedCategory('Toutes les catégories');
                 setRadiusKm(150);
               }}
-              className="mt-3 text-xs text-amber-400 hover:underline font-bold"
+              className={`mt-3 text-xs ${textHighlight} hover:underline font-bold`}
             >
               Élargir le rayon de recherche
             </button>
