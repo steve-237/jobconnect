@@ -101,6 +101,62 @@ export class UsersService {
     });
   }
 
+  async findPendingKyc() {
+    return prisma.user.findMany({
+      where: { kycStatus: 'PENDING' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        kycStatus: true,
+        isVerified: true,
+        createdAt: true,
+        bio: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async approveKyc(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { kycStatus: 'APPROVED', isVerified: true },
+    });
+  }
+
+  async rejectKyc(id: string) {
+    return prisma.user.update({
+      where: { id },
+      data: { kycStatus: 'REJECTED', isVerified: false },
+    });
+  }
+
+  async getAdminStats() {
+    const totalUsers = await prisma.user.count();
+    const candidatesCount = await prisma.user.count({ where: { role: 'CANDIDATE' } });
+    const employersCount = await prisma.user.count({ where: { role: 'EMPLOYER' } });
+    const totalJobs = await prisma.job.count();
+    const completedJobs = await prisma.job.count({ where: { status: 'COMPLETED' } });
+    const pendingKycCount = await prisma.user.count({ where: { kycStatus: 'PENDING' } });
+    
+    const transactions = await prisma.transaction.aggregate({
+      where: { status: 'COMPLETED' },
+      _sum: { amount: true },
+    });
+
+    return {
+      totalUsers,
+      candidatesCount,
+      employersCount,
+      totalJobs,
+      completedJobs,
+      pendingKycCount,
+      totalVolume: transactions._sum.amount || 0,
+    };
+  }
+
   async remove(id: string) {
     return prisma.user.delete({ where: { id } });
   }

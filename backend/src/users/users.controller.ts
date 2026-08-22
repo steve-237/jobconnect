@@ -60,6 +60,30 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @Get('admin/kyc/pending')
+  getPendingKyc(@Request() req: any) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+    return this.usersService.findPendingKyc();
+  }
+
+  @Patch('admin/kyc/:id/approve')
+  approveKyc(@Param('id') id: string, @Request() req: any) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+    return this.usersService.approveKyc(id);
+  }
+
+  @Patch('admin/kyc/:id/reject')
+  rejectKyc(@Param('id') id: string, @Request() req: any) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+    return this.usersService.rejectKyc(id);
+  }
+
+  @Get('admin/stats')
+  getAdminStats(@Request() req: any) {
+    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+    return this.usersService.getAdminStats();
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: any) {
     if (req.user.role !== 'ADMIN') {
