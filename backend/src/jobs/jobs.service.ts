@@ -158,13 +158,9 @@ export class JobsService {
       };
     });
 
-    if (lat || lng || userLocation || (location && radius)) {
-      return jobsWithDistance
-        .filter((j) => j.distanceKm <= maxRadius)
-        .sort((a, b) => a.distanceKm - b.distanceKm);
-    }
-
-    return jobsWithDistance;
+    return jobsWithDistance
+      .filter((j) => j.distanceKm <= maxRadius)
+      .sort((a, b) => a.distanceKm - b.distanceKm);
   }
 
   async findOne(id: string) {
