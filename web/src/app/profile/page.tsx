@@ -89,6 +89,49 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   // Reviews
   const [reviews, setReviews] = useState<{id: string, rating: number, comment: string, createdAt: string, reviewer: {firstName: string, lastName: string}}[]>([]);
 
+  // KYC Modal State
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  const [kycDocType, setKycDocType] = useState('CNI');
+  const [kycDocUrl, setKycDocUrl] = useState('');
+  const [kycSelfieUrl, setKycSelfieUrl] = useState('');
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!kycDocUrl || !kycSelfieUrl) {
+      addToast('Veuillez fournir à la fois la pièce d\'identité et le selfie de contrôle.', 'error');
+      return;
+    }
+
+    setIsSubmittingKyc(true);
+    try {
+      await api.post('/users/me/kyc', {
+        docType: kycDocType,
+        docUrl: kycDocUrl,
+        selfieUrl: kycSelfieUrl,
+      });
+      setProfile(prev => ({ ...prev, kycStatus: 'PENDING' }));
+      setIsKycModalOpen(false);
+      addToast('Dossier KYC transmis avec succès ! En cours d\'examen par l\'administration.', 'success', 'Dossier Reçu 📄');
+    } catch (e: any) {
+      console.error(e);
+      addToast(e.response?.data?.message || 'Erreur lors de l\'envoi du dossier KYC', 'error');
+    } finally {
+      setIsSubmittingKyc(false);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -283,30 +326,35 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
 
         {/* ─── KYC Banner ─── */}
         {!profile.isVerified && (
-          <div className="glass rounded-xl p-5 border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-500/20 p-2 rounded-full">
-                {profile.kycStatus === 'PENDING' ? <Clock className="text-amber-500" /> : <AlertTriangle className="text-amber-500" />}
+          <div className="glass rounded-2xl p-6 border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="bg-amber-500/20 p-3 rounded-2xl text-amber-400">
+                {profile.kycStatus === 'PENDING' ? <Clock className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
               </div>
               <div>
-                <h3 className="font-semibold text-amber-500">
-                  {profile.kycStatus === 'PENDING' ? 'Vérification en cours' : 'Profil non vérifié'}
+                <h3 className="font-bold text-base text-amber-400 flex items-center gap-2">
+                  {profile.kycStatus === 'PENDING' ? 'Vérification d\'identité en cours ⏳' : 'Obtenez votre Badge de Confiance 🔵'}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  {profile.kycStatus === 'PENDING' ? 'Vos documents sont en cours d\'analyse.' : 'Vérifiez votre identité pour obtenir le badge de confiance.'}
+                <p className="text-xs text-muted-foreground mt-1">
+                  {profile.kycStatus === 'PENDING'
+                    ? 'Vos pièces justificatives ont été transmises et sont actuellement examinées par notre équipe de modération.'
+                    : 'Transmettez votre pièce d\'identité et selfie de contrôle pour certifier votre profil.'}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              {profile.kycStatus === 'UNVERIFIED' && (
-                <button onClick={handleKycRequest} className="bg-amber-500 hover:bg-amber-600 text-black px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer">
-                  Vérifier mon identité
+            <div className="flex gap-2 shrink-0">
+              {profile.kycStatus !== 'PENDING' && (
+                <button
+                  onClick={() => setIsKycModalOpen(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+                >
+                  Soumettre mes pièces d'identité
                 </button>
               )}
               {profile.kycStatus === 'PENDING' && (
-                <button onClick={simulateAdminApprove} className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap cursor-pointer">
-                  (Simuler Approbation)
-                </button>
+                <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-xl text-xs font-bold">
+                  Dossier en Examen
+                </div>
               )}
             </div>
           </div>
@@ -691,6 +739,105 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
             </button>
           </div>
         </div>
+
+        {/* ─── KYC Submission Modal ─── */}
+        {isKycModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsKycModalOpen(false)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <Shield className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Vérification d'Identité (KYC)</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Transmettez vos pièces justificatives officielles</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsKycModalOpen(false)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleKycSubmit} className="space-y-4">
+                {/* Document Type Selection */}
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Type de Pièce d'Identité</label>
+                  <select
+                    value={kycDocType}
+                    onChange={(e) => setKycDocType(e.target.value)}
+                    className="w-full bg-[#141414] border border-white/10 rounded-xl p-3 text-xs text-white focus:border-amber-500 focus:outline-none font-medium cursor-pointer"
+                  >
+                    <option value="CNI">Carte Nationale d'Identité (CNI)</option>
+                    <option value="PASSPORT">Passeport International</option>
+                    <option value="PERMIS">Permis de Conduire</option>
+                    <option value="KBIS">Kbis / Registre du Commerce (Employeur)</option>
+                  </select>
+                </div>
+
+                {/* Upload Zone 1: ID Document */}
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">1. Scan / Photo du Document d'Identité</label>
+                  <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 rounded-2xl p-4 bg-white/5 text-center transition-colors relative">
+                    {kycDocUrl ? (
+                      <div className="relative group">
+                        <img src={kycDocUrl} alt="Pièce d'identité" className="h-28 mx-auto rounded-xl object-contain border border-white/10" />
+                        <button
+                          type="button"
+                          onClick={() => setKycDocUrl('')}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer flex flex-col items-center gap-2 py-2">
+                        <FileText className="w-7 h-7 text-amber-400" />
+                        <span className="text-xs font-semibold text-white">Sélectionner ou glisser la photo du document</span>
+                        <span className="text-[10px] text-muted-foreground">Format JPG, PNG ou WEBP</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setKycDocUrl)} />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Upload Zone 2: Selfie Control */}
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1.5">2. Photo Selfie de Contrôle</label>
+                  <div className="border-2 border-dashed border-white/15 hover:border-amber-500/50 rounded-2xl p-4 bg-white/5 text-center transition-colors relative">
+                    {kycSelfieUrl ? (
+                      <div className="relative group">
+                        <img src={kycSelfieUrl} alt="Selfie de contrôle" className="h-28 mx-auto rounded-xl object-contain border border-white/10" />
+                        <button
+                          type="button"
+                          onClick={() => setKycSelfieUrl('')}
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer flex flex-col items-center gap-2 py-2">
+                        <User className="w-7 h-7 text-blue-400" />
+                        <span className="text-xs font-semibold text-white">Prendre / Choisir un Selfie tenant la carte</span>
+                        <span className="text-[10px] text-muted-foreground">Assurez-vous que votre visage et le document sont lisibles</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, setKycSelfieUrl)} />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingKyc || !kycDocUrl || !kycSelfieUrl}
+                  className="w-full mt-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingKyc ? 'Transmissions des pièces...' : 'Soumettre mon dossier KYC'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

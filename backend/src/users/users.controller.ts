@@ -36,8 +36,13 @@ export class UsersController {
   }
 
   @Post('me/kyc')
-  requestKyc(@Request() req: any) {
-    return this.usersService.requestKyc(req.user.userId);
+  requestKyc(
+    @Request() req: any,
+    @Body('docType') docType?: string,
+    @Body('docUrl') docUrl?: string,
+    @Body('selfieUrl') selfieUrl?: string,
+  ) {
+    return this.usersService.requestKyc(req.user.userId, docType, docUrl, selfieUrl);
   }
 
   @Post('me/kyc/simulate-approve')

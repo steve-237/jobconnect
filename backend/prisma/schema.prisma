@@ -38,6 +38,10 @@ model User {
   avatarUrl       String?
   isVerified      Boolean   @default(false)
   kycStatus       String    @default("UNVERIFIED") // UNVERIFIED, PENDING, APPROVED, REJECTED
+  kycDocType      String?   // CNI, PASSPORT, PERMIS, KBIS
+  kycDocUrl       String?   // Document image
+  kycSelfieUrl    String?   // Selfie control photo
+  kycSubmittedAt  DateTime?
   expoPushToken   String?
   
   // Relations

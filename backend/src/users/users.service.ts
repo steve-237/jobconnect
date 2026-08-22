@@ -3,11 +3,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaClient, User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 const prisma = new PrismaClient();
 
 @Injectable()
 export class UsersService {
+  constructor(private readonly messagesGateway: MessagesGateway) {}
+
   async create(createUserDto: CreateUserDto) {
     const existingUser = await prisma.user.findUnique({
       where: { email: createUserDto.email },
@@ -63,10 +66,16 @@ export class UsersService {
     });
   }
 
-  async requestKyc(id: string) {
+  async requestKyc(id: string, docType?: string, docUrl?: string, selfieUrl?: string) {
     return prisma.user.update({
       where: { id },
-      data: { kycStatus: 'PENDING' },
+      data: {
+        kycStatus: 'PENDING',
+        kycDocType: docType || 'CNI',
+        kycDocUrl: docUrl || null,
+        kycSelfieUrl: selfieUrl || null,
+        kycSubmittedAt: new Date(),
+      },
     });
   }
 
@@ -86,6 +95,12 @@ export class UsersService {
         firstName: true,
         lastName: true,
         role: true,
+        kycStatus: true,
+        kycDocType: true,
+        kycDocUrl: true,
+        kycSelfieUrl: true,
+        kycSubmittedAt: true,
+        isVerified: true,
       },
     });
   }
@@ -111,6 +126,10 @@ export class UsersService {
         lastName: true,
         role: true,
         kycStatus: true,
+        kycDocType: true,
+        kycDocUrl: true,
+        kycSelfieUrl: true,
+        kycSubmittedAt: true,
         isVerified: true,
         createdAt: true,
         bio: true,
@@ -120,17 +139,35 @@ export class UsersService {
   }
 
   async approveKyc(id: string) {
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id },
       data: { kycStatus: 'APPROVED', isVerified: true },
     });
+
+    this.messagesGateway.sendNotificationToUser(id, {
+      id: `notif-${Date.now()}`,
+      type: 'KYC_APPROVED',
+      title: 'Identité Vérifiée ! 🔵',
+      message: 'Félicitations, votre dossier d\'identité KYC a été validé. Vous bénéficiez maintenant du badge de confiance !',
+    });
+
+    return updated;
   }
 
   async rejectKyc(id: string) {
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id },
       data: { kycStatus: 'REJECTED', isVerified: false },
     });
+
+    this.messagesGateway.sendNotificationToUser(id, {
+      id: `notif-${Date.now()}`,
+      type: 'KYC_REJECTED',
+      title: 'Dossier KYC Rejeté ❌',
+      message: 'Votre demande de vérification d\'identité a été refusée. Veuillez soumettre à nouveau vos documents.',
+    });
+
+    return updated;
   }
 
   async getAdminStats() {

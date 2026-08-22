@@ -24,6 +24,12 @@ export class MessagesGateway
 
   constructor(private readonly messagesService: MessagesService) {}
 
+  sendNotificationToUser(userId: string, notif: any) {
+    if (this.server) {
+      this.server.to(`user_${userId}`).emit('notification', notif);
+    }
+  }
+
   /**
    * Basic authentication for WebSocket.
    * Extracts token from handshake headers or auth payload.

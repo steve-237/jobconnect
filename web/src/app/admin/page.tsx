@@ -64,6 +64,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<'kyc' | 'users'>('kyc');
+  const [inspectingUser, setInspectingUser] = useState<UserData | null>(null);
 
   // Stats
   const [stats, setStats] = useState<AdminStats>({
@@ -378,6 +379,14 @@ export default function AdminPage() {
 
                     <div className="flex items-center gap-3 self-end md:self-center shrink-0">
                       <button
+                        onClick={() => setInspectingUser(user)}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 text-amber-400 text-xs font-bold transition-all cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4" />
+                        Examiner le dossier 📄
+                      </button>
+
+                      <button
                         onClick={() => handleRejectKyc(user)}
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
                       >
@@ -483,6 +492,107 @@ export default function AdminPage() {
               </table>
             </div>
           </section>
+        )}
+
+        {/* ─── KYC Inspector Modal (Side-by-Side View) ─── */}
+        {inspectingUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setInspectingUser(null)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              
+              {/* Header */}
+              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      Examen du Dossier KYC — {inspectingUser.firstName} {inspectingUser.lastName}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {inspectingUser.email} • Rôle : <span className="text-amber-400 font-semibold">{inspectingUser.role}</span>
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setInspectingUser(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Side-by-Side Images Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* Left Column: ID Document */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center">
+                  <div className="flex items-center justify-between w-full mb-3">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-amber-400" />
+                      Document : {inspectingUser.kycDocType || 'CNI'}
+                    </span>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-muted-foreground">Pièce officielle</span>
+                  </div>
+                  {inspectingUser.kycDocUrl ? (
+                    <img src={inspectingUser.kycDocUrl} alt="Document d'identité" className="max-h-64 w-full object-contain rounded-xl border border-white/10 bg-black/40" />
+                  ) : (
+                    <div className="h-56 w-full flex flex-col items-center justify-center bg-black/40 rounded-xl border border-dashed border-white/10 text-muted-foreground text-xs">
+                      <FileText className="w-8 h-8 mb-2 text-amber-400/50" />
+                      Document d'identité (Non fourni)
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Selfie Control */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center">
+                  <div className="flex items-center justify-between w-full mb-3">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-blue-400" />
+                      Selfie de Contrôle
+                    </span>
+                    <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-muted-foreground">Visage + Carte</span>
+                  </div>
+                  {inspectingUser.kycSelfieUrl ? (
+                    <img src={inspectingUser.kycSelfieUrl} alt="Selfie de contrôle" className="max-h-64 w-full object-contain rounded-xl border border-white/10 bg-black/40" />
+                  ) : (
+                    <div className="h-56 w-full flex flex-col items-center justify-center bg-black/40 rounded-xl border border-dashed border-white/10 text-muted-foreground text-xs">
+                      <User className="w-8 h-8 mb-2 text-blue-400/50" />
+                      Photo Selfie de contrôle (Non fournie)
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Action Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <p className="text-xs text-muted-foreground">
+                  Soumis le : {inspectingUser.kycSubmittedAt ? new Date(inspectingUser.kycSubmittedAt).toLocaleDateString('fr-FR') : 'Récemment'}
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      handleRejectKyc(inspectingUser);
+                      setInspectingUser(null);
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Rejeter le dossier
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleApproveKyc(inspectingUser);
+                      setInspectingUser(null);
+                    }}
+                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Approuver KYC & Activer Badge 🔵
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
         )}
       </div>
     </div>

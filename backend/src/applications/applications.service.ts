@@ -7,12 +7,17 @@ import {
 import { PrismaClient } from '@prisma/client';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 const prisma = new PrismaClient();
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
+
   async create(
     createApplicationDto: CreateApplicationDto,
     candidateId: string,
@@ -45,13 +50,31 @@ export class ApplicationsService {
       throw new ConflictException('You have already applied for this job');
     }
 
-    return prisma.application.create({
+    const application = await prisma.application.create({
       data: {
         jobId: createApplicationDto.jobId,
         candidateId,
         message: createApplicationDto.message,
       },
+      include: {
+        candidate: {
+          select: { firstName: true, lastName: true },
+        },
+      },
     });
+
+    // Real-time socket notification to employer
+    this.messagesGateway.sendNotificationToUser(job.employerId, {
+      id: `notif-${Date.now()}`,
+      type: 'NEW_APPLICATION',
+      title: 'Nouvelle Candidature 📩',
+      message: `${application.candidate.firstName} ${application.candidate.lastName} a postulé à votre annonce "${job.title}".`,
+      jobId: job.id,
+      jobTitle: job.title,
+      senderName: `${application.candidate.firstName} ${application.candidate.lastName}`,
+    });
+
+    return application;
   }
 
   async findAllForCandidate(candidateId: string) {
@@ -115,7 +138,17 @@ export class ApplicationsService {
       data: { status: 'IN_PROGRESS' },
     });
 
-    // Notify the candidate
+    // Real-time socket notification to candidate
+    this.messagesGateway.sendNotificationToUser(application.candidateId, {
+      id: `notif-${Date.now()}`,
+      type: 'APPLICATION_ACCEPTED',
+      title: 'Candidature Acceptée 🎉',
+      message: `Votre candidature pour "${application.job.title}" a été acceptée !`,
+      jobId: application.jobId,
+      jobTitle: application.job.title,
+    });
+
+    // Push notification if token available
     const candidate = await prisma.user.findUnique({
       where: { id: application.candidateId },
     });
@@ -150,7 +183,17 @@ export class ApplicationsService {
       data: { isAccepted: false, status: 'REJECTED' },
     });
 
-    // Notify the candidate
+    // Real-time socket notification to candidate
+    this.messagesGateway.sendNotificationToUser(application.candidateId, {
+      id: `notif-${Date.now()}`,
+      type: 'APPLICATION_REJECTED',
+      title: 'Candidature Refusée ❌',
+      message: `Votre candidature pour "${application.job.title}" a été refusée.`,
+      jobId: application.jobId,
+      jobTitle: application.job.title,
+    });
+
+    // Push notification if token available
     const candidate = await prisma.user.findUnique({
       where: { id: application.candidateId },
     });
