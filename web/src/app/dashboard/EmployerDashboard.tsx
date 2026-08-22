@@ -975,142 +975,158 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
           </div>
         )}
 
-        {/* Edit Job Modal */}
+        {/* Edit Job Modal (No Scrollbar Layout) */}
         {editingJob && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setEditingJob(null)}>
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                  <Edit3 className="w-5 h-5 text-amber-500" /> Modifier l'annonce
-                </h3>
-                <button onClick={() => setEditingJob(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setEditingJob(null)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center pb-5 mb-5 border-b border-white/10 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white tracking-tight">Modifier l'annonce</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Mettez à jour les détails de votre offre de mission</p>
+                  </div>
+                </div>
+                <button onClick={() => setEditingJob(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6">
+              {/* Form Content - 2 Columns Compact */}
+              <div className="relative z-10">
                 {editError && (
-                  <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-sm text-red-400">
+                  <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 font-medium">
                     {editError}
                   </div>
                 )}
 
-                <form onSubmit={handleEditJobSubmit} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Titre de l'annonce</label>
-                    <div className="relative">
-                      <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <input
-                        type="text"
-                        required
-                        value={editFormData.title}
-                        onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Catégorie</label>
-                    <div className="relative">
-                      <List className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <select
-                        required
-                        value={editFormData.categoryId}
-                        onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-[#111] pl-12 pr-4 py-3 text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id} className="bg-[#111] text-white">
-                            {cat.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleEditJobSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column */}
+                  <div className="space-y-3.5">
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Budget (€)</label>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Titre de l'annonce</label>
                       <div className="relative">
-                        <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="number"
-                          required
-                          min="1"
-                          step="0.01"
-                          value={editFormData.price}
-                          onChange={e => setEditFormData({ ...editFormData, price: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Localisation</label>
-                      <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <input
                           type="text"
-                          value={editFormData.location}
-                          onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Date prévue (Optionnel)</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="datetime-local"
-                          value={editFormData.scheduledDate}
-                          onChange={e => setEditFormData({ ...editFormData, scheduledDate: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          required
+                          value={editFormData.title}
+                          onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">Durée estimée (minutes)</label>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Catégorie</label>
                       <div className="relative">
-                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                        <input
-                          type="number"
-                          min="15"
-                          step="15"
-                          value={editFormData.estimatedDuration}
-                          onChange={e => setEditFormData({ ...editFormData, estimatedDuration: e.target.value })}
-                          className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        />
+                        <List className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                        <select
+                          required
+                          value={editFormData.categoryId}
+                          onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })}
+                          className="w-full appearance-none rounded-xl border border-white/10 bg-[#141414] pl-10 pr-8 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium cursor-pointer"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id} className="bg-[#141414] text-white">
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Budget (€)</label>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <input
+                            type="number"
+                            required
+                            min="1"
+                            step="0.01"
+                            value={editFormData.price}
+                            onChange={e => setEditFormData({ ...editFormData, price: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-emerald-400 font-bold focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Localisation</label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="text"
+                            value={editFormData.location}
+                            onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Date prévue</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="datetime-local"
+                            value={editFormData.scheduledDate}
+                            onChange={e => setEditFormData({ ...editFormData, scheduledDate: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-2 py-2 text-[11px] text-foreground focus:border-amber-500 focus:outline-none font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Durée (min)</label>
+                        <div className="relative">
+                          <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <input
+                            type="number"
+                            min="15"
+                            step="15"
+                            value={editFormData.estimatedDuration}
+                            onChange={e => setEditFormData({ ...editFormData, estimatedDuration: e.target.value })}
+                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none font-medium"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">Description détaillée</label>
-                    <div className="relative">
-                      <AlignLeft className="absolute left-4 top-4 w-5 h-5 text-muted-foreground" />
-                      <textarea
-                        required
-                        rows={4}
-                        value={editFormData.description}
-                        onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
-                        className="block w-full rounded-xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none"
-                      />
+                  {/* Right Column */}
+                  <div className="flex flex-col justify-between space-y-3.5">
+                    <div className="flex-1 flex flex-col">
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Description détaillée</label>
+                      <div className="relative flex-1 flex flex-col">
+                        <AlignLeft className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground" />
+                        <textarea
+                          required
+                          value={editFormData.description}
+                          onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
+                          className="w-full flex-1 min-h-[145px] rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-3 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none leading-relaxed font-normal"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={isUpdatingJob}
-                    className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 mt-4"
-                  >
-                    {isUpdatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
-                  </button>
+                    <button
+                      type="submit"
+                      disabled={isUpdatingJob}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+                    >
+                      {isUpdatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
@@ -1119,26 +1135,31 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
         {/* Review Modal */}
         {selectedJobToReview && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setSelectedJobToReview(null)}>
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-md flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center p-6 border-b border-white/10">
-                <h3 className="text-xl font-bold">Évaluer le candidat</h3>
-                <button onClick={() => setSelectedJobToReview(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedJobToReview(null)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <Star className="w-5 h-5 fill-current" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Évaluer le candidat</h3>
+                </div>
+                <button onClick={() => setSelectedJobToReview(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-6">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Comment s'est passée la mission "{selectedJobToReview.title}" ?
+              <div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Comment s'est passée la mission <span className="text-white font-semibold">"{selectedJobToReview.title}"</span> ?
                 </p>
                 <div className="flex gap-2 justify-center mb-6">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       onClick={() => setReviewRating(star)}
-                      className={`p-2 rounded-full transition-colors ${reviewRating >= star ? 'text-amber-500' : 'text-white/20'}`}
+                      className={`p-2 rounded-xl transition-all ${reviewRating >= star ? 'text-amber-400 scale-110' : 'text-white/20 hover:text-white/40'}`}
                     >
-                      <Star className="w-8 h-8 fill-current" />
+                      <Star className="w-7 h-7 fill-current" />
                     </button>
                   ))}
                 </div>
@@ -1146,11 +1167,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                   placeholder="Laissez un commentaire sur le travail effectué..."
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 outline-none resize-none mb-6"
+                  className="w-full h-28 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white focus:border-amber-500/50 focus:outline-none resize-none mb-5"
                 />
                 <button
                   onClick={submitReview}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl font-bold transition-all"
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
                 >
                   Publier l'avis
                 </button>
