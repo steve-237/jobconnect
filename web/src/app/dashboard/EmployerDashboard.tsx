@@ -3,7 +3,7 @@
 import {
   Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical,
   LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet,
-  Trash2, Edit3, DollarSign, MapPin, Calendar, Clock, List, AlignLeft
+  Trash2, Edit3, DollarSign, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
