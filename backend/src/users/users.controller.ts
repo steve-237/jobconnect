@@ -30,6 +30,11 @@ export class UsersController {
     return this.usersService.findById(req.user.userId);
   }
 
+  @Patch('me')
+  updateMyProfile(@Request() req: any, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(req.user.userId, updateUserDto);
+  }
+
   @Patch('push-token')
   updatePushToken(@Body('token') token: string, @Request() req: any) {
     return this.usersService.updatePushToken(req.user.userId, token);

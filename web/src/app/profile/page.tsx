@@ -180,7 +180,7 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
 
   const handleSave = async () => {
     try {
-      await api.patch(`/users/${profile.id || 'me'}`, {
+      await api.patch('/users/me', {
         firstName: draft.firstName,
         lastName: draft.lastName,
         bio: draft.bio
