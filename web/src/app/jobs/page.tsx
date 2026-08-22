@@ -91,8 +91,8 @@ export default function JobsPage({
   const [isLoading, setIsLoading] = useState(true);
 
   const handleGeolocation = () => {
-    if (!navigator.geolocation) {
-      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+    if (typeof window === 'undefined' || !navigator?.geolocation) {
+      alert("La géolocalisation n'est pas supportée sur cet appareil.");
       return;
     }
     setIsLocating(true);
@@ -105,9 +105,22 @@ export default function JobsPage({
         setIsLocating(false);
       },
       (err) => {
-        console.error(err);
         setIsLocating(false);
-        alert("Impossible de récupérer votre position actuelle.");
+        let errorMsg = "Impossible de récupérer votre position GPS.";
+        if (err.code === 1) {
+          errorMsg = "Autorisation GPS refusée. Veuillez autoriser la localisation dans les paramètres de votre navigateur.";
+        } else if (err.code === 2) {
+          errorMsg = "Position GPS indisponible pour le moment.";
+        } else if (err.code === 3) {
+          errorMsg = "Temps d'attente dépassé pour la géolocalisation.";
+        }
+        console.warn('Geolocation info:', err.code, err.message);
+        alert(errorMsg);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 60000,
       }
     );
   };
