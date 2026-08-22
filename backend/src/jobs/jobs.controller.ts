@@ -53,16 +53,6 @@ export class JobsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateJobDto: UpdateJobDto,
-    @Request() req: any,
-  ) {
-    return this.jobsService.update(id, updateJobDto, req.user.userId);
-  }
-
-  @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
   updateStatus(
     @Param('id') id: string,
@@ -70,6 +60,16 @@ export class JobsController {
     @Request() req: any,
   ) {
     return this.jobsService.updateStatus(id, status, req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateJobDto: UpdateJobDto,
+    @Request() req: any,
+  ) {
+    return this.jobsService.update(id, updateJobDto, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
