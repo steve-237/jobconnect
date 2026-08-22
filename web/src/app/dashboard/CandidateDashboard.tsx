@@ -48,6 +48,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   const [isApplying, setIsApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
+  // Chat Modal state
+  const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
+
   // Review Modal state for candidate
   const [selectedJobToReview, setSelectedJobToReview] = useState<{ id: string; title: string } | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
