@@ -151,15 +151,19 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
         setDraft(updatedData);
 
         if (res.data.role === 'CANDIDATE') {
-          const availRes = await api.get(`/availabilities/user/${res.data.id}`);
-          setAvailabilities(availRes.data);
-          
           try {
-            const reviewsRes = await api.get(`/reviews/user/${res.data.id}`);
-            setReviews(reviewsRes.data);
+            const availRes = await api.get(`/availabilities/user/${res.data.id}`);
+            setAvailabilities(availRes.data);
           } catch (e) {
-            console.error('Error fetching reviews:', e);
+            console.error('Error fetching availabilities:', e);
           }
+        }
+
+        try {
+          const reviewsRes = await api.get(`/reviews/user/${res.data.id}`);
+          setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : []);
+        } catch (e) {
+          console.error('Error fetching reviews:', e);
         }
       })
       .catch(console.error)

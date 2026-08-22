@@ -4,7 +4,7 @@ import {
   FileText, TrendingUp, Search, User, ArrowRight,
   DollarSign, MapPin, Clock, LogOut, CheckCircle2,
   MessageSquare, Wallet, Calendar, X, LayoutGrid,
-  Briefcase, Bell, Loader2, CheckCircle
+  Briefcase, Bell, Loader2, CheckCircle, Star
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -48,8 +48,30 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   const [isApplying, setIsApplying] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
 
-  // Chat Modal state
-  const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
+  // Review Modal state for candidate
+  const [selectedJobToReview, setSelectedJobToReview] = useState<{ id: string; title: string } | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const submitReview = async () => {
+    if (!selectedJobToReview) return;
+    setIsSubmittingReview(true);
+    try {
+      await api.post('/reviews', {
+        jobId: selectedJobToReview.id,
+        rating: reviewRating,
+        comment: reviewComment,
+      });
+      addToast('Votre avis sur l\'employeur a été publié avec succès !', 'success', 'Avis Publié ⭐');
+      setSelectedJobToReview(null);
+      setReviewComment('');
+    } catch (e: any) {
+      addToast(e.response?.data?.message || 'Erreur lors de la publication de l\'avis', 'error');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   // Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -334,7 +356,14 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                             </div>
                           </td>
                           <td className="px-6 py-5 text-right whitespace-nowrap">
-                            {app.isAccepted ? (
+                            {app.job.status === 'COMPLETED' ? (
+                              <button
+                                onClick={() => setSelectedJobToReview({ id: app.job.id, title: app.job.title })}
+                                className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+                              >
+                                <Star className="w-4 h-4 fill-current" /> Évaluer l'employeur
+                              </button>
+                            ) : app.isAccepted ? (
                               <button
                                 onClick={() => setActiveChatApp({ id: app.id, title: app.job.title })}
                                 className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
@@ -549,6 +578,52 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             >
               Répondre au message
             </button>
+          </div>
+        {/* Review Modal for Candidate */}
+        {selectedJobToReview && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedJobToReview(null)}>
+            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+                    <Star className="w-5 h-5 fill-current" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Évaluer l'employeur</h3>
+                </div>
+                <button onClick={() => setSelectedJobToReview(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Comment s'est passée votre collaboration sur la mission <span className="text-white font-semibold">"{selectedJobToReview.title}"</span> ?
+                </p>
+                <div className="flex gap-2 justify-center mb-6">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setReviewRating(star)}
+                      className={`p-2 rounded-xl transition-all cursor-pointer ${reviewRating >= star ? 'text-amber-400 scale-110' : 'text-white/20 hover:text-white/40'}`}
+                    >
+                      <Star className="w-7 h-7 fill-current" />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  placeholder="Partagez votre avis sur l'employeur (ponctualité, clarté des consignes, communication...)..."
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  className="w-full h-28 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white focus:border-amber-500/50 focus:outline-none resize-none mb-5"
+                />
+                <button
+                  onClick={submitReview}
+                  disabled={isSubmittingReview}
+                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingReview ? 'Publication de l\'avis...' : 'Publier mon avis sur l\'employeur'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

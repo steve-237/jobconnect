@@ -51,10 +51,27 @@ export class UsersService {
   async findById(id: string) {
     const user = await prisma.user.findUnique({
       where: { id },
+      include: {
+        appliedJobs: true,
+        postedJobs: true,
+        reviewsReceived: { select: { rating: true } },
+      },
     });
+
     if (user) {
-      const { passwordHash, ...result } = user;
-      return result;
+      const { passwordHash, appliedJobs, postedJobs, reviewsReceived, ...result } = user;
+      const totalReviews = reviewsReceived.length;
+      const avgRating = totalReviews > 0
+        ? reviewsReceived.reduce((acc, r) => acc + r.rating, 0) / totalReviews
+        : 0;
+
+      return {
+        ...result,
+        jobsApplied: appliedJobs.length,
+        jobsPosted: postedJobs.length,
+        rating: Math.round(avgRating * 10) / 10,
+        totalReviews,
+      };
     }
     return null;
   }
