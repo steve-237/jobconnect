@@ -3,12 +3,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Calendar as CalendarIcon, MapPin, DollarSign, ArrowLeft, Clock, User,
+  Calendar as CalendarIcon, MapPin, Coins, ArrowLeft, Clock, User,
   Briefcase, MessageSquare, ChevronLeft, ChevronRight, List, CalendarDays,
   CheckCircle, AlertCircle, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import ChatModal from '@/components/ChatModal';
 
 interface Application {
@@ -238,10 +239,10 @@ export default function CalendarPage({
 
           <div className="glass p-5 rounded-2xl border border-white/10 flex items-center gap-4">
             <div className="bg-emerald-500/15 text-emerald-400 p-3 rounded-xl">
-              <DollarSign className="w-6 h-6" />
+              <Coins className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-emerald-400">{stats.totalEarnings} €</p>
+              <p className="text-2xl font-bold text-emerald-400">{formatPrice(stats.totalEarnings)}</p>
               <p className="text-xs text-muted-foreground font-medium">Revenus prévus</p>
             </div>
           </div>
@@ -479,9 +480,9 @@ export default function CalendarPage({
 
                     {/* Right: Price & Actions */}
                     <div className="shrink-0 flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 pt-4 md:pt-0 border-t md:border-t-0 border-white/5">
-                      <div className="text-2xl font-extrabold text-emerald-400 flex items-center">
-                        <DollarSign className="w-5 h-5 -mr-1" />
-                        {job.price} €
+                      <div className="text-2xl font-extrabold text-emerald-400 flex items-center gap-1">
+                        <Coins className="w-5 h-5" />
+                        {formatPrice(job.price)}
                       </div>
 
                       <div className="flex items-center gap-2">

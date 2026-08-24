@@ -348,8 +348,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                           </td>
                           <td className="px-6 py-5">
                             <div className="flex items-center gap-1.5 font-medium">
-                              <DollarSign className="w-4 h-4 text-muted-foreground" />
-                              {app.job.price} €
+                              <Coins className="w-4 h-4 text-muted-foreground" />
+                              {formatPrice(app.job.price)}
                             </div>
                           </td>
                           <td className="px-6 py-5 text-muted-foreground text-sm">

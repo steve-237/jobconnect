@@ -17,7 +17,7 @@ import {
   XCircle,
   CheckCircle,
   Clock,
-  DollarSign,
+  Coins,
   UserCheck,
   Building,
   User,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
 
 function decodeUserFromToken(): { email: string; role?: string } | null {
@@ -300,10 +301,10 @@ export default function AdminPage() {
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Volume d'Affaires</span>
               <div className="bg-emerald-500/20 p-2.5 rounded-xl text-emerald-400">
-                <DollarSign className="w-5 h-5" />
+                <Coins className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-extrabold text-emerald-400">{stats.totalVolume.toFixed(2)} €</p>
+            <p className="text-3xl font-extrabold text-emerald-400">{formatPrice(stats.totalVolume)}</p>
             <p className="text-[11px] text-emerald-400/80 font-semibold mt-1">Paiements validés</p>
           </div>
         </section>

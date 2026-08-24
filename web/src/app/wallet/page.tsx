@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import {
   Wallet, ArrowDownRight, ArrowUpRight, Clock, CheckCircle, XCircle,
-  PlusCircle, CreditCard, Download, X, Building, DollarSign, ShieldCheck
+  PlusCircle, CreditCard, Download, X, Building, Coins, ShieldCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { useRouter } from 'next/navigation';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
