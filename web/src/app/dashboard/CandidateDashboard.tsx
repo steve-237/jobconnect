@@ -15,6 +15,7 @@ import CalendarPage from '../calendar/page';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
+import NotificationBell from '@/components/NotificationBell';
 import { useSocket } from '@/hooks/useSocket';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
@@ -251,21 +252,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               Voici l'état de vos candidatures et recherches d'emploi.
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-4">
-            <button
-              onClick={() => setUnreadNotifsCount(0)}
-              className="p-2 bg-white/5 border border-white/10 rounded-full text-muted-foreground hover:text-white transition-colors relative"
-              title="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadNotifsCount > 0 ? (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-background animate-bounce">
-                  {unreadNotifsCount}
-                </span>
-              ) : (
-                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></span>
-              )}
-            </button>
+            <NotificationBell userId={user?.id} theme="primary" />
           </div>
         </header>
 
