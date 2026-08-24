@@ -1,4 +1,4 @@
-import { PrismaClient, JobStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -48,153 +48,290 @@ async function main() {
   const employer1 = await prisma.user.upsert({
     where: { email: 'jean.dupont@employeur.com' },
     update: {},
-    create: { email: 'jean.dupont@employeur.com', passwordHash: pwd, firstName: 'Jean', lastName: 'Dupont', role: 'EMPLOYER', isVerified: true, bio: 'Je recherche souvent de l\'aide pour des petits travaux.' },
+    create: { email: 'jean.dupont@employeur.com', passwordHash: pwd, firstName: 'Jean', lastName: 'Dupont', role: 'EMPLOYER', isVerified: true, bio: 'Je recherche souvent de l\'aide pour des petits travaux et aménagements.' },
   });
   const employer2 = await prisma.user.upsert({
     where: { email: 'marie.dubois@employeur.com' },
     update: {},
     create: { email: 'marie.dubois@employeur.com', passwordHash: pwd, firstName: 'Marie', lastName: 'Dubois', role: 'EMPLOYER', isVerified: true, bio: 'Maman de 3 enfants, j\'ai besoin d\'aide pour le ménage et le jardin.' },
   });
+  const employer3 = await prisma.user.upsert({
+    where: { email: 'sophie.bernard@employeur.com' },
+    update: {},
+    create: { email: 'sophie.bernard@employeur.com', passwordHash: pwd, firstName: 'Sophie', lastName: 'Bernard', role: 'EMPLOYER', isVerified: true, bio: 'Chef d\'entreprise cherchant des renforts ponctuels.' },
+  });
 
   // Candidats
   const candidate1 = await prisma.user.upsert({
     where: { email: 'marc.bricole@candidat.com' },
     update: {},
-    create: { email: 'marc.bricole@candidat.com', passwordHash: pwd, firstName: 'Marc', lastName: 'Bricoleur', role: 'CANDIDATE', isVerified: true, bio: 'Expert en montage de meubles IKEA et petits travaux.' },
+    create: { email: 'marc.bricole@candidat.com', passwordHash: pwd, firstName: 'Marc', lastName: 'Bricoleur', role: 'CANDIDATE', isVerified: true, bio: 'Expert en montage de meubles IKEA et petits travaux de rénovation.' },
   });
   const candidate2 = await prisma.user.upsert({
     where: { email: 'lucie.jardin@candidat.com' },
     update: {},
-    create: { email: 'lucie.jardin@candidat.com', passwordHash: pwd, firstName: 'Lucie', lastName: 'Jardin', role: 'CANDIDATE', isVerified: true, bio: 'J\'ai la main verte ! Je m\'occupe de vos jardins avec passion.' },
+    create: { email: 'lucie.jardin@candidat.com', passwordHash: pwd, firstName: 'Lucie', lastName: 'Jardin', role: 'CANDIDATE', isVerified: true, bio: 'J\'ai la main verte ! Je m\'occupe de vos jardins et espaces verts avec passion.' },
   });
   const candidate3 = await prisma.user.upsert({
     where: { email: 'paul.coursier@candidat.com' },
     update: {},
-    create: { email: 'paul.coursier@candidat.com', passwordHash: pwd, firstName: 'Paul', lastName: 'Coursier', role: 'CANDIDATE', isVerified: false, bio: 'Je livre vos colis rapidement sur Paris en vélo.' },
+    create: { email: 'paul.coursier@candidat.com', passwordHash: pwd, firstName: 'Paul', lastName: 'Coursier', role: 'CANDIDATE', isVerified: true, bio: 'Livreur réactif et ponctuel, équipé d\'un véhicule d\'appoint.' },
   });
 
-  // 3. Offres (Jobs)
-  console.log('Seeding jobs...');
-  // Delete all existing jobs first to avoid duplicates
+  // 3. Clean and Seed 16 Jobs
+  console.log('Clearing old jobs & applications...');
+  await prisma.transaction.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.application.deleteMany();
   await prisma.job.deleteMany();
 
-  const job1 = await prisma.job.create({
-    data: {
-      title: 'Montage de 2 armoires PAX',
-      description: 'Je recherche quelqu\'un d\'expérimenté pour monter deux grandes armoires IKEA PAX ce weekend.',
-      price: 80.0,
+  console.log('Seeding 16 realistic jobs...');
+
+  const jobsData = [
+    {
+      title: 'Montage de 2 armoires IKEA PAX',
+      description: 'Recherche personne expérimentée avec ses outils pour monter 2 armoires hautes avec portes coulissantes.',
+      price: 85.0,
       location: 'Paris 15e',
       latitude: 48.8412,
       longitude: 2.2960,
-      status: 'PUBLISHED',
+      status: 'PUBLISHED' as const,
       employerId: employer1.id,
       categoryId: categoryMap.get('Bricolage').id,
-    }
-  });
-
-  const job2 = await prisma.job.create({
-    data: {
-      title: 'Tonte de pelouse (500m2)',
-      description: 'La pelouse est très haute, j\'ai la tondeuse mais pas le temps. A faire rapidement.',
-      price: 50.0,
-      location: 'Lyon',
-      latitude: 45.7640,
-      longitude: 4.8357,
-      status: 'PUBLISHED',
+    },
+    {
+      title: 'Tonte de pelouse & taille de haies (400m²)',
+      description: 'Pelouse à tondre et haie de cyprès à égaliser. Tondeuse fournie sur place.',
+      price: 65.0,
+      location: 'Lyon 6e',
+      latitude: 45.7680,
+      longitude: 4.8557,
+      status: 'PUBLISHED' as const,
       employerId: employer2.id,
       categoryId: categoryMap.get('Jardinage').id,
-    }
-  });
-
-  const job3 = await prisma.job.create({
-    data: {
-      title: 'Livraison d\'un colis urgent',
-      description: 'J\'ai oublié mes clés au bureau, quelqu\'un peut-il faire l\'aller-retour ?',
-      price: 30.0,
-      location: 'Marseille',
+    },
+    {
+      title: 'Livraison express de documents officiels',
+      description: 'Récupération d\'un pli important au centre-ville pour livraison immédiate avant 17h.',
+      price: 35.0,
+      location: 'Marseille Vieux-Port',
       latitude: 43.2965,
       longitude: 5.3698,
-      status: 'MATCHING',
-      employerId: employer1.id,
+      status: 'PUBLISHED' as const,
+      employerId: employer3.id,
       categoryId: categoryMap.get('Livraison').id,
-    }
-  });
-
-  const job4 = await prisma.job.create({
-    data: {
-      title: 'Grand ménage de printemps',
-      description: 'Ménage complet de mon appartement de 60m2, incluant les vitres.',
+    },
+    {
+      title: 'Grand ménage de printemps & vitres',
+      description: 'Nettoyage complet d\'un appartement T3 de 70m² incluant baies vitrées et cuisine.',
       price: 120.0,
-      location: 'Bordeaux',
-      latitude: 44.8378,
-      longitude: -0.5792,
-      status: 'COMPLETED',
+      location: 'Bordeaux Quinconces',
+      latitude: 44.8448,
+      longitude: -0.5742,
+      status: 'PUBLISHED' as const,
       employerId: employer2.id,
       categoryId: categoryMap.get('Ménage').id,
-    }
-  });
+    },
+    {
+      title: 'Aide déménagement studio 25m²',
+      description: 'Besoin de 2 bras pour porter 10 cartons et 1 canapé du 2ème au 1er étage avec ascenseur.',
+      price: 90.0,
+      location: 'Toulouse Capitole',
+      latitude: 43.6047,
+      longitude: 1.4442,
+      status: 'PUBLISHED' as const,
+      employerId: employer1.id,
+      categoryId: categoryMap.get('Déménagement').id,
+    },
+    {
+      title: 'Cours particuliers de Mathématiques (Terminale)',
+      description: 'Soutien intensif de 2 heures en algèbre et probabilités pour préparation au Bac.',
+      price: 50.0,
+      location: 'Lille Centre',
+      latitude: 50.6366,
+      longitude: 3.0635,
+      status: 'PUBLISHED' as const,
+      employerId: employer3.id,
+      categoryId: categoryMap.get('Éducation').id,
+    },
+    {
+      title: 'Dépannage PC Portable & Installation SSD',
+      description: 'Mon ordinateur rame. Besoin de remplacer le disque dur par un SSD et réinstaller Windows 11.',
+      price: 75.0,
+      location: 'Nantes Centre',
+      latitude: 47.2184,
+      longitude: -1.5536,
+      status: 'PUBLISHED' as const,
+      employerId: employer1.id,
+      categoryId: categoryMap.get('Informatique').id,
+    },
+    {
+      title: 'Fixation TV Murale & Masquage des câbles',
+      description: 'Pose d\'un support TV mural orientable sur mur en brique avec goulotte cache-câbles.',
+      price: 55.0,
+      location: 'Nice Promenade',
+      latitude: 43.6961,
+      longitude: 7.2656,
+      status: 'PUBLISHED' as const,
+      employerId: employer2.id,
+      categoryId: categoryMap.get('Bricolage').id,
+    },
+    {
+      title: 'Garde de chat à domicile (3 jours)',
+      description: 'Passer 1h par jour pour nourrir mon chat, changer la litière et jouer un peu.',
+      price: 60.0,
+      location: 'Strasbourg Centre',
+      latitude: 48.5734,
+      longitude: 7.7521,
+      status: 'PUBLISHED' as const,
+      employerId: employer3.id,
+      categoryId: categoryMap.get('Ménage').id,
+    },
+    {
+      title: 'Rangement & Désencombrement d\'une cave',
+      description: 'Aide à trier, mettre en étagères et évacuer des cartons encombrants à la déchetterie.',
+      price: 70.0,
+      location: 'Rennes Centre',
+      latitude: 48.1173,
+      longitude: -1.6778,
+      status: 'PUBLISHED' as const,
+      employerId: employer1.id,
+      categoryId: categoryMap.get('Déménagement').id,
+    },
+    {
+      title: 'Remplacement Robinet Cuisine & Syphon',
+      description: 'Mon mitigeur de cuisine fuite. J\'ai acheté le nouveau robinet, besoin de pose propre.',
+      price: 70.0,
+      location: 'Montpellier Comédie',
+      latitude: 43.6085,
+      longitude: 3.8795,
+      status: 'PUBLISHED' as const,
+      employerId: employer2.id,
+      categoryId: categoryMap.get('Bricolage').id,
+    },
+    {
+      title: 'Cours d\'Anglais conversationnel (2h)',
+      description: 'Session de conversation orale professionnelle en anglais avant un entretien d\'embauche.',
+      price: 50.0,
+      location: 'Paris 11e',
+      latitude: 48.8590,
+      longitude: 2.3780,
+      status: 'PUBLISHED' as const,
+      employerId: employer3.id,
+      categoryId: categoryMap.get('Éducation').id,
+    },
+    {
+      title: 'Peinture murale d\'une chambre (15m²)',
+      description: 'Mise en peinture blanche d\'une chambre d\'enfant. Peinture et rouleaux fournis.',
+      price: 160.0,
+      location: 'Lyon Villeurbanne',
+      latitude: 45.7715,
+      longitude: 4.8820,
+      status: 'PUBLISHED' as const,
+      employerId: employer1.id,
+      categoryId: categoryMap.get('Bricolage').id,
+    },
+    {
+      title: 'Nettoyage complet état des lieux',
+      description: 'Dépoussiérage, désinfection sanitaires et nettoyage sols pour remise des clés.',
+      price: 110.0,
+      location: 'Marseille Prado',
+      latitude: 43.2680,
+      longitude: 5.3890,
+      status: 'PUBLISHED' as const,
+      employerId: employer2.id,
+      categoryId: categoryMap.get('Ménage').id,
+    },
+    {
+      title: 'Transport & Livraison d\'une table en bois',
+      description: 'Récupération d\'une table de salle à manger achetée sur LeBonCoin et livraison chez moi.',
+      price: 45.0,
+      location: 'Lille Vauban',
+      latitude: 50.6310,
+      longitude: 3.0480,
+      status: 'PUBLISHED' as const,
+      employerId: employer3.id,
+      categoryId: categoryMap.get('Livraison').id,
+    },
+    {
+      title: 'Taille d\'arbres fruitiers & ramassage',
+      description: 'Taille légère de 3 pommiers et évacuation des branches mortes dans le jardin.',
+      price: 85.0,
+      location: 'Bordeaux Caudéran',
+      latitude: 44.8490,
+      longitude: -0.6120,
+      status: 'PUBLISHED' as const,
+      employerId: employer1.id,
+      categoryId: categoryMap.get('Jardinage').id,
+    },
+  ];
 
-  // 4. Applications
-  console.log('Seeding applications...');
-  await prisma.application.create({
+  const createdJobs = [];
+  for (const j of jobsData) {
+    const created = await prisma.job.create({ data: j });
+    createdJobs.push(created);
+  }
+
+  // 4. Sample Applications & Messages for demo
+  console.log('Seeding demo applications & messages...');
+
+  const app1 = await prisma.application.create({
     data: {
-      jobId: job1.id,
+      jobId: createdJobs[0].id,
       candidateId: candidate1.id,
-      message: 'Bonjour, j\'ai l\'habitude de monter des armoires PAX. Je suis disponible samedi matin.',
+      message: 'Bonjour, j\'ai monté des dizaines d\'armoires PAX IKEA. Je suis disponible dès ce weekend avec ma boîte à outils !',
       isAccepted: false,
-    }
+    },
   });
 
-  const appJob2 = await prisma.application.create({
+  const app2 = await prisma.application.create({
     data: {
-      jobId: job2.id,
+      jobId: createdJobs[1].id,
       candidateId: candidate2.id,
-      message: 'Bonjour Marie, je suis dispo pour tonter votre pelouse ce dimanche.',
-      isAccepted: true, // Accepted
-    }
-  });
-  // Change job2 status
-  await prisma.job.update({ where: { id: job2.id }, data: { status: 'IN_PROGRESS' }});
-
-  // Messages for appJob2
-  await prisma.message.create({
-    data: {
-      applicationId: appJob2.id,
-      senderId: candidate2.id,
-      content: 'Merci d\'avoir accepté ! A quelle heure puis-je passer ?',
-    }
-  });
-  await prisma.message.create({
-    data: {
-      applicationId: appJob2.id,
-      senderId: employer2.id,
-      content: 'Bonjour Lucie, vers 14h ça vous irait ?',
-    }
-  });
-
-  // Applications for Job 4 (COMPLETED)
-  const appJob4 = await prisma.application.create({
-    data: {
-      jobId: job4.id,
-      candidateId: candidate1.id, // Let's say Marc did it
-      message: 'Je suis très minutieux, je peux m\'en occuper demain.',
+      message: 'Bonjour Marie, j\'ai mon propre matériel professionnel. Je peux passer samedi matin.',
       isAccepted: true,
-    }
+    },
   });
-  
-  // 5. Reviews
-  console.log('Seeding reviews...');
+
+  await prisma.job.update({
+    where: { id: createdJobs[1].id },
+    data: { status: 'IN_PROGRESS' },
+  });
+
+  await prisma.message.create({
+    data: {
+      applicationId: app2.id,
+      senderId: candidate2.id,
+      content: 'Bonjour Marie ! Merci pour la confirmation. À quelle heure souhaitez-vous que j\'arrive samedi ?',
+    },
+  });
+
+  await prisma.message.create({
+    data: {
+      applicationId: app2.id,
+      senderId: employer2.id,
+      content: 'Bonjour Lucie, parfait pour samedi 9h. Je vous attends avec plaisir !',
+    },
+  });
+
+  // Sample Completed Job & Review
+  await prisma.job.update({
+    where: { id: createdJobs[3].id },
+    data: { status: 'COMPLETED' },
+  });
+
   await prisma.review.create({
     data: {
-      jobId: job4.id,
+      jobId: createdJobs[3].id,
       rating: 5,
-      comment: 'Travail exceptionnel, Marc a été très efficace et ponctuel !',
+      comment: 'Service impeccable ! Appartement étincelant et vitres impeccables. Je recommande vivitement.',
       reviewerId: employer2.id,
       revieweeId: candidate1.id,
-    }
+    },
   });
 
-  console.log('Seeding finished successfully.');
+  console.log(`✅ Successfully seeded 16 jobs across major French cities!`);
 }
 
 main()

@@ -455,7 +455,7 @@ export default function AdminPage() {
                       <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-4 font-bold text-white flex items-center gap-2">
                           {u.firstName} {u.lastName}
-                          {u.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 fill-blue-500/20" title="Vérifié" />}
+                          {u.isVerified && <span title="Vérifié"><CheckCircle2 className="w-3.5 h-3.5 text-blue-500 fill-blue-500/20" /></span>}
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">{u.email}</td>
                         <td className="px-6 py-4">
