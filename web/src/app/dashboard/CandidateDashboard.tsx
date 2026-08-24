@@ -33,9 +33,20 @@ interface Application {
 
 export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'calendar' | 'profile' | 'wallet'>('overview');
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserId(payload.sub || payload.id);
+      } catch (e) {}
+    }
+  }, []);
 
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -253,7 +264,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
-            <NotificationBell userId={user?.id} theme="primary" />
+            <NotificationBell userId={userId} theme="primary" />
           </div>
         </header>
 

@@ -53,9 +53,20 @@ interface Category {
 
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserId(payload.sub || payload.id);
+      } catch (e) {}
+    }
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'profile' | 'wallet'>('overview');
 
@@ -466,7 +477,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
-            <NotificationBell userId={user?.id} theme="amber" />
+            <NotificationBell userId={userId} theme="amber" />
           </div>
         </header>
 
