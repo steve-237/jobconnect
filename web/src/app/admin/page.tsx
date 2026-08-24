@@ -50,6 +50,7 @@ interface UserData {
   kycDocType?: string;
   kycDocUrl?: string;
   kycSelfieUrl?: string;
+  kycSubmittedAt?: string;
   isVerified?: boolean;
   bio?: string;
   createdAt?: string;
