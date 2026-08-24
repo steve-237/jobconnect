@@ -107,10 +107,21 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
   const isEmployer = role === 'EMPLOYER';
 
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [pendingEscrowBalance, setPendingEscrowBalance] = useState(0);
+
   const fetchTransactions = () => {
     setIsLoading(true);
     api.get('/payments/transactions')
-      .then((res) => setTransactions(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        if (res.data && Array.isArray(res.data.transactions)) {
+          setTransactions(res.data.transactions);
+          setAvailableBalance(res.data.availableBalance || 0);
+          setPendingEscrowBalance(res.data.pendingEscrowBalance || 0);
+        } else if (Array.isArray(res.data)) {
+          setTransactions(res.data);
+        }
+      })
       .catch((err) => console.error(err))
       .finally(() => setIsLoading(false));
   };
@@ -125,18 +136,6 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
     fetchTransactions();
   }, [router]);
 
-  const completedTransactions = transactions.filter((t) => t.status === 'COMPLETED');
-  const totalAmount = completedTransactions.reduce((acc, curr) => {
-    const title = curr.job?.title?.toLowerCase() || '';
-    if (title.includes('retrait') || title.includes('virement')) {
-      return acc - curr.amount;
-    }
-    if (isEmployer && !title.includes('rechargement') && !title.includes('dépôt')) {
-      return acc + curr.amount;
-    }
-    return acc + curr.amount;
-  }, 0);
-
   // Handle Deposit (Employer Recharge)
   const handleDepositSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,21 +147,13 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
     setIsSubmitting(true);
     try {
-      addToast(`Rechargement de ${amount.toFixed(2)} € effectué avec succès !`, 'success', 'Solde mis à jour');
+      await api.post('/payments/deposit', { amount });
+      addToast(`Rechargement de ${formatPrice(amount)} effectué avec succès !`, 'success', 'Solde mis à jour');
       setIsDepositModalOpen(false);
       setDepositAmount('50');
-      setTransactions((prev) => [
-        {
-          id: `dep-${Date.now()}`,
-          amount,
-          status: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          job: { title: 'Rechargement de solde Portefeuille' },
-        },
-        ...prev,
-      ]);
-    } catch (e) {
-      addToast('Échec du rechargement de solde', 'error');
+      fetchTransactions();
+    } catch (e: any) {
+      addToast(e.response?.data?.message || 'Échec du rechargement de solde', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -187,26 +178,18 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
     setIsSubmitting(true);
     try {
+      await api.post('/payments/withdraw', { amount, iban });
       addToast(
-        `Virement bancaire de ${amount.toFixed(2)} € initié vers l'IBAN ${iban.slice(0, 4)}...${iban.slice(-4)}.`,
+        `Virement bancaire de ${formatPrice(amount)} initié avec succès vers l'IBAN ${iban.slice(0, 4)}...${iban.slice(-4)}.`,
         'success',
-        'Demande de virement envoyée'
+        'Virement Transmis 🏦'
       );
       setIsWithdrawModalOpen(false);
       setWithdrawAmount('');
       setIban('');
-      setTransactions((prev) => [
-        {
-          id: `with-${Date.now()}`,
-          amount,
-          status: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          job: { title: `Retrait vers la banque (${iban.slice(-4)})` },
-        },
-        ...prev,
-      ]);
-    } catch (e) {
-      addToast('Échec de la demande de retrait', 'error');
+      fetchTransactions();
+    } catch (e: any) {
+      addToast(e.response?.data?.message || 'Échec de la demande de retrait', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -244,14 +227,27 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                     {isEmployer ? 'Total Dépensé / Solde' : 'Solde Disponible (Gains)'}
                   </h2>
                   <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Compte Vérifié & Sécurisé
+                    <ShieldCheck className="w-3.5 h-3.5" /> Compte & Paiements Sécurisés
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-extrabold text-white tracking-tight">{totalAmount.toFixed(2)}</span>
-                <span className="text-2xl text-muted-foreground font-bold">€</span>
+              <div className="flex flex-wrap items-center gap-6 mt-4">
+                <div>
+                  <span className="text-xs text-muted-foreground font-semibold block mb-0.5">Solde Disponible</span>
+                  <span className="text-4xl font-black text-emerald-400 tracking-tight">
+                    {formatPrice(availableBalance)}
+                  </span>
+                </div>
+
+                <div className="pl-6 border-l border-white/10">
+                  <span className="text-xs text-amber-400 font-semibold block mb-0.5 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" /> En Séquestre (Escrow)
+                  </span>
+                  <span className="text-2xl font-extrabold text-amber-300 tracking-tight">
+                    {formatPrice(pendingEscrowBalance)}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -323,7 +319,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
                     <span className={`text-xl font-extrabold ${meta.textClass}`}>
-                      {meta.sign}{t.amount.toFixed(2)} €
+                      {meta.sign}{formatPrice(Math.abs(t.amount))}
                     </span>
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
                       {isPending ? (

@@ -36,6 +36,18 @@ export class PaymentsController {
     return this.paymentsService.getUserTransactions(req.user.userId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('deposit')
+  deposit(@Body('amount') amount: number, @Request() req: any) {
+    return this.paymentsService.depositFunds(req.user.userId, amount);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('withdraw')
+  withdraw(@Body('amount') amount: number, @Body('iban') iban: string, @Request() req: any) {
+    return this.paymentsService.withdrawFunds(req.user.userId, amount, iban);
+  }
+
   @Post('webhook')
   async webhook(
     @Req() req: any,

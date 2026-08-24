@@ -218,18 +218,84 @@ export class PaymentsService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    let rawTx: any[] = [];
     if (user.role === 'EMPLOYER') {
-      return prisma.transaction.findMany({
+      rawTx = await prisma.transaction.findMany({
         where: { employerId: userId },
         include: { job: true, candidate: { select: { firstName: true, lastName: true } } },
         orderBy: { createdAt: 'desc' },
       });
     } else {
-      return prisma.transaction.findMany({
+      rawTx = await prisma.transaction.findMany({
         where: { candidateId: userId },
         include: { job: true, employer: { select: { firstName: true, lastName: true } } },
         orderBy: { createdAt: 'desc' },
       });
     }
+
+    let availableBalance = 0;
+    let pendingEscrowBalance = 0;
+
+    for (const t of rawTx) {
+      if (user.role === 'CANDIDATE') {
+        if (t.job?.status === 'COMPLETED' || t.status === 'COMPLETED') {
+          availableBalance += t.amount;
+        } else if (t.status === 'PENDING' || t.job?.status === 'IN_PROGRESS') {
+          pendingEscrowBalance += t.amount;
+        }
+      } else {
+        // EMPLOYER
+        if (t.status === 'PENDING' || t.job?.status === 'IN_PROGRESS') {
+          pendingEscrowBalance += t.amount;
+        }
+      }
+    }
+
+    return {
+      availableBalance,
+      pendingEscrowBalance,
+      transactions: rawTx,
+    };
+  }
+
+  async depositFunds(userId: string, amount: number) {
+    if (!amount || amount <= 0) throw new ForbiddenException('Invalid amount');
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Create a dummy job or direct deposit record
+    const dummyJob = await prisma.job.findFirst();
+    if (!dummyJob) throw new NotFoundException('No reference job found');
+
+    return prisma.transaction.create({
+      data: {
+        amount,
+        status: 'COMPLETED',
+        stripeSessionId: `deposit_${Date.now()}`,
+        employerId: user.role === 'EMPLOYER' ? userId : dummyJob.employerId,
+        candidateId: user.role === 'CANDIDATE' ? userId : dummyJob.employerId,
+        jobId: dummyJob.id,
+      },
+    });
+  }
+
+  async withdrawFunds(userId: string, amount: number, iban: string) {
+    if (!amount || amount <= 0) throw new ForbiddenException('Invalid amount');
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const dummyJob = await prisma.job.findFirst();
+    if (!dummyJob) throw new NotFoundException('No reference job found');
+
+    return prisma.transaction.create({
+      data: {
+        amount: -amount,
+        status: 'COMPLETED',
+        stripeSessionId: `payout_iban_${iban.slice(-4)}_${Date.now()}`,
+        employerId: dummyJob.employerId,
+        candidateId: userId,
+        jobId: dummyJob.id,
+      },
+    });
   }
 }
