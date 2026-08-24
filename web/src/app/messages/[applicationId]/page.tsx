@@ -38,7 +38,12 @@ export default function ChatRoomPage({ params }: { params: Promise<{ application
       return;
     }
     const payload = JSON.parse(atob(token.split('.')[1]));
-    setCurrentUserId(payload.userId);
+    setCurrentUserId(payload.sub || payload.userId || payload.id);
+
+    if (!applicationId || applicationId === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
 
     // Fetch history
     api.get(`/messages/${applicationId}`)

@@ -38,8 +38,13 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUserId(payload.userId);
+        setCurrentUserId(payload.sub || payload.userId || payload.id);
       } catch (e) {}
+    }
+
+    if (!applicationId || applicationId === 'undefined') {
+      setIsLoading(false);
+      return;
     }
 
     // Fetch message history
@@ -54,7 +59,7 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
           }
         }
       })
-      .catch((err) => console.error('Failed to load chat history', err))
+      .catch((err) => console.warn('Failed to load chat history:', err.response?.data?.message || err.message))
       .finally(() => setIsLoading(false));
   }, [applicationId]);
 
