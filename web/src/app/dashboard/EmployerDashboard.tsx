@@ -465,6 +465,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               Gérez vos annonces et suivez les candidatures reçues.
             </p>
           </div>
+          <div className="mt-4 md:mt-0 flex gap-4">
             <NotificationBell userId={user?.id} theme="amber" />
           </div>
         </header>

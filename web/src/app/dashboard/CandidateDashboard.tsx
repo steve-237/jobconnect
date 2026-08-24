@@ -252,6 +252,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               Voici l'état de vos candidatures et recherches d'emploi.
             </p>
           </div>
+          <div className="mt-4 md:mt-0 flex gap-4">
             <NotificationBell userId={user?.id} theme="primary" />
           </div>
         </header>
