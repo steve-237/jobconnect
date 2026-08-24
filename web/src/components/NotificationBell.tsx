@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, MessageSquare, CheckCircle, XCircle, Briefcase, Star, ExternalLink } from 'lucide-react';
-import { useSocket } from '@/context/SocketContext';
+import { useSocket } from '@/hooks/useSocket';
 
 export interface NotificationItem {
   id: string;
