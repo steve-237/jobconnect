@@ -442,7 +442,8 @@ export default function JobsPage({
                 return (
                   <div
                     key={job.id}
-                    className={`bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 ${cardHoverBorder} rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative`}
+                    onClick={() => (onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`))}
+                    className={`bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 ${cardHoverBorder} rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative cursor-pointer hover:scale-[1.01] active:scale-[0.99]`}
                   >
                     {/* Top Row: Category + Candidate Blue Distance Badge + Price */}
                     <div>
@@ -491,8 +492,15 @@ export default function JobsPage({
                         </span>
 
                         <button
-                          onClick={() => onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`)}
-                          className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onJobClick) {
+                              onJobClick(job.id);
+                            } else {
+                              window.location.href = `/jobs/${job.id}`;
+                            }
+                          }}
+                          className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95`}
                         >
                           Postuler ➔
                         </button>
