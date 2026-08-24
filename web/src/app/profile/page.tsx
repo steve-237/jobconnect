@@ -20,10 +20,12 @@ import {
   AlertTriangle,
   Clock,
   Plus,
-  ArrowLeft
+  ArrowLeft,
+  Coins
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { CURRENCIES, getSelectedCurrency, setSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
 interface UserProfile {
@@ -69,6 +71,13 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<UserProfile>(mockProfile);
   const [loading, setLoading] = useState(true);
+  const [currentCurrency, setCurrentCurrency] = useState<CurrencyConfig>(getSelectedCurrency());
+
+  const handleCurrencyChange = (code: string) => {
+    const updated = setSelectedCurrency(code);
+    setCurrentCurrency(updated);
+    addToast(`Devise d'affichage mise à jour sur ${updated.name}`, 'success', 'Préférence Enregistrée 💱');
+  };
 
   // Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -671,6 +680,41 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
                 Aucun avis pour le moment
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ─── Devise & Monnaie Configurator ─── */}
+        <div className="glass rounded-2xl p-6 sm:p-8 space-y-5 border border-white/10 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-500/10 rounded-xl p-2.5 text-emerald-400 border border-emerald-500/20">
+              <Coins className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-foreground">Préférences de Devise / Monnaie</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Choisissez la monnaie d'affichage utilisée pour les rémunérations et les paiements</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+            {CURRENCIES.map((curr) => {
+              const isSelected = currentCurrency.code === curr.code;
+              return (
+                <button
+                  key={curr.code}
+                  type="button"
+                  onClick={() => handleCurrencyChange(curr.code)}
+                  className={`p-3.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-lg shadow-emerald-500/10 scale-105 ring-2 ring-emerald-500/30'
+                      : 'bg-white/5 border-white/10 text-muted-foreground hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <span className="text-xl font-black text-emerald-400">{curr.symbol}</span>
+                  <span className="text-xs font-extrabold tracking-wide">{curr.code}</span>
+                  <span className="text-[10px] text-muted-foreground font-medium text-center truncate max-w-full">{curr.name}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

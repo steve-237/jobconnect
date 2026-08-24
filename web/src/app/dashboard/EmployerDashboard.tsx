@@ -3,12 +3,13 @@
 import {
   Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical,
   LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet,
-  Trash2, Edit3, DollarSign, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight
+  Trash2, Edit3, Coins, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
+import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
@@ -881,9 +882,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Budget (€)</label>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Budget ({getSelectedCurrency().symbol})
+                        </label>
                         <div className="relative">
-                          <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                           <input
                             type="number"
                             required
@@ -1043,9 +1046,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Budget (€)</label>
+                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                          Budget ({getSelectedCurrency().symbol})
+                        </label>
                         <div className="relative">
-                          <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                          <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                           <input
                             type="number"
                             required

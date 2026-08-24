@@ -4,10 +4,11 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, MapPin, DollarSign, Clock, User, Briefcase, Loader2,
+  ArrowLeft, MapPin, Coins, Clock, User, Briefcase, Loader2,
   CheckCircle2, Calendar, ShieldCheck, Sparkles, Send
 } from 'lucide-react';
 import api from '@/lib/api';
+import { formatPrice } from '@/lib/currency';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
 interface Job {
@@ -178,9 +179,9 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
             <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
               <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-6 py-4 flex flex-col items-start sm:items-end">
                 <span className="text-xs text-emerald-400 font-semibold uppercase tracking-wider mb-0.5">Rémunération Proposée</span>
-                <div className="text-4xl font-black text-emerald-400 flex items-center gap-1">
-                  <DollarSign className="w-7 h-7" />
-                  {job.price.toFixed(2)} €
+                <div className="text-4xl font-black text-emerald-400 flex items-center gap-2">
+                  <Coins className="w-7 h-7" />
+                  {formatPrice(job.price)}
                 </div>
               </div>
               <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">

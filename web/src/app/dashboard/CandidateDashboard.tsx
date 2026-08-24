@@ -2,7 +2,7 @@
 
 import {
   FileText, TrendingUp, Search, User, ArrowRight,
-  DollarSign, MapPin, Clock, LogOut, CheckCircle2,
+  Coins, MapPin, Clock, LogOut, CheckCircle2,
   MessageSquare, Wallet, Calendar, X, LayoutGrid,
   Briefcase, Bell, Loader2, CheckCircle, Star
 } from 'lucide-react';
@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import api from '@/lib/api';
+import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import JobsPage from '../jobs/page';
 import CalendarPage from '../calendar/page';
 import ProfilePage from '../profile/page';
@@ -458,9 +459,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                     {/* Info Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5">
-                        <div className="flex items-center gap-1 text-emerald-400 font-extrabold text-lg">
-                          <DollarSign className="w-4 h-4 shrink-0" />
-                          {jobDetail.price.toFixed(2)} €
+                        <div className="flex items-center gap-1.5 text-emerald-400 font-extrabold text-lg">
+                          <Coins className="w-4 h-4 shrink-0" />
+                          {formatPrice(jobDetail.price)}
                         </div>
                         <p className="text-[11px] text-emerald-400/80 font-semibold mt-0.5">Rémunération</p>
                       </div>

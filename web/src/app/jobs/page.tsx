@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   Search,
   MapPin,
-  DollarSign,
+  Coins,
   Clock,
   Filter,
   ChevronRight,
@@ -20,6 +20,7 @@ import {
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import api from '@/lib/api';
+import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -86,6 +87,17 @@ export default function JobsPage({
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [appliedJobIds, setAppliedJobIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [activeCurrency, setActiveCurrency] = useState<CurrencyConfig>(getSelectedCurrency());
+
+  useEffect(() => {
+    const handleCurrencyUpdate = () => {
+      setActiveCurrency(getSelectedCurrency());
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('jobconnect_currency_changed', handleCurrencyUpdate);
+      return () => window.removeEventListener('jobconnect_currency_changed', handleCurrencyUpdate);
+    }
+  }, []);
 
   // Theme configuration (Candidate default = Primary Blue)
   const isAmber = theme === 'amber';
@@ -459,7 +471,7 @@ export default function JobsPage({
                         </div>
 
                         <div className="text-emerald-400 font-black text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                          {job.price.toFixed(2)} €
+                          {formatPrice(job.price, activeCurrency)}
                         </div>
                       </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Briefcase, MapPin, DollarSign, AlignLeft, List, Loader2, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Briefcase, MapPin, Coins, AlignLeft, List, Loader2, Calendar, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Category {
@@ -164,7 +164,7 @@ export default function CreateJobPage() {
               <div>
                 <label htmlFor="price" className="block text-sm font-medium text-muted-foreground mb-2">Budget (€)</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="number"
                     id="price"
