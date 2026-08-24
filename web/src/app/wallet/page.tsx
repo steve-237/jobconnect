@@ -167,7 +167,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
       addToast('Veuillez entrer un montant valide', 'error');
       return;
     }
-    if (amount > totalAmount) {
+    if (amount > availableBalance) {
       addToast('Montant supérieur à votre solde disponible', 'error');
       return;
     }
@@ -446,10 +446,10 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                     <label className="text-xs font-semibold text-muted-foreground">Montant à retirer (€)</label>
                     <button
                       type="button"
-                      onClick={() => setWithdrawAmount(totalAmount.toString())}
+                      onClick={() => setWithdrawAmount(availableBalance.toString())}
                       className="text-[11px] text-emerald-400 hover:underline font-semibold"
                     >
-                      Tout retirer ({totalAmount.toFixed(2)} €)
+                      Tout retirer ({formatPrice(availableBalance)})
                     </button>
                   </div>
                   <input
