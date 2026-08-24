@@ -47,6 +47,9 @@ interface UserData {
   email: string;
   role: string;
   kycStatus?: string;
+  kycDocType?: string;
+  kycDocUrl?: string;
+  kycSelfieUrl?: string;
   isVerified?: boolean;
   bio?: string;
   createdAt?: string;
