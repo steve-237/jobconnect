@@ -78,4 +78,41 @@ export class ReviewsService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getUserReputation(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        reviewsReceived: { select: { rating: true } },
+        postedJobs: { where: { status: 'COMPLETED' } },
+        appliedJobs: { where: { isAccepted: true, job: { status: 'COMPLETED' } } },
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const reviews = user.reviewsReceived;
+    const totalReviews = reviews.length;
+    const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = totalReviews > 0 ? Math.round((totalRating / totalReviews) * 10) / 10 : 5.0;
+
+    const badges = [];
+    if (user.isVerified) {
+      badges.push({ code: 'VERIFIED', label: 'Identité Vérifiée 🛡️', color: 'blue' });
+    }
+    if (averageRating >= 4.5 && totalReviews >= 1) {
+      badges.push({ code: 'TOP_PROVIDER', label: 'Top Prestataire 🌟', color: 'amber' });
+    }
+    if (user.role === 'EMPLOYER' && user.postedJobs.length >= 2) {
+      badges.push({ code: 'SUPER_EMPLOYER', label: 'Employeur de Confiance ⚡', color: 'emerald' });
+    }
+
+    return {
+      userId,
+      averageRating,
+      totalReviews,
+      badges,
+      completedJobsCount: user.role === 'EMPLOYER' ? user.postedJobs.length : user.appliedJobs.length,
+    };
+  }
 }

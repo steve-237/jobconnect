@@ -28,6 +28,11 @@ export class ReviewsController {
     );
   }
 
+  @Get('user/:userId/reputation')
+  getUserReputation(@Param('userId') userId: string) {
+    return this.reviewsService.getUserReputation(userId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('user/:userId')
   getUserReviews(@Param('userId') userId: string) {

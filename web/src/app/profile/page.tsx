@@ -97,6 +97,11 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
 
   // Reviews
   const [reviews, setReviews] = useState<{id: string, rating: number, comment: string, createdAt: string, reviewer: {firstName: string, lastName: string}}[]>([]);
+  const [reputation, setReputation] = useState<{
+    averageRating: number;
+    totalReviews: number;
+    badges: { code: string; label: string; color: string }[];
+  }>({ averageRating: 5.0, totalReviews: 0, badges: [] });
 
   // KYC Modal State
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
@@ -170,10 +175,14 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
           }
 
           try {
-            const reviewsRes = await api.get(`/reviews/user/${res.data.id}`);
+            const [reviewsRes, repRes] = await Promise.all([
+              api.get(`/reviews/user/${res.data.id}`),
+              api.get(`/reviews/user/${res.data.id}/reputation`),
+            ]);
             setReviews(Array.isArray(reviewsRes.data) ? reviewsRes.data : []);
+            if (repRes.data) setReputation(repRes.data);
           } catch (e) {
-            console.warn('Error fetching reviews:', e);
+            console.warn('Error fetching reviews or reputation:', e);
           }
         }
       })
@@ -335,6 +344,26 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
                   Member since {memberSince}
                 </span>
               </div>
+
+              {/* Reputation Badges */}
+              {reputation.badges.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-3 justify-center sm:justify-start">
+                  {reputation.badges.map((b) => (
+                    <span
+                      key={b.code}
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold border ${
+                        b.color === 'amber'
+                          ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                          : b.color === 'emerald'
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+                      }`}
+                    >
+                      {b.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -647,11 +676,11 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star 
                   key={star} 
-                  className={`w-6 h-6 ${star <= Math.round(profile.rating) ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} 
+                  className={`w-6 h-6 ${star <= Math.round(reputation.averageRating) ? 'text-amber-500 fill-amber-500' : 'text-muted-foreground'}`} 
                 />
               ))}
             </div>
-            <span className="font-medium">{profile.rating.toFixed(1)}/5 ({reviews.length} avis)</span>
+            <span className="font-medium text-amber-400 font-extrabold text-lg">{reputation.averageRating.toFixed(1)}/5 ({reviews.length} avis)</span>
           </div>
 
           <div className="space-y-4">
