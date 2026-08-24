@@ -15,6 +15,7 @@ import {
   List,
   CheckCircle,
   Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -214,6 +215,22 @@ export default function JobsPage({
     ? userCity.trim()
     : 'Paris';
 
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+    selectedCategory !== 'Toutes les catégories' ||
+    userCity.trim() ||
+    userCoords ||
+    radiusKm < 500
+  );
+
+  const resetAllFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('Toutes les catégories');
+    setUserCity('');
+    setUserCoords(null);
+    setRadiusKm(500);
+  };
+
   return (
     <div className={isEmbedded ? 'w-full space-y-4' : 'mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 space-y-4'}>
       {!isEmbedded && (
@@ -370,16 +387,26 @@ export default function JobsPage({
       </section>
 
       {/* ─── Active Filter Status Header ─── */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex items-center justify-between px-1 gap-2 flex-wrap">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           Missions trouvées
           <span className={`text-xs bg-primary/20 ${textHighlight} border ${containerBorder} px-2 py-0.5 rounded-full font-extrabold`}>
             {filteredJobs.length}
           </span>
-          <span className="text-xs text-muted-foreground font-normal">
+          <span className="text-xs text-muted-foreground font-normal hidden sm:inline">
             • Distances par rapport à <span className={`${textHighlight} font-semibold`}>{referenceLocationLabel}</span>
           </span>
         </h2>
+
+        {hasActiveFilters && (
+          <button
+            onClick={resetAllFilters}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/25 hover:bg-red-500 hover:text-white transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+            <span>Réinitialiser les filtres</span>
+          </button>
+        )}
       </div>
 
       {/* ─── Jobs Cards Feed Container ─── */}
