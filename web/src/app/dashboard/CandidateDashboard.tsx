@@ -26,9 +26,11 @@ interface Application {
   status?: string;
   createdAt: string;
   job: {
+    id: string;
     title: string;
     price: number;
     location: string;
+    status?: string;
   };
 }
 

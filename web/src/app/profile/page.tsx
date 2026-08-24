@@ -39,7 +39,6 @@ interface UserProfile {
   isVerified: boolean;
   kycStatus: string;
   jobsApplied: number;
-  jobsApplied: number;
   jobsPosted: number;
   rating: number;
 }
