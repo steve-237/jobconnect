@@ -34,7 +34,7 @@ interface UserProfile {
   lastName: string;
   email: string;
   bio: string;
-  role: 'CANDIDATE' | 'EMPLOYER';
+  role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN';
   createdAt: string;
   isVerified: boolean;
   kycStatus: string;
