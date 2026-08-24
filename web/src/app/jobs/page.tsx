@@ -80,7 +80,7 @@ export default function JobsPage({
   // Geolocation & Location Reference Filter (Default Paris if empty)
   const [userCity, setUserCity] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [radiusKm, setRadiusKm] = useState<number>(50);
+  const [radiusKm, setRadiusKm] = useState<number>(500);
   const [isLocating, setIsLocating] = useState(false);
 
   const [jobs, setJobs] = useState<Job[]>([]);

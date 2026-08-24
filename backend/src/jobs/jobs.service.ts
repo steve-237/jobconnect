@@ -145,7 +145,8 @@ export class JobsService {
     });
 
     const refCoords = getLocationCoordinates(userLocation || location, lat, lng);
-    const maxRadius = radius ? parseFloat(radius) : 200;
+    const parsedRadius = radius ? parseFloat(radius) : 1000;
+    const maxRadius = parsedRadius >= 500 ? 5000 : parsedRadius;
 
     const jobsWithDistance = jobs.map((job) => {
       const coords = getJobCoordinates(job);
