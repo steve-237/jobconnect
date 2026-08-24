@@ -337,21 +337,21 @@ export default function JobsPage({
           {/* Layer 2: Distance Slider & Quick Pills (Col 5) */}
           <div className="md:col-span-5 flex items-center justify-between gap-2 bg-white/5 border border-white/10 p-2 rounded-xl">
             <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">
-              Rayon : <span className={`${textHighlight} font-extrabold`}>{radiusKm} km</span>
+              Rayon : <span className={`${textHighlight} font-extrabold`}>{radiusKm >= 500 ? '500+ km' : `${radiusKm} km`}</span>
             </span>
 
             <input
               type="range"
               min="5"
-              max="150"
+              max="500"
               step="5"
               value={radiusKm}
               onChange={(e) => setRadiusKm(Number(e.target.value))}
-              className={`w-24 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer ${isAmber ? 'accent-amber-500' : 'accent-blue-500'}`}
+              className={`w-20 sm:w-24 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer ${isAmber ? 'accent-amber-500' : 'accent-blue-500'}`}
             />
 
             <div className="flex items-center gap-1">
-              {[10, 25, 50, 100].map((preset) => (
+              {[10, 25, 50, 100, 250, 500].map((preset) => (
                 <button
                   key={preset}
                   type="button"
@@ -360,7 +360,7 @@ export default function JobsPage({
                     radiusKm === preset ? accentPillClass : 'text-muted-foreground hover:text-white bg-white/5'
                   }`}
                 >
-                  {preset}k
+                  {preset >= 500 ? '500k+' : `${preset}k`}
                 </button>
               ))}
             </div>
