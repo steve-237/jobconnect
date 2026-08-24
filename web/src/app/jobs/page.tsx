@@ -161,9 +161,15 @@ export default function JobsPage({
           const queryString = params.toString();
           if (queryString) endpoint += `?${queryString}`;
         }
-        const promises: Promise<any>[] = [api.get(endpoint), api.get('/categories')];
+        const promises: Promise<any>[] = [
+          api.get(endpoint).catch((err) => {
+            console.warn('Jobs fetch error:', err?.response?.status || err.message);
+            return { data: [] };
+          }),
+          api.get('/categories').catch(() => ({ data: [] })),
+        ];
 
-        const token = localStorage.getItem('token');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
         let isCandidate = false;
         if (token) {
           try {
@@ -175,12 +181,20 @@ export default function JobsPage({
         }
 
         if (isCandidate && !onlyMyJobs) {
-          promises.push(api.get('/applications/my-applications'));
+          promises.push(
+            api.get('/applications/my-applications').catch((err) => {
+              // If token expired (401), clear invalid token from localStorage
+              if (err?.response?.status === 401 && typeof window !== 'undefined') {
+                localStorage.removeItem('token');
+              }
+              return { data: [] };
+            })
+          );
         }
 
         const [jobsRes, catsRes, appsRes] = await Promise.all(promises);
-        setJobs(Array.isArray(jobsRes.data) ? jobsRes.data : []);
-        setCategories(Array.isArray(catsRes.data) ? catsRes.data : []);
+        setJobs(Array.isArray(jobsRes?.data) ? jobsRes.data : []);
+        setCategories(Array.isArray(catsRes?.data) ? catsRes.data : []);
 
         if (appsRes && Array.isArray(appsRes.data)) {
           const ids = new Set<string>(appsRes.data.map((app: any) => app.job?.id || app.jobId).filter(Boolean));
