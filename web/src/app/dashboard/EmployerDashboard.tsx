@@ -399,64 +399,74 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background relative overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-full lg:w-72 border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-10 shrink-0">
-        <div className="p-6 border-b border-white/5">
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
+      {/* Sidebar / Mobile Header Navigation */}
+      <aside className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-20 shrink-0">
+        <div className="p-4 lg:p-6 border-b border-white/5 flex items-center justify-between">
+          <h2 className="text-lg lg:text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center">
               <Briefcase className="w-5 h-5" />
             </div>
             Employer Hub
           </h2>
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Annonce
+            </button>
+            <NotificationBell userId={userId} theme="amber" />
+          </div>
         </div>
 
-        <div className="p-4 flex-1">
-          <nav className="space-y-2">
+        <div className="p-2 lg:p-4 flex-1 overflow-x-auto no-scrollbar">
+          <nav className="flex lg:flex-col gap-1.5 lg:space-y-2 min-w-max lg:min-w-0">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'overview' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
+                activeTab === 'overview' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
               }`}
             >
-              <LayoutGrid className="w-5 h-5" />
+              <LayoutGrid className="w-4 h-4 lg:w-5 lg:h-5" />
               Vue d'ensemble
             </button>
             <button
               onClick={() => setActiveTab('candidates')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'candidates' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
+                activeTab === 'candidates' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
               }`}
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4 lg:w-5 lg:h-5" />
               Candidats & Postulants
             </button>
             <button
               onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'profile' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
+                activeTab === 'profile' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
               }`}
             >
-              <User className="w-5 h-5" />
-              Profil Entreprise
+              <User className="w-4 h-4 lg:w-5 lg:h-5" />
+              Profil
             </button>
             <button
               onClick={() => setActiveTab('wallet')}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
-                activeTab === 'wallet' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+              className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
+                activeTab === 'wallet' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
               }`}
             >
-              <Wallet className="w-5 h-5" />
+              <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
               Portefeuille
             </button>
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all mt-4 border border-transparent hover:border-red-500/20">
-              <LogOut className="w-5 h-5" />
-              Déconnexion
+            <button onClick={handleLogout} className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0">
+              <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
+              <span className="hidden lg:inline">Déconnexion</span>
             </button>
           </nav>
         </div>
 
-        <div className="p-6 border-t border-white/5">
-          <button onClick={handleOpenCreateModal} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95">
+        <div className="hidden lg:block p-6 border-t border-white/5">
+          <button onClick={handleOpenCreateModal} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer">
             <Plus className="w-5 h-5" />
             Créer une annonce
           </button>

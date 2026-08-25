@@ -214,39 +214,42 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-background relative overflow-hidden">
-      {/* ─── Sidebar ─── */}
-      <aside className="w-full lg:w-72 border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-10 shrink-0">
-        <div className="p-6 border-b border-white/5">
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
+      {/* ─── Sidebar / Mobile Navigation Header ─── */}
+      <aside className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-20 shrink-0">
+        <div className="p-4 lg:p-6 border-b border-white/5 flex items-center justify-between">
+          <h2 className="text-lg lg:text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
               <Briefcase className="w-5 h-5" />
             </div>
             Candidate Hub
           </h2>
+          <div className="lg:hidden">
+            <NotificationBell userId={userId} theme="primary" />
+          </div>
         </div>
 
-        <div className="p-4 flex-1">
-          <nav className="space-y-2">
+        <div className="p-2 lg:p-4 flex-1 overflow-x-auto no-scrollbar">
+          <nav className="flex lg:flex-col gap-1.5 lg:space-y-2 min-w-max lg:min-w-0">
             {navItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => setActiveTab(item.key)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
                   activeTab === item.key
-                    ? 'bg-primary/10 text-primary border border-primary/20'
+                    ? 'bg-primary/20 text-primary border border-primary/30 shadow-lg shadow-primary/10'
                     : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
+                <item.icon className="w-4 h-4 lg:w-5 lg:h-5" />
                 {item.label}
               </button>
             ))}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl font-medium transition-all mt-4 border border-transparent hover:border-red-500/20"
+              className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0"
             >
-              <LogOut className="w-5 h-5" />
-              Déconnexion
+              <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
+              <span className="hidden lg:inline">Déconnexion</span>
             </button>
           </nav>
         </div>
