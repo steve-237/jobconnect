@@ -116,51 +116,59 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Quick Login Buttons (Dev Only) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 border-t border-white/10 pt-6">
-              <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
-                [Dev Only] Connexion Rapide Démo
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'admin@jobconnect.com', password: 'password123' })}
-                  className="col-span-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
-                >
-                  Admin (admin@jobconnect.com)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' })}
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
-                >
-                  Employeur (Jean)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' })}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
-                >
-                  Candidat (Marc)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'employer@test.com', password: 'password123' })}
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
-                >
-                  Employeur Test
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({ email: 'candidate@test.com', password: 'password123' })}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium"
-                >
-                  Candidat Test
-                </button>
-              </div>
+          {/* Quick Login Buttons (Demo Accounts) */}
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
+              Accounts Demo / Connexion Rapide 🚀
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button 
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'admin@jobconnect.com', password: 'password123' });
+                }}
+                className="col-span-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                👑 Admin (admin@jobconnect.com)
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' });
+                }}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                💼 Employeur (Jean)
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' });
+                }}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                👷 Candidat (Marc)
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'employer@test.com', password: 'password123' });
+                }}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                Employeur Test
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'candidate@test.com', password: 'password123' });
+                }}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                Candidat Test
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
