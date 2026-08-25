@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import {
   Wallet, ArrowDownRight, ArrowUpRight, Clock, CheckCircle, XCircle,
-  PlusCircle, CreditCard, Download, X, Building, Coins, ShieldCheck
+  PlusCircle, CreditCard, Download, X, Building, Coins, ShieldCheck,
+  FileText, Printer
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -98,6 +99,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
   // Modals state
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<Transaction | null>(null);
 
   // Form states
   const [depositAmount, setDepositAmount] = useState('50');
@@ -321,15 +323,24 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                     <span className={`text-xl font-extrabold ${meta.textClass}`}>
                       {meta.sign}{formatPrice(Math.abs(t.amount))}
                     </span>
-                    <div className="flex items-center gap-1.5 text-xs font-semibold">
+                    <div className="flex items-center gap-2 text-xs font-semibold">
                       {isPending ? (
                         <span className="flex items-center text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/20">
                           <Clock size={12} className="mr-1" /> En attente
                         </span>
                       ) : t.status === 'COMPLETED' ? (
-                        <span className="flex items-center text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-full border border-emerald-400/20">
-                          <CheckCircle size={12} className="mr-1" /> Validé
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-full border border-emerald-400/20">
+                            <CheckCircle size={12} className="mr-1" /> Validé
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceipt(t)}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-0.5 rounded-full border border-blue-500/25 transition-all cursor-pointer"
+                          >
+                            <FileText size={11} /> Reçu PDF
+                          </button>
+                        </div>
                       ) : (
                         <span className="flex items-center text-red-400 bg-red-400/10 px-2.5 py-0.5 rounded-full border border-red-400/20">
                           <XCircle size={12} className="mr-1" /> Échoué
@@ -487,6 +498,66 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   {isSubmitting ? 'Traitement...' : `Confirmer le virement (-${withdrawAmount || 0} €)`}
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL REÇU / FACTURE PDF ─── */}
+        {selectedReceipt && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setSelectedReceipt(null)}
+          >
+            <div
+              className="glass rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-white/20 relative shadow-2xl bg-[#141414]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedReceipt(null)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div className="p-3 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-500/30">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Reçu Officiel de Mission</h3>
+                  <p className="text-xs text-muted-foreground">Preuve de paiement & séquestre JobConnect</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm bg-white/5 p-4 rounded-2xl border border-white/10 font-mono text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">ID Transaction :</span>
+                  <span className="text-white font-bold">{selectedReceipt.id.slice(0, 18)}...</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Date :</span>
+                  <span className="text-white">{new Date(selectedReceipt.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Intitulé Mission :</span>
+                  <span className="text-emerald-400 font-bold">{selectedReceipt.job?.title || 'Prestation JobConnect'}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-white/10 text-sm">
+                  <span className="text-muted-foreground font-sans font-bold">Montant Réglé :</span>
+                  <span className="text-white font-black text-lg">{formatPrice(Math.abs(selectedReceipt.amount))}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-500/25"
+                >
+                  <Printer className="w-4 h-4" />
+                  Imprimer / Télécharger (PDF)
+                </button>
+              </div>
             </div>
           </div>
         )}

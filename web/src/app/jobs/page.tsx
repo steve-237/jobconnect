@@ -16,11 +16,15 @@ import {
   CheckCircle,
   Sparkles,
   RotateCcw,
+  Bookmark,
+  Heart,
+  Target,
 } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
+import { calculateMatchingScore, getBookmarks, toggleBookmark } from '@/lib/matching';
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), {
   ssr: false,
@@ -77,6 +81,14 @@ export default function JobsPage({
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  // Budget Filter
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+
+  // Bookmarks
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+  const [onlyBookmarks, setOnlyBookmarks] = useState(false);
+
   // Geolocation & Location Reference Filter (Default Paris if empty)
   const [userCity, setUserCity] = useState<string>('');
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -90,12 +102,20 @@ export default function JobsPage({
   const [activeCurrency, setActiveCurrency] = useState<CurrencyConfig>(getSelectedCurrency());
 
   useEffect(() => {
+    setBookmarkedIds(getBookmarks());
     const handleCurrencyUpdate = () => {
       setActiveCurrency(getSelectedCurrency());
     };
+    const handleBookmarksUpdate = () => {
+      setBookmarkedIds(getBookmarks());
+    };
     if (typeof window !== 'undefined') {
       window.addEventListener('jobconnect_currency_changed', handleCurrencyUpdate);
-      return () => window.removeEventListener('jobconnect_currency_changed', handleCurrencyUpdate);
+      window.addEventListener('jobconnect_bookmarks_changed', handleBookmarksUpdate);
+      return () => {
+        window.removeEventListener('jobconnect_currency_changed', handleCurrencyUpdate);
+        window.removeEventListener('jobconnect_bookmarks_changed', handleBookmarksUpdate);
+      };
     }
   }, []);
 
@@ -226,12 +246,20 @@ export default function JobsPage({
 
   const filteredJobs = (Array.isArray(jobs) ? jobs : []).filter((job) => {
     if (excludedSet.has(job.id)) return false;
+    if (onlyBookmarks && !bookmarkedIds.includes(job.id)) return false;
+
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (job.location && job.location.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory =
       selectedCategory === 'Toutes les catégories' || job.category?.name === selectedCategory;
+
+    const min = parseFloat(minPrice);
+    const max = parseFloat(maxPrice);
+    if (!isNaN(min) && job.price < min) return false;
+    if (!isNaN(max) && job.price > max) return false;
+
     return matchesSearch && matchesCategory;
   });
 
@@ -457,22 +485,44 @@ export default function JobsPage({
                     onClick={() => (onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`))}
                     className={`bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 ${cardHoverBorder} rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative cursor-pointer hover:scale-[1.01] active:scale-[0.99]`}
                   >
-                    {/* Top Row: Category + Candidate Blue Distance Badge + Price */}
+                    {/* Top Row: Category + Matching % + Distance + Price + Bookmark */}
                     <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center justify-between gap-1.5 mb-3 flex-wrap">
                         <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
                           {job.category?.name || 'Général'}
                         </span>
 
+                        {/* MATCHING SCORE BADGE */}
+                        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                          <Target className="w-3 h-3 text-purple-400" />
+                          <span>🎯 {calculateMatchingScore({ distanceKm: distanceVal, categoryMatch: true })}% Fit</span>
+                        </div>
+
                         {/* CANDIDATE BLUE DISTANCE ESTIMATION BADGE */}
-                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black shadow-md ${distanceBadgeClass}`}>
+                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black shadow-md ${distanceBadgeClass}`}>
                           <MapPin className={`w-3.5 h-3.5 ${iconColor} shrink-0 animate-pulse`} />
                           <span>📍 {distanceVal} km</span>
                         </div>
 
-                        <div className="text-emerald-400 font-black text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                        <div className="text-emerald-400 font-black text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full ml-auto">
                           {formatPrice(job.price, activeCurrency)}
                         </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleBookmark(job.id);
+                          }}
+                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            bookmarkedIds.includes(job.id)
+                              ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                              : 'bg-white/5 text-muted-foreground border-white/10 hover:text-white hover:bg-white/10'
+                          }`}
+                          title={bookmarkedIds.includes(job.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                        >
+                          <Heart className={`w-3.5 h-3.5 ${bookmarkedIds.includes(job.id) ? 'fill-rose-500' : ''}`} />
+                        </button>
                       </div>
 
                       {/* Job Title */}
