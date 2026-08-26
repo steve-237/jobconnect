@@ -246,7 +246,9 @@ export default function CandidatesPage() {
                           <h3 className="font-bold text-base text-white flex items-center gap-1.5">
                             {cand.firstName} {cand.lastName}
                             {cand.isVerified && (
-                              <ShieldCheck className="w-4 h-4 text-blue-400 fill-blue-500/20" title="Profil Vérifié" />
+                              <span title="Profil Vérifié">
+                                <ShieldCheck className="w-4 h-4 text-blue-400 fill-blue-500/20" />
+                              </span>
                             )}
                           </h3>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
