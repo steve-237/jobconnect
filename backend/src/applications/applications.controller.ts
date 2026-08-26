@@ -65,4 +65,20 @@ export class ApplicationsController {
     }
     return this.applicationsService.rejectApplication(id, req.user.userId);
   }
+
+  @Post('invite')
+  inviteCandidate(
+    @Body() body: { candidateId: string; jobId: string; message?: string },
+    @Request() req: any,
+  ) {
+    if (req.user.role !== 'EMPLOYER') {
+      throw new ForbiddenException('Only employers can invite candidates');
+    }
+    return this.applicationsService.inviteCandidate(
+      req.user.userId,
+      body.candidateId,
+      body.jobId,
+      body.message,
+    );
+  }
 }

@@ -438,8 +438,15 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <Users className="w-4 h-4 lg:w-5 lg:h-5" />
-              Candidats & Postulants
+              Candidats
             </button>
+            <a
+              href="/candidates"
+              className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 shrink-0"
+            >
+              <Search className="w-4 h-4 lg:w-5 lg:h-5 text-amber-400" />
+              Annuaire Prestataires 🔍
+            </a>
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${

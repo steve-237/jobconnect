@@ -208,4 +208,50 @@ export class ApplicationsService {
 
     return updated;
   }
+
+  async inviteCandidate(
+    employerId: string,
+    candidateId: string,
+    jobId: string,
+    message?: string,
+  ) {
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) throw new NotFoundException('Job not found');
+    if (job.employerId !== employerId) throw new ForbiddenException('You do not own this job');
+
+    const candidate = await prisma.user.findUnique({ where: { id: candidateId } });
+    if (!candidate || candidate.role !== 'CANDIDATE') throw new NotFoundException('Candidate not found');
+
+    const existing = await prisma.application.findUnique({
+      where: { jobId_candidateId: { jobId, candidateId } },
+    });
+
+    let app = existing;
+    if (!app) {
+      app = await prisma.application.create({
+        data: {
+          jobId,
+          candidateId,
+          message: message || `Invitation directe de l'employeur à postuler sur la mission "${job.title}".`,
+          status: 'PENDING',
+        },
+      });
+    }
+
+    const employer = await prisma.user.findUnique({ where: { id: employerId } });
+    const employerName = employer ? `${employer.firstName} ${employer.lastName}` : 'Un employeur';
+
+    // WebSocket Notification to Candidate
+    this.messagesGateway.sendNotificationToUser(candidateId, {
+      id: `invite-${Date.now()}`,
+      type: 'JOB_INVITATION',
+      title: 'Invitation à une Mission 🌟',
+      message: `${employerName} vous invite à postuler à la mission "${job.title}" !`,
+      jobId: job.id,
+      jobTitle: job.title,
+      senderName: employerName,
+    });
+
+    return { success: true, applicationId: app.id };
+  }
 }
