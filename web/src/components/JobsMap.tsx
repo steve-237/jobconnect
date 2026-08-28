@@ -38,7 +38,7 @@ export default function JobsMap({ jobs, userLat = 48.8566, userLng = 2.3522, onS
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
 
-      if (!leafletMapRef.current) {
+      if (!leafletMapRef.current && mapRef.current) {
         // Initialize Map centered at user location or Paris default
         const map = L.map(mapRef.current).setView([userLat, userLng], 6);
 
