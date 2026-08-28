@@ -20,20 +20,58 @@
 }
 
 /* Light theme overrides */
-.light-theme {
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-card: #ffffff;
-  --color-card-border: #e2e8f0;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
+html.light-theme, html.light-theme body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
 }
 
-.light-theme .glass {
-  background: rgba(255, 255, 255, 0.88);
+html.light-theme .glass {
+  background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light-theme .text-white,
+html.light-theme .text-foreground {
+  color: #0f172a !important;
+}
+
+html.light-theme .text-gray-300,
+html.light-theme .text-gray-400,
+html.light-theme .text-muted-foreground {
+  color: #475569 !important;
+}
+
+html.light-theme .bg-card,
+html.light-theme .bg-\[\#141414\],
+html.light-theme .bg-\[\#121212\],
+html.light-theme .bg-\[\#18181b\] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light-theme .bg-black\/40,
+html.light-theme .bg-black\/60,
+html.light-theme .bg-black\/80 {
+  background-color: rgba(248, 250, 252, 0.92) !important;
+}
+
+html.light-theme .border-white\/5,
+html.light-theme .border-white\/10,
+html.light-theme .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+html.light-theme input,
+html.light-theme select,
+html.light-theme textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
 }
 
 @layer base {

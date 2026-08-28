@@ -10,6 +10,7 @@ import {
   CheckCircle2, Users, Shield, Zap, Star, ChevronRight,
   Search, MapPin
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const FEATURES = [
   {
@@ -83,15 +84,42 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm font-medium text-gray-300 hover:text-white transition-colors px-4 py-2">
-              Sign In
-            </Link>
-            <Link 
-              href="/register" 
-              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center gap-2"
-            >
-              Get Started <ArrowRight className="w-4 h-4" />
-            </Link>
+            <ThemeToggle />
+            
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 cursor-pointer"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Mon Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem('token');
+                    setIsLoggedIn(false);
+                    router.push('/login');
+                  }}
+                  className="text-xs font-semibold text-muted-foreground hover:text-red-400 px-3 py-2 transition-colors cursor-pointer"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-xs font-semibold text-muted-foreground hover:text-white transition-colors px-3 py-2">
+                  Se connecter
+                </Link>
+                <Link 
+                  href="/register" 
+                  className="bg-primary hover:bg-primary/80 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center gap-1.5 cursor-pointer"
+                >
+                  S'inscrire <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
