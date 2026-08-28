@@ -26,10 +26,10 @@ import api from '@/lib/api';
 import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import { calculateMatchingScore, getBookmarks, toggleBookmark } from '@/lib/matching';
 
-const MapComponent = dynamic(() => import('@/components/MapComponent'), {
+const JobsMap = dynamic(() => import('@/components/JobsMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[600px] rounded-3xl glass animate-pulse flex items-center justify-center border border-white/10">
+    <div className="w-full h-[520px] rounded-3xl glass animate-pulse flex items-center justify-center border border-white/10">
       <Loader2 className="animate-spin text-primary w-10 h-10" />
     </div>
   ),
@@ -472,7 +472,7 @@ export default function JobsPage({
           </div>
         ) : filteredJobs.length > 0 ? (
           viewMode === 'map' ? (
-            <MapComponent jobs={filteredJobs} />
+            <JobsMap jobs={filteredJobs} userLat={userCoords?.lat || 48.8566} userLng={userCoords?.lng || 2.3522} />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredJobs.map((job) => {

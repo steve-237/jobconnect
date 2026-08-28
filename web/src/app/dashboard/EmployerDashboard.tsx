@@ -15,6 +15,7 @@ import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
 import { useSocket } from '@/hooks/useSocket';
 import NotificationBell from '@/components/NotificationBell';
+import ThemeToggle from '@/components/ThemeToggle';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
 
 interface Job {
@@ -408,10 +409,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </div>
             Employer Hub
           </h2>
-          <div className="flex items-center gap-2 lg:hidden">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button
               onClick={handleOpenCreateModal}
-              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Annonce

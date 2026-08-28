@@ -17,6 +17,7 @@ import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
 import NotificationBell from '@/components/NotificationBell';
+import ThemeToggle from '@/components/ThemeToggle';
 import { useSocket } from '@/hooks/useSocket';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
@@ -223,7 +224,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             </div>
             Candidate Hub
           </h2>
-          <div className="lg:hidden">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <NotificationBell userId={userId} theme="primary" />
           </div>
         </div>
