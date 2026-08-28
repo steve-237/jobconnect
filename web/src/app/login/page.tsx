@@ -27,9 +27,14 @@ export default function LoginPage() {
       
       localStorage.setItem('token', access_token);
       
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login. Please try again.');
+      console.error('Login error:', err);
+      if (err.message === 'Network Error' || err.code === 'ERR_NETWORK') {
+        setError('Impossible de contacter le serveur backend (http://localhost:4000). Veuillez vérifier que le serveur backend est démarré.');
+      } else {
+        setError(err.response?.data?.message || 'Identifiants incorrects. Veuillez réessayer.');
+      }
     } finally {
       setLoading(false);
     }
