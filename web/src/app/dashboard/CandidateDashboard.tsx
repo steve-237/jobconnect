@@ -127,6 +127,43 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             applicationId: notif.applicationId,
           });
         }
+
+        // When employer sends a job invitation → refresh applications list & show toast
+        if (notif.type === 'JOB_INVITATION') {
+          addToast(
+            notif.message || `Vous avez reçu une invitation pour la mission "${notif.jobTitle}".`,
+            'info',
+            '🌟 Invitation reçue !'
+          );
+          // Refresh applications so the new PENDING invite appears immediately
+          api.get('/applications/my-applications')
+            .then(res => setApplications(res.data))
+            .catch(e => console.error('Failed to refresh applications after invitation', e));
+        }
+
+        // When a candidature is accepted → refresh applications list
+        if (notif.type === 'APPLICATION_ACCEPTED') {
+          addToast(
+            notif.message || `Votre candidature a été acceptée !`,
+            'success',
+            '🎉 Candidature Acceptée !'
+          );
+          api.get('/applications/my-applications')
+            .then(res => setApplications(res.data))
+            .catch(e => console.error('Failed to refresh applications', e));
+        }
+
+        // When a candidature is rejected → refresh applications list
+        if (notif.type === 'APPLICATION_REJECTED') {
+          addToast(
+            notif.message || `Votre candidature a été refusée.`,
+            'error',
+            '❌ Candidature Refusée'
+          );
+          api.get('/applications/my-applications')
+            .then(res => setApplications(res.data))
+            .catch(e => console.error('Failed to refresh applications', e));
+        }
       };
 
       socket.on('notification', handleNotification);
@@ -272,7 +309,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
-            <NotificationBell userId={userId} theme="primary" />
+            {/* Notifications managed in sidebar header */}
           </div>
         </header>
 

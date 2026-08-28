@@ -500,7 +500,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-4">
-            <NotificationBell userId={userId} theme="amber" />
+            {/* Notifications managed in sidebar header */}
           </div>
         </header>
 

@@ -6,7 +6,7 @@ import { useSocket } from '@/hooks/useSocket';
 
 export interface NotificationItem {
   id: string;
-  type: 'NEW_MESSAGE' | 'APPLICATION_ACCEPTED' | 'APPLICATION_REJECTED' | 'NEW_APPLICATION' | 'JOB_COMPLETED' | 'SYSTEM';
+  type: 'NEW_MESSAGE' | 'APPLICATION_ACCEPTED' | 'APPLICATION_REJECTED' | 'NEW_APPLICATION' | 'JOB_COMPLETED' | 'JOB_INVITATION' | 'SYSTEM';
   title: string;
   message: string;
   createdAt: string;
@@ -148,6 +148,8 @@ export default function NotificationBell({
         return <Briefcase className="w-4 h-4 text-amber-400 shrink-0" />;
       case 'JOB_COMPLETED':
         return <Star className="w-4 h-4 text-yellow-400 shrink-0" />;
+      case 'JOB_INVITATION':
+        return <Star className="w-4 h-4 text-violet-400 shrink-0" />;
       default:
         return <Bell className="w-4 h-4 text-primary shrink-0" />;
     }
