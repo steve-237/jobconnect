@@ -419,7 +419,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               <Plus className="w-4 h-4" />
               Annonce
             </button>
-            <NotificationBell userId={userId} theme="amber" />
           </div>
         </div>
 
@@ -499,8 +498,8 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               Gérez vos annonces et suivez les candidatures reçues.
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-4">
-            {/* Notifications managed in sidebar header */}
+          <div className="mt-4 md:mt-0 flex items-center gap-3">
+            <NotificationBell userId={userId} theme="amber" />
           </div>
         </header>
 

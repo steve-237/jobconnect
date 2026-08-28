@@ -263,7 +263,6 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
           </h2>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <NotificationBell userId={userId} theme="primary" />
           </div>
         </div>
 
@@ -308,8 +307,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               Voici l'état de vos candidatures et recherches d'emploi.
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-4">
-            {/* Notifications managed in sidebar header */}
+          <div className="mt-4 md:mt-0 flex items-center gap-3">
+            <NotificationBell userId={userId} theme="primary" />
           </div>
         </header>
 
