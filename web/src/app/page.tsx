@@ -54,10 +54,12 @@ export default function Home() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      setIsLoggedIn(true);
+      // User already logged in → redirect to dashboard
+      router.replace('/dashboard');
+      return;
     }
     setIsChecking(false);
-  }, []);
+  }, [router]);
 
   if (isChecking) {
     return (

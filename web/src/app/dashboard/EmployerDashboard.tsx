@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import ProfilePage from '../profile/page';
 import WalletPage from '../wallet/page';
+import CandidatesPage from '../candidates/page';
 import ChatModal from '@/components/ChatModal';
 import { useSocket } from '@/hooks/useSocket';
 import NotificationBell from '@/components/NotificationBell';
@@ -70,7 +71,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     }
   }, []);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'profile' | 'wallet'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'annuaire' | 'profile' | 'wallet'>('overview');
 
   // Toast & Confirm states
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -442,13 +443,15 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               <Users className="w-4 h-4 lg:w-5 lg:h-5" />
               Candidats
             </button>
-            <a
-              href="/candidates"
-              className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 shrink-0"
+            <button
+              onClick={() => setActiveTab('annuaire')}
+              className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
+                activeTab === 'annuaire' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-amber-300 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20'
+              }`}
             >
-              <Search className="w-4 h-4 lg:w-5 lg:h-5 text-amber-400" />
+              <Search className="w-4 h-4 lg:w-5 lg:h-5" />
               Annuaire Prestataires 🔍
-            </a>
+            </button>
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 ${
@@ -746,6 +749,13 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         {activeTab === 'wallet' && (
           <div className="w-full -mt-10">
             <WalletPage isEmbedded={true} />
+          </div>
+        )}
+
+        {/* Tab: Annuaire Prestataires (embedded) */}
+        {activeTab === 'annuaire' && (
+          <div className="w-full">
+            <CandidatesPage />
           </div>
         )}
 
