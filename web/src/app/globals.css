@@ -45,25 +45,10 @@ html.light-theme .text-muted-foreground {
   color: #475569 !important;
 }
 
-html.light-theme .bg-card,
-html.light-theme .bg-\[\#141414\],
-html.light-theme .bg-\[\#121212\],
-html.light-theme .bg-\[\#18181b\] {
+html.light-theme .bg-card {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #e2e8f0 !important;
-}
-
-html.light-theme .bg-black\/40,
-html.light-theme .bg-black\/60,
-html.light-theme .bg-black\/80 {
-  background-color: rgba(248, 250, 252, 0.92) !important;
-}
-
-html.light-theme .border-white\/5,
-html.light-theme .border-white\/10,
-html.light-theme .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.12) !important;
 }
 
 html.light-theme input,
