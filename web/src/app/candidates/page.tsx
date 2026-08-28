@@ -19,6 +19,8 @@ interface CandidateUser {
   isVerified?: boolean;
   avatarUrl?: string;
   createdAt?: string;
+  skills?: string[];
+  portfolio?: { id: string; title: string; imageUrl: string }[];
   reputation?: {
     averageRating: number;
     totalReviews: number;
@@ -43,6 +45,7 @@ export default function CandidatesPage() {
 
   // Invite Modal State
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateUser | null>(null);
+  const [portfolioCandidate, setPortfolioCandidate] = useState<CandidateUser | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [inviteMessage, setInviteMessage] = useState<string>('');
   const [isSending, setIsSending] = useState(false);
@@ -271,9 +274,23 @@ export default function CandidatesPage() {
                       {cand.bio || "Prestataire qualifié disponible pour réaliser vos missions avec soin et professionnalisme."}
                     </p>
 
+                    {/* Skills Badges */}
+                    {cand.skills && cand.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {cand.skills.map((skill) => (
+                          <span
+                            key={skill}
+                            className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary"
+                          >
+                            🛠️ {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Reputation Badges */}
                     {cand.reputation?.badges && cand.reputation.badges.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
                         {cand.reputation.badges.map((b) => (
                           <span
                             key={b.code}
@@ -283,6 +300,17 @@ export default function CandidatesPage() {
                           </span>
                         ))}
                       </div>
+                    )}
+
+                    {/* Portfolio Button (if photos exist) */}
+                    {cand.portfolio && cand.portfolio.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setPortfolioCandidate(cand)}
+                        className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-xl border border-blue-500/20 transition-all cursor-pointer"
+                      >
+                        📸 Voir le Portfolio ({cand.portfolio.length} réalisations)
+                      </button>
                     )}
                   </div>
 
@@ -375,6 +403,53 @@ export default function CandidatesPage() {
                   </>
                 )}
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ─── MODAL PORTFOLIO PHOTO SHOWCASE ─── */}
+        {portfolioCandidate && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setPortfolioCandidate(null)}
+          >
+            <div
+              className="glass rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 border border-blue-500/30 relative shadow-2xl bg-[#141414]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setPortfolioCandidate(null)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div className="p-3 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-500/30">
+                  <Briefcase className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    Portfolio de {portfolioCandidate.firstName} {portfolioCandidate.lastName}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">Photos de réalisations de travaux et chantiers passés</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+                {(portfolioCandidate.portfolio || []).map((item: any, idx: number) => (
+                  <div key={item.id || idx} className="glass rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="w-full h-44 object-cover"
+                    />
+                    <div className="p-3 bg-card/90">
+                      <p className="font-bold text-sm text-white">{item.title}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

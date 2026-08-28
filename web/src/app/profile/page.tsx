@@ -41,6 +41,8 @@ interface UserProfile {
   jobsApplied: number;
   jobsPosted: number;
   rating: number;
+  skills?: string[];
+  portfolio?: { id: string; title: string; imageUrl: string }[];
 }
 
 interface Availability {
@@ -206,11 +208,13 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
       await api.patch('/users/me', {
         firstName: draft.firstName,
         lastName: draft.lastName,
-        bio: draft.bio
+        bio: draft.bio,
+        skills: draft.skills || [],
+        portfolio: draft.portfolio || [],
       });
       setProfile({ ...draft });
       setEditing(false);
-      addToast('Profil mis à jour avec succès', 'success');
+      addToast('Profil, compétences et portfolio mis à jour avec succès', 'success', 'Profil Enregistré 💾');
     } catch(e) {
       console.error(e);
       addToast('Erreur lors de la sauvegarde du profil', 'error');
@@ -576,6 +580,120 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
             </div>
           </div>
         </div>
+
+        {/* ─── Compétences & Portfolio (CANDIDATE only) ─── */}
+        {profile.role === 'CANDIDATE' && (
+          <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Briefcase className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Compétences & Portfolio de Réalisations</h2>
+                <p className="text-xs text-muted-foreground">Mettez en valeur vos savoir-faire et vos réalisations photos pour convaincre les employeurs.</p>
+              </div>
+            </div>
+
+            {/* Section 1: Compétences Clés */}
+            <div className="space-y-3 pt-2 border-t border-white/5">
+              <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                🛠️ Mes Compétences Clés
+              </label>
+              
+              <div className="flex flex-wrap gap-2">
+                {['Bricolage', 'Électricité', 'Jardinage', 'Déménagement', 'Ménage', 'Plomberie', 'Peinture', 'Babysitting', 'Informatique', 'Cours particuliers', 'Mécanique', 'Cuisine'].map((skill) => {
+                  const currentSkills = editing ? (draft.skills || []) : (profile.skills || []);
+                  const isSelected = currentSkills.includes(skill);
+
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      disabled={!editing}
+                      onClick={() => {
+                        if (!editing) return;
+                        const nextSkills = isSelected
+                          ? currentSkills.filter((s) => s !== skill)
+                          : [...currentSkills, skill];
+                        setDraft({ ...draft, skills: nextSkills });
+                      }}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105'
+                          : 'bg-white/5 text-muted-foreground border-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      {isSelected ? '✓ ' : '+ '}{skill}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section 2: Portfolio Galerie Photo */}
+            <div className="space-y-4 pt-4 border-t border-white/5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  📸 Galerie de Réalisations (Portfolio)
+                </label>
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sampleTitle = prompt("Intitulé de la réalisation (ex: Rénovation Salle de Bain) :");
+                      if (!sampleTitle) return;
+                      const sampleUrl = prompt("URL de la photo de réalisation :", "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=60");
+                      if (!sampleUrl) return;
+
+                      const newItem = { id: `port-${Date.now()}`, title: sampleTitle, imageUrl: sampleUrl };
+                      const currentPort = draft.portfolio || [];
+                      setDraft({ ...draft, portfolio: [...currentPort, newItem] });
+                      addToast("Photo ajoutée au portfolio (cliquez sur 'Save' pour enregistrer)", "info");
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-500/20 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Ajouter une réalisation
+                  </button>
+                )}
+              </div>
+
+              {((editing ? draft.portfolio : profile.portfolio) || []).length === 0 ? (
+                <div className="p-6 bg-white/5 rounded-2xl border border-white/5 text-center text-xs text-muted-foreground">
+                  Aucune photo de réalisation pour le moment. Cliquez sur "Edit Profile" puis "Ajouter une réalisation" pour créer votre portfolio.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {((editing ? draft.portfolio : profile.portfolio) || []).map((item: any, idx: number) => (
+                    <div key={item.id || idx} className="group relative glass rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="p-3 bg-card/90 backdrop-blur-md border-t border-white/5 flex items-center justify-between">
+                        <span className="font-bold text-xs text-white truncate">{item.title}</span>
+                        {editing && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const currentPort = draft.portfolio || [];
+                              const filtered = currentPort.filter((_, i) => i !== idx);
+                              setDraft({ ...draft, portfolio: filtered });
+                            }}
+                            className="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ─── Availabilities (CANDIDATE only) ─── */}
         {profile.role === 'CANDIDATE' && (

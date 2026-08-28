@@ -43,6 +43,8 @@ model User {
   kycSelfieUrl    String?   // Selfie control photo
   kycSubmittedAt  DateTime?
   expoPushToken   String?
+  skills          String[]  @default([])
+  portfolio       Json?     @default("[]")
   
   // Relations
   postedJobs      Job[]     @relation("EmployerJobs")

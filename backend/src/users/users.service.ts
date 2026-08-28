@@ -44,6 +44,11 @@ export class UsersService {
         firstName: true,
         lastName: true,
         role: true,
+        bio: true,
+        isVerified: true,
+        skills: true,
+        portfolio: true,
+        createdAt: true,
       },
     });
   }
