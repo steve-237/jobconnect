@@ -18,6 +18,8 @@ import WalletPage from '../wallet/page';
 import ChatModal from '@/components/ChatModal';
 import NotificationBell from '@/components/NotificationBell';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useSocket } from '@/hooks/useSocket';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 
@@ -37,6 +39,7 @@ interface Application {
 
 export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -237,17 +240,17 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   };
 
   const navItems = [
-    { key: 'overview' as const, label: 'Overview', icon: LayoutGrid },
-    { key: 'jobs' as const, label: 'Browse Jobs', icon: Search },
-    { key: 'calendar' as const, label: 'Mon Planning', icon: Calendar },
-    { key: 'profile' as const, label: 'Mon Profil', icon: User },
-    { key: 'wallet' as const, label: 'Portefeuille', icon: Wallet },
+    { key: 'overview' as const, label: t('dashboard.overview'), icon: LayoutGrid },
+    { key: 'jobs' as const, label: t('dashboard.browse_jobs'), icon: Search },
+    { key: 'calendar' as const, label: t('dashboard.my_planning'), icon: Calendar },
+    { key: 'profile' as const, label: t('dashboard.my_profile'), icon: User },
+    { key: 'wallet' as const, label: t('dashboard.my_wallet'), icon: Wallet },
   ];
 
   const stats = [
-    { label: 'Candidatures', value: applications.length, icon: FileText, accent: 'bg-primary/20 text-primary' },
-    { label: 'Acceptées', value: applications.filter(a => a.isAccepted).length, icon: CheckCircle2, accent: 'bg-emerald-500/20 text-emerald-400' },
-    { label: 'Vues profil', value: 45, icon: TrendingUp, accent: 'bg-violet-500/20 text-violet-400' },
+    { label: t('dashboard.stat_applications'), value: applications.length, icon: FileText, accent: 'bg-primary/20 text-primary' },
+    { label: t('dashboard.stat_accepted'), value: applications.filter(a => a.isAccepted).length, icon: CheckCircle2, accent: 'bg-emerald-500/20 text-emerald-400' },
+    { label: t('dashboard.stat_profile_views'), value: 45, icon: TrendingUp, accent: 'bg-violet-500/20 text-violet-400' },
   ];
 
   return (
@@ -259,9 +262,10 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
               <Briefcase className="w-5 h-5" />
             </div>
-            Candidate Hub
+            {t('dashboard.candidate_hub')}
           </h2>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher variant="compact" />
             <ThemeToggle />
           </div>
         </div>
@@ -287,7 +291,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0"
             >
               <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
-              <span className="hidden lg:inline">Déconnexion</span>
+              <span className="hidden lg:inline">{t('dashboard.logout')}</span>
             </button>
           </nav>
         </div>
@@ -304,7 +308,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               </span>
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Voici l'état de vos candidatures et recherches d'emploi.
+              {t('dashboard.candidate_subtitle')}
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex items-center gap-3">
@@ -359,7 +363,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                     ) : applications.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="p-8 text-center">
-                          <p className="text-muted-foreground mb-4">Vous n'avez pas encore postulé.</p>
+                          <p className="text-muted-foreground mb-4">{t('dashboard.no_applications')}</p>
                           <button
                             onClick={() => setActiveTab('jobs')}
                             className="bg-primary hover:bg-primary/80 text-white px-6 py-2 rounded-lg font-medium transition-colors"

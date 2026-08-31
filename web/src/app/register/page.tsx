@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, User, Briefcase, ArrowRight, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { t } = useLanguage();
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -45,18 +48,26 @@ export default function RegisterPage() {
       <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px] pointer-events-none" />
       <div className="absolute top-[10%] left-[-10%] w-[30%] h-[30%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       
+      {/* Floating Top Right Language Switcher */}
+      <div className="absolute top-6 right-6 z-20">
+        <LanguageSwitcher variant="dropdown" align="right" />
+      </div>
+
       <div className="w-full max-w-lg animate-fade-in-up">
         <div className="glass p-8 md:p-10 rounded-3xl relative gradient-border shadow-2xl shadow-primary/5">
           <div className="flex flex-col items-center mb-8">
-            <Link href="/" className="flex items-center gap-2 mb-8 hover:scale-105 transition-transform">
+            <Link href="/" className="flex items-center gap-2 mb-6 hover:scale-105 transition-transform">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
               <span className="font-bold text-2xl tracking-tight">JobConnect</span>
             </Link>
-            <h1 className="text-3xl font-bold mb-2 tracking-tight">Create an account</h1>
+
+            <LanguageSwitcher variant="pills" className="mb-6" />
+
+            <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('auth.register_title')}</h1>
             <p className="text-muted-foreground text-sm text-center">
-              Join thousands of freelancers and employers
+              {t('auth.register_subtitle')}
             </p>
           </div>
 
@@ -80,7 +91,7 @@ export default function RegisterPage() {
                 }`}
               >
                 <User className="w-6 h-6" />
-                <span className="text-sm font-medium">Je cherche un job</span>
+                <span className="text-sm font-medium">{t('auth.role_candidate')}</span>
               </button>
               
               <button
@@ -93,13 +104,13 @@ export default function RegisterPage() {
                 }`}
               >
                 <Briefcase className="w-6 h-6" />
-                <span className="text-sm font-medium">Je propose un job</span>
+                <span className="text-sm font-medium">{t('auth.role_employer')}</span>
               </button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-5">
               <div className="space-y-2 flex-1">
-                <label className="text-sm font-medium text-gray-300">First Name</label>
+                <label className="text-sm font-medium text-gray-300">{t('auth.first_name')}</label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                   <input 
@@ -113,7 +124,7 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="space-y-2 flex-1">
-                <label className="text-sm font-medium text-gray-300">Last Name</label>
+                <label className="text-sm font-medium text-gray-300">{t('auth.last_name')}</label>
                 <div className="relative group">
                   <input 
                     type="text"
@@ -128,7 +139,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Email Address</label>
+              <label className="text-sm font-medium text-gray-300">{t('auth.email')}</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
@@ -143,7 +154,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Password</label>
+              <label className="text-sm font-medium text-gray-300">{t('auth.password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
@@ -166,7 +177,7 @@ export default function RegisterPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Create Account
+                  {t('auth.register_btn')}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -174,9 +185,9 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-8 text-center text-sm text-gray-400">
-            Already have an account?{' '}
+            {t('auth.already_account')}{' '}
             <Link href="/login" className="text-primary hover:text-primary-hover transition-colors font-medium">
-              Sign in
+              {t('auth.login_link')}
             </Link>
           </div>
         </div>

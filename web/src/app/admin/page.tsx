@@ -27,6 +27,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 function decodeUserFromToken(): { email: string; role?: string } | null {
   try {
@@ -68,6 +69,7 @@ interface AdminStats {
 
 export default function AdminPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [ready, setReady] = useState(false);
   const [activeTab, setActiveTab] = useState<'kyc' | 'users'>('kyc');
   const [inspectingUser, setInspectingUser] = useState<UserData | null>(null);
@@ -238,7 +240,7 @@ export default function AdminPage() {
             </Link>
             <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
               <Shield className="w-8 h-8 text-red-500" />
-              Panneau d'Administration
+              {t('admin.title')}
             </h1>
           </div>
 
@@ -324,7 +326,7 @@ export default function AdminPage() {
             }`}
           >
             <ShieldCheck className="w-4 h-4" />
-            Vérifications KYC ({pendingKycList.length})
+            {t('admin.kyc_tab')} ({pendingKycList.length})
           </button>
 
           <button
@@ -336,7 +338,7 @@ export default function AdminPage() {
             }`}
           >
             <Users className="w-4 h-4" />
-            Gestion des Utilisateurs ({usersList.length})
+            {t('admin.users_tab')} ({usersList.length})
           </button>
         </div>
 
@@ -357,7 +359,7 @@ export default function AdminPage() {
 
             {pendingKycList.length === 0 ? (
               <div className="p-12 text-center text-muted-foreground text-sm">
-                Aucune demande de vérification KYC en attente pour le moment. 🎉
+                {t('admin.kyc_no_pending')}
               </div>
             ) : (
               <div className="divide-y divide-white/5">
@@ -397,7 +399,7 @@ export default function AdminPage() {
                         className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
                       >
                         <XCircle className="w-4 h-4" />
-                        Rejeter
+                        {t('admin.reject')}
                       </button>
 
                       <button
@@ -405,7 +407,7 @@ export default function AdminPage() {
                         className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
                       >
                         <CheckCircle className="w-4 h-4" />
-                        Approuver KYC 🔵
+                        {t('admin.approve')} 🔵
                       </button>
                     </div>
                   </div>
@@ -485,7 +487,7 @@ export default function AdminPage() {
                             <button
                               onClick={() => handleDeleteUser(u.id, `${u.firstName} ${u.lastName}`)}
                               className="text-muted-foreground hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors cursor-pointer"
-                              title="Supprimer cet utilisateur"
+                              title={t('admin.delete_user')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -581,7 +583,7 @@ export default function AdminPage() {
                     className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer"
                   >
                     <XCircle className="w-4 h-4" />
-                    Rejeter le dossier
+                    {t('admin.reject')}
                   </button>
 
                   <button
@@ -592,7 +594,7 @@ export default function AdminPage() {
                     className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Approuver KYC & Activer Badge 🔵
+                    {t('admin.approve')} 🔵
                   </button>
                 </div>
               </div>

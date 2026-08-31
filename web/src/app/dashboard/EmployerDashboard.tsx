@@ -18,6 +18,8 @@ import { useSocket } from '@/hooks/useSocket';
 import NotificationBell from '@/components/NotificationBell';
 import ThemeToggle from '@/components/ThemeToggle';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 interface Job {
   id: string;
@@ -56,6 +58,7 @@ interface Category {
 
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -408,9 +411,10 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center">
               <Briefcase className="w-5 h-5" />
             </div>
-            Employer Hub
+            {t('dashboard.employer_hub')}
           </h2>
           <div className="flex items-center gap-2">
+            <LanguageSwitcher variant="compact" />
             <ThemeToggle />
             <button
               onClick={handleOpenCreateModal}
@@ -431,7 +435,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <LayoutGrid className="w-4 h-4 lg:w-5 lg:h-5" />
-              Vue d'ensemble
+              {t('dashboard.overview')}
             </button>
             <button
               onClick={() => setActiveTab('candidates')}
@@ -440,7 +444,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <Users className="w-4 h-4 lg:w-5 lg:h-5" />
-              Candidats
+              {t('dashboard.applicants')}
             </button>
             <button
               onClick={() => setActiveTab('annuaire')}
@@ -449,7 +453,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <Search className="w-4 h-4 lg:w-5 lg:h-5" />
-              Annuaire Prestataires 🔍
+              {t('dashboard.directory')} 🔍
             </button>
             <button
               onClick={() => setActiveTab('profile')}
@@ -458,7 +462,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <User className="w-4 h-4 lg:w-5 lg:h-5" />
-              Profil
+              {t('dashboard.my_profile')}
             </button>
             <button
               onClick={() => setActiveTab('wallet')}
@@ -467,11 +471,11 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               }`}
             >
               <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
-              Portefeuille
+              {t('dashboard.my_wallet')}
             </button>
             <button onClick={handleLogout} className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0">
               <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
-              <span className="hidden lg:inline">Déconnexion</span>
+              <span className="hidden lg:inline">{t('dashboard.logout')}</span>
             </button>
           </nav>
         </div>
@@ -495,7 +499,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               </span>
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Gérez vos annonces et suivez les candidatures reçues.
+              {t('dashboard.employer_subtitle')}
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex items-center gap-3">
@@ -512,7 +516,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                   <div className="bg-amber-500/20 text-amber-500 p-3 rounded-xl"><Briefcase className="w-6 h-6" /></div>
                 </div>
                 <h3 className="text-4xl font-bold mt-4 mb-1">{jobs.length}</h3>
-                <p className="text-muted-foreground font-medium">Missions créées</p>
+                <p className="text-muted-foreground font-medium">{t('dashboard.stat_jobs_posted')}</p>
               </div>
 
               <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
@@ -719,13 +723,13 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                             }}
                             className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors text-sm"
                           >
-                            <Check className="w-4 h-4" /> Accepter
+                            <Check className="w-4 h-4" /> {t('dashboard.accept')}
                           </button>
                           <button
                             onClick={() => handleRejectApplication(app.id)}
                             className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2.5 rounded-xl font-semibold transition-colors text-sm"
                           >
-                            <X className="w-4 h-4" /> Refuser
+                            <X className="w-4 h-4" /> {t('dashboard.reject')}
                           </button>
                         </div>
                       )}
@@ -820,13 +824,13 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                                 }}
                                 className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
                               >
-                                <Check className="w-4 h-4" /> Accepter
+                                <Check className="w-4 h-4" /> {t('dashboard.accept')}
                               </button>
                               <button
                                 onClick={() => handleRejectApplication(app.id)}
                                 className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
                               >
-                                <X className="w-4 h-4" /> Refuser
+                                <X className="w-4 h-4" /> {t('dashboard.reject')}
                               </button>
                             </div>
                           )}

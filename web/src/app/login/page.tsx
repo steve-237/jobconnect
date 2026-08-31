@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowRight, Loader2, Briefcase } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -45,18 +48,26 @@ export default function LoginPage() {
       <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px] pointer-events-none" />
       
+      {/* Floating Top Right Language Switcher */}
+      <div className="absolute top-6 right-6 z-20">
+        <LanguageSwitcher variant="dropdown" align="right" />
+      </div>
+
       <div className="w-full max-w-md animate-fade-in-up">
         <div className="glass p-8 rounded-3xl relative gradient-border shadow-2xl shadow-primary/5">
           <div className="flex flex-col items-center mb-8">
-            <Link href="/" className="flex items-center gap-2 mb-8 hover:scale-105 transition-transform">
+            <Link href="/" className="flex items-center gap-2 mb-6 hover:scale-105 transition-transform">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
               <span className="font-bold text-2xl tracking-tight">JobConnect</span>
             </Link>
-            <h1 className="text-3xl font-bold mb-2 tracking-tight">Connexion</h1>
+            
+            <LanguageSwitcher variant="pills" className="mb-6" />
+            
+            <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('auth.login_title')}</h1>
             <p className="text-muted-foreground text-sm text-center">
-              Connectez-vous à votre compte pour continuer
+              {t('auth.login_subtitle')}
             </p>
           </div>
 
@@ -69,14 +80,14 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Adresse Email</label>
+              <label className="text-sm font-medium text-gray-300">{t('auth.email')}</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
                   type="email"
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
-                  placeholder="exemple@email.com"
+                  placeholder={t('auth.email_placeholder')}
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                 />
@@ -84,7 +95,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Mot de passe</label>
+              <label className="text-sm font-medium text-gray-300">{t('auth.password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
                 <input 
@@ -107,7 +118,7 @@ export default function LoginPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Se connecter
+                  {t('auth.login_btn')}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -115,9 +126,9 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center text-sm text-gray-400">
-            Pas encore de compte ?{' '}
+            {t('auth.no_account')}{' '}
             <Link href="/register" className="text-primary hover:underline transition-colors font-medium">
-              S'inscrire
+              {t('auth.register_link')}
             </Link>
           </div>
 

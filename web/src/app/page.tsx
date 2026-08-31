@@ -11,6 +11,8 @@ import {
   Search, MapPin
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const FEATURES = [
   {
@@ -23,7 +25,7 @@ const FEATURES = [
     icon: <Shield className="w-8 h-8 text-green-400" />,
     title: 'Secure Escrow',
     description: 'Payments are held in escrow until the job is completed. Both parties are protected from fraud.',
-    image: '/feature-payment.png',
+    image: '/feature-verified.png',
   },
   {
     icon: <Star className="w-8 h-8 text-purple-400" />,
@@ -48,6 +50,7 @@ const TESTIMONIALS = [
 
 export default function Home() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [isChecking, setIsChecking] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -80,12 +83,13 @@ export default function Home() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <Link href="/jobs" className="hover:text-white transition-colors">Browse Jobs</Link>
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
+            <Link href="/jobs" className="hover:text-white transition-colors">{t('nav.browse_jobs')}</Link>
+            <a href="#features" className="hover:text-white transition-colors">{t('nav.features')}</a>
+            <a href="#how-it-works" className="hover:text-white transition-colors">{t('nav.how_it_works')}</a>
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageSwitcher variant="dropdown" />
             <ThemeToggle />
             
             {isLoggedIn ? (
@@ -95,7 +99,7 @@ export default function Home() {
                   className="bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-lg shadow-primary/20 cursor-pointer"
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  Mon Dashboard
+                  {t('nav.my_dashboard')}
                 </Link>
                 <button
                   type="button"
@@ -106,19 +110,19 @@ export default function Home() {
                   }}
                   className="text-xs font-semibold text-muted-foreground hover:text-red-400 px-3 py-2 transition-colors cursor-pointer"
                 >
-                  Déconnexion
+                  {t('common.logout')}
                 </button>
               </>
             ) : (
               <>
                 <Link href="/login" className="text-xs font-semibold text-muted-foreground hover:text-white transition-colors px-3 py-2">
-                  Se connecter
+                  {t('nav.sign_in')}
                 </Link>
                 <Link 
                   href="/register" 
                   className="bg-primary hover:bg-primary/80 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 flex items-center gap-1.5 cursor-pointer"
                 >
-                  S'inscrire <ArrowRight className="w-3.5 h-3.5" />
+                  {t('nav.register')} <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </>
             )}

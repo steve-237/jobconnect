@@ -9,6 +9,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { calculateMatchingScore } from '@/lib/matching';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface CandidateUser {
   id: string;
@@ -36,6 +37,7 @@ interface EmployerJob {
 }
 
 export default function CandidatesPage() {
+  const { t } = useLanguage();
   const [candidates, setCandidates] = useState<CandidateUser[]>([]);
   const [myJobs, setMyJobs] = useState<EmployerJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -165,10 +167,10 @@ export default function CandidatesPage() {
             <div>
               <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-amber-400 to-amber-200 bg-clip-text text-transparent flex items-center gap-3">
                 <Users className="w-8 h-8 text-amber-400" />
-                Annuaire des Prestataires Qualifiés
+                {t('candidates.title')}
               </h1>
               <p className="text-muted-foreground mt-1 text-sm">
-                Explorez et invitez directement les meilleurs prestataires pour vos missions.
+                {t('candidates.subtitle')}
               </p>
             </div>
           </div>
@@ -182,7 +184,7 @@ export default function CandidatesPage() {
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-400" />
               <input
                 type="text"
-                placeholder="Rechercher par nom, prénom ou compétence..."
+                placeholder={t('candidates.search_placeholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-xs font-medium text-white placeholder:text-muted-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 transition-all"
@@ -211,7 +213,7 @@ export default function CandidatesPage() {
                   onChange={(e) => setOnlyVerified(e.target.checked)}
                   className="rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-500/30 w-4 h-4 cursor-pointer"
                 />
-                <ShieldCheck className="w-4 h-4 text-blue-400" /> Profils Vérifiés Uniquement
+                <ShieldCheck className="w-4 h-4 text-blue-400" /> {t('candidates.verified_only')}
               </label>
             </div>
           </div>
@@ -224,7 +226,7 @@ export default function CandidatesPage() {
           </div>
         ) : filteredCandidates.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center text-muted-foreground border border-white/5">
-            Aucun prestataire ne correspond à vos critères de recherche.
+            {t('candidates.no_candidates')}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -257,7 +259,7 @@ export default function CandidatesPage() {
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                             <span className="font-bold text-white">{rating.toFixed(1)}</span>
-                            <span>({cand.reputation?.totalReviews || 0} avis)</span>
+                            <span>({cand.reputation?.totalReviews || 0} {t('candidates.reviews')})</span>
                           </p>
                         </div>
                       </div>
@@ -309,7 +311,7 @@ export default function CandidatesPage() {
                         onClick={() => setPortfolioCandidate(cand)}
                         className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-xl border border-blue-500/20 transition-all cursor-pointer"
                       >
-                        📸 Voir le Portfolio ({cand.portfolio.length} réalisations)
+                        📸 {t('candidates.portfolio')} ({cand.portfolio.length})
                       </button>
                     )}
                   </div>
@@ -322,7 +324,7 @@ export default function CandidatesPage() {
                       className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-lg shadow-amber-500/20 active:scale-95 cursor-pointer"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      Inviter à une mission
+                      {t('candidates.invite')}
                     </button>
                   </div>
                 </div>
@@ -354,7 +356,7 @@ export default function CandidatesPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">
-                    Inviter {selectedCandidate.firstName} {selectedCandidate.lastName}
+                    {t('candidates.invite_modal_title')} — {selectedCandidate.firstName} {selectedCandidate.lastName}
                   </h3>
                   <p className="text-xs text-muted-foreground">Proposez-lui directement l'une de vos annonces</p>
                 </div>
@@ -368,7 +370,7 @@ export default function CandidatesPage() {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <label className="text-xs font-semibold text-muted-foreground">Sélectionnez la mission :</label>
+                      <label className="text-xs font-semibold text-muted-foreground">{t('candidates.invite_select_job')} :</label>
                       <select
                         value={selectedJobId}
                         onChange={(e) => setSelectedJobId(e.target.value)}
@@ -398,7 +400,7 @@ export default function CandidatesPage() {
                       disabled={isSending}
                       className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-amber-500/25 cursor-pointer"
                     >
-                      {isSending ? 'Envoi en cours...' : "Transmettre l'invitation 🚀"}
+                      {isSending ? 'Envoi en cours...' : `${t('candidates.invite_send')} 🚀`}
                     </button>
                   </>
                 )}

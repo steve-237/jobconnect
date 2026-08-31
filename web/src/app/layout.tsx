@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const inter = Inter({
   variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
 });
 
 export const viewport: Viewport = {
@@ -31,9 +32,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "JobConnect Team" }],
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",
     apple: "/icon.svg",
   },
@@ -44,14 +43,7 @@ export const metadata: Metadata = {
     siteName: "JobConnect",
     locale: "fr_FR",
     type: "website",
-    images: [
-      {
-        url: "/icon.svg",
-        width: 512,
-        height: 512,
-        alt: "JobConnect Logo",
-      },
-    ],
+    images: [{ url: "/icon.svg", width: 512, height: 512, alt: "JobConnect Logo" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -70,7 +62,9 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, MessageSquare, CheckCircle, XCircle, Briefcase, Star, ExternalLink } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface NotificationItem {
   id: string;
@@ -28,6 +29,7 @@ export default function NotificationBell({
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
+  const { t } = useLanguage();
 
   const isAmber = theme === 'amber';
   const badgeBg = isAmber ? 'bg-amber-500' : 'bg-primary';

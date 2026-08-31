@@ -11,6 +11,7 @@ import api from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { useRouter } from 'next/navigation';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Transaction {
   id: string;
@@ -33,8 +34,8 @@ function decodeRole(): string {
   }
 }
 
-function getTransactionMeta(t: Transaction, isEmployer: boolean) {
-  const title = t.job?.title?.toLowerCase() || '';
+function getTransactionMeta(tx: Transaction, isEmployer: boolean) {
+  const title = tx.job?.title?.toLowerCase() || '';
 
   if (title.includes('rechargement') || title.includes('dépôt') || title.includes('deposit')) {
     return {
@@ -62,7 +63,7 @@ function getTransactionMeta(t: Transaction, isEmployer: boolean) {
     return {
       isCredit: false,
       sign: '-',
-      subtitle: t.candidate ? `Payé à ${t.candidate.firstName} ${t.candidate.lastName}` : 'Paiement mission (Séquestre)',
+      subtitle: tx.candidate ? `Payé à ${tx.candidate.firstName} ${tx.candidate.lastName}` : 'Paiement mission (Séquestre)',
       icon: ArrowUpRight,
       iconClass: 'bg-red-500/10 text-red-400 border-red-500/20',
       textClass: 'text-foreground',
@@ -71,7 +72,7 @@ function getTransactionMeta(t: Transaction, isEmployer: boolean) {
     return {
       isCredit: true,
       sign: '+',
-      subtitle: t.employer ? `Reçu de ${t.employer.firstName} ${t.employer.lastName}` : 'Gain de mission',
+      subtitle: tx.employer ? `Reçu de ${tx.employer.firstName} ${tx.employer.lastName}` : 'Gain de mission',
       icon: ArrowDownRight,
       iconClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
       textClass: 'text-emerald-400',
@@ -81,6 +82,7 @@ function getTransactionMeta(t: Transaction, isEmployer: boolean) {
 
 export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [role, setRole] = useState('CANDIDATE');
@@ -206,7 +208,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-              Mon Portefeuille
+              {t('wallet.title')}
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Gérez vos transactions, rechargements et virements bancaires en toute sécurité.
@@ -261,7 +263,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-amber-500/25 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <PlusCircle className="w-5 h-5" />
-                  Recharger mon solde
+                  {t('wallet.deposit')}
                 </button>
               ) : (
                 <button
@@ -269,7 +271,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-2xl transition-all shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95 cursor-pointer"
                 >
                   <Download className="w-5 h-5" />
-                  Demander un retrait
+                  {t('wallet.withdraw')}
                 </button>
               )}
             </div>
@@ -278,7 +280,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
         {/* Transactions List Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-foreground">Historique des transactions</h3>
+          <h3 className="text-xl font-bold text-foreground">{t('wallet.transactions')}</h3>
         </div>
 
         {/* Transactions List */}
@@ -288,23 +290,23 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
           </div>
         ) : transactions.length === 0 ? (
           <div className="glass rounded-2xl p-12 text-center text-muted-foreground border border-white/5">
-            Aucune transaction enregistrée pour le moment.
+            {t('wallet.no_transactions')}
           </div>
         ) : (
           <div className="space-y-3">
-            {transactions.map((t) => {
-              const meta = getTransactionMeta(t, isEmployer);
-              const date = new Date(t.createdAt).toLocaleDateString('fr-FR', {
+            {transactions.map((tx) => {
+              const meta = getTransactionMeta(tx, isEmployer);
+              const date = new Date(tx.createdAt).toLocaleDateString('fr-FR', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
               });
-              const isPending = t.status === 'PENDING';
+              const isPending = tx.status === 'PENDING';
               const Icon = meta.icon;
 
               return (
                 <div
-                  key={t.id}
+                  key={tx.id}
                   className="glass rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-white/5 hover:border-white/20 transition-all hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-4">
@@ -312,7 +314,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                       <Icon size={22} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-base text-foreground">{t.job?.title || 'Transaction'}</h4>
+                      <h4 className="font-bold text-base text-foreground">{tx.job?.title || 'Transaction'}</h4>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {meta.subtitle} • {date}
                       </p>
@@ -321,21 +323,21 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
 
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
                     <span className={`text-xl font-extrabold ${meta.textClass}`}>
-                      {meta.sign}{formatPrice(Math.abs(t.amount))}
+                      {meta.sign}{formatPrice(Math.abs(tx.amount))}
                     </span>
                     <div className="flex items-center gap-2 text-xs font-semibold">
                       {isPending ? (
                         <span className="flex items-center text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/20">
-                          <Clock size={12} className="mr-1" /> En attente
+                          <Clock size={12} className="mr-1" /> {t('wallet.type_pending')}
                         </span>
-                      ) : t.status === 'COMPLETED' ? (
+                      ) : tx.status === 'COMPLETED' ? (
                         <div className="flex items-center gap-2">
                           <span className="flex items-center text-emerald-400 bg-emerald-400/10 px-2.5 py-0.5 rounded-full border border-emerald-400/20">
                             <CheckCircle size={12} className="mr-1" /> Validé
                           </span>
                           <button
                             type="button"
-                            onClick={() => setSelectedReceipt(t)}
+                            onClick={() => setSelectedReceipt(tx)}
                             className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-0.5 rounded-full border border-blue-500/25 transition-all cursor-pointer"
                           >
                             <FileText size={11} /> Reçu PDF
@@ -524,7 +526,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Reçu Officiel de Mission</h3>
+                  <h3 className="text-xl font-bold text-white">{t('wallet.receipt_title')}</h3>
                   <p className="text-xs text-muted-foreground">Preuve de paiement & séquestre JobConnect</p>
                 </div>
               </div>
@@ -555,7 +557,7 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   className="flex-1 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-500/25"
                 >
                   <Printer className="w-4 h-4" />
-                  Imprimer / Télécharger (PDF)
+                  {t('wallet.print')}
                 </button>
               </div>
             </div>
