@@ -54,6 +54,8 @@ export const metadata: Metadata = {
   },
 };
 
+import SupportChatbot from "@/components/SupportChatbot";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +66,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
         <LanguageProvider>
           {children}
+          <SupportChatbot />
         </LanguageProvider>
       </body>
     </html>

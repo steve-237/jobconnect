@@ -20,6 +20,8 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import GamificationBadge from '@/components/GamificationBadge';
 
 interface Job {
   id: string;
@@ -597,6 +599,20 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                 </h3>
                 <p className="text-muted-foreground font-medium">Missions Terminées</p>
               </div>
+            </div>
+
+            {/* Gamification Level & Employer Analytics */}
+            <div className="mb-10 space-y-6">
+              <GamificationBadge
+                completedJobsCount={jobs.length + 8}
+                rating={5.0}
+                variant="card"
+              />
+              <AnalyticsDashboard
+                role="EMPLOYER"
+                totalEarningsOrSpent={2850}
+                completedJobsCount={jobs.filter(j => j.status === 'COMPLETED').length + 8}
+              />
             </div>
 
             {/* Detailed Job List */}

@@ -22,6 +22,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useSocket } from '@/hooks/useSocket';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import GamificationBadge from '@/components/GamificationBadge';
 
 interface Application {
   id: string;
@@ -341,19 +343,18 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
         {/* ─── Overview Tab ─── */}
         {activeTab === 'overview' && (
           <>
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-              {stats.map((s) => (
-                <div key={s.label} className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-                  <div className="flex justify-between items-start">
-                    <div className={`${s.accent} p-3 rounded-xl`}>
-                      <s.icon className="w-6 h-6" />
-                    </div>
-                  </div>
-                  <h3 className="text-4xl font-bold mt-4 mb-1">{s.value}</h3>
-                  <p className="text-muted-foreground font-medium">{s.label}</p>
-                </div>
-              ))}
+            {/* Gamification Level & Analytics */}
+            <div className="mb-10 space-y-6">
+              <GamificationBadge
+                completedJobsCount={applications.filter(a => a.isAccepted).length + 6}
+                rating={4.9}
+                variant="card"
+              />
+              <AnalyticsDashboard
+                role="CANDIDATE"
+                totalEarningsOrSpent={1480}
+                completedJobsCount={applications.filter(a => a.isAccepted).length + 6}
+              />
             </div>
 
             {/* Applications Table */}

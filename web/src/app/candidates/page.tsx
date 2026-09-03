@@ -10,6 +10,7 @@ import api from '@/lib/api';
 import { calculateMatchingScore } from '@/lib/matching';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import GamificationBadge from '@/components/GamificationBadge';
 
 interface CandidateUser {
   id: string;
@@ -248,13 +249,18 @@ export default function CandidatesPage() {
                           {initials}
                         </div>
                         <div>
-                          <h3 className="font-bold text-base text-white flex items-center gap-1.5">
+                          <h3 className="font-bold text-base text-white flex items-center gap-1.5 flex-wrap">
                             {cand.firstName} {cand.lastName}
                             {cand.isVerified && (
                               <span title="Profil Vérifié">
                                 <ShieldCheck className="w-4 h-4 text-blue-400 fill-blue-500/20" />
                               </span>
                             )}
+                            <GamificationBadge
+                              completedJobsCount={(cand.reputation?.totalReviews || 0) * 2 + 5}
+                              rating={rating}
+                              variant="compact"
+                            />
                           </h3>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                             <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />

@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { X, Send, Loader2, User, MessageSquare, CheckCheck, Lock } from 'lucide-react';
+import { X, Send, Loader2, User, MessageSquare, CheckCheck, Lock, Video } from 'lucide-react';
 import api from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
+import WebRtcCallModal from './WebRtcCallModal';
 
 interface Message {
   id: string;
@@ -31,6 +32,7 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
   const [isLoading, setIsLoading] = useState(true);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isWebRtcOpen, setIsWebRtcOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,13 +161,31 @@ export default function ChatModal({ applicationId, title = 'Discussion en direct
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-muted-foreground hover:text-white hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsWebRtcOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+              title="Lancer un appel vidéo WebRTC"
+            >
+              <Video className="w-4 h-4" />
+              <span>Appel Visio HD</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-muted-foreground hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {isWebRtcOpen && (
+          <WebRtcCallModal
+            partnerName={title.replace(/^Chat\s*—\s*/i, '')}
+            onClose={() => setIsWebRtcOpen(false)}
+          />
+        )}
 
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10 scrollbar-thin scrollbar-thumb-white/10">
