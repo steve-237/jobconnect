@@ -10,6 +10,7 @@ import { MessagesModule } from './messages/messages.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AvailabilitiesModule } from './availabilities/availabilities.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AvailabilitiesModule } from './availabilities/availabilities.module';
     NotificationsModule,
     PaymentsModule,
     AvailabilitiesModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

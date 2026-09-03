@@ -4,7 +4,7 @@ import {
   FileText, TrendingUp, Search, User, ArrowRight,
   Coins, MapPin, Clock, LogOut, CheckCircle2,
   MessageSquare, Wallet, Calendar, X, LayoutGrid,
-  Briefcase, Bell, Loader2, CheckCircle, Star
+  Briefcase, Bell, Loader2, CheckCircle, Star, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -195,6 +195,28 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
       console.error(e);
     } finally {
       setIsLoadingJob(false);
+    }
+  };
+
+  const [isAiGeneratingPitch, setIsAiGeneratingPitch] = useState(false);
+
+  const handleAiGeneratePitch = async () => {
+    if (!jobDetail) return;
+    setIsAiGeneratingPitch(true);
+    try {
+      const res = await api.post('/ai/generate-pitch', {
+        jobTitle: jobDetail.title,
+        jobDescription: jobDetail.description || '',
+      });
+      if (res.data?.pitch) {
+        setApplyMessage(res.data.pitch);
+        addToast('Pitch de candidature généré par l\'IA avec succès !', 'success', 'Assistant IA 🤖');
+      }
+    } catch (e: any) {
+      console.error('AI Pitch error', e);
+      addToast('Échec de la génération du pitch IA', 'error');
+    } finally {
+      setIsAiGeneratingPitch(false);
     }
   };
 
@@ -561,7 +583,18 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                         </div>
                       ) : (
                         <>
-                          <label className="text-xs font-semibold text-muted-foreground mb-2 block">Message à l'employeur (optionnel)</label>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="text-xs font-semibold text-muted-foreground block">Message à l'employeur (optionnel)</label>
+                            <button
+                              type="button"
+                              onClick={handleAiGeneratePitch}
+                              disabled={isAiGeneratingPitch}
+                              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-xl border border-primary/20 transition-all cursor-pointer"
+                            >
+                              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                              {isAiGeneratingPitch ? 'Rédaction...' : 'Rédiger avec l\'IA 🤖'}
+                            </button>
+                          </div>
                           <textarea
                             value={applyMessage}
                             onChange={(e) => setApplyMessage(e.target.value)}

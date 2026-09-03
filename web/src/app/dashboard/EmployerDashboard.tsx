@@ -3,7 +3,7 @@
 import {
   Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical,
   LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet,
-  Trash2, Edit3, Coins, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight, Search
+  Trash2, Edit3, Coins, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight, Search, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -151,6 +151,65 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     scheduledDate: '',
     estimatedDuration: '',
   });
+
+  // AI Assistant States
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [isAiEstimating, setIsAiEstimating] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState('');
+
+  const handleAiGenerateJob = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsAiGenerating(true);
+    try {
+      const res = await api.post('/ai/generate-job', {
+        prompt: aiPrompt,
+        location: createFormData.location || 'Paris',
+      });
+      const data = res.data;
+      setCreateFormData((prev) => ({
+        ...prev,
+        title: data.title || prev.title,
+        description: data.description || prev.description,
+        price: data.recommendedPrice ? data.recommendedPrice.toString() : prev.price,
+        categoryId: data.categoryId || prev.categoryId,
+        estimatedDuration: data.estimatedDuration ? (data.estimatedDuration * 60).toString() : prev.estimatedDuration,
+      }));
+      setAiExplanation(data.explanation || '');
+      addToast('Annonce générée par l\'IA avec succès !', 'success', 'Assistant IA ✨');
+    } catch (e: any) {
+      console.error('AI Generation error', e);
+      addToast(e.response?.data?.message || 'Erreur lors de la génération IA', 'error');
+    } finally {
+      setIsAiGenerating(false);
+    }
+  };
+
+  const handleAiEstimatePrice = async () => {
+    if (!createFormData.title && !createFormData.description) {
+      addToast('Veuillez d\'abord saisir un titre ou une description', 'error');
+      return;
+    }
+    setIsAiEstimating(true);
+    try {
+      const res = await api.post('/ai/estimate-price', {
+        title: createFormData.title,
+        description: createFormData.description,
+        location: createFormData.location,
+      });
+      const data = res.data;
+      if (data.recommendedPrice) {
+        setCreateFormData((prev) => ({ ...prev, price: data.recommendedPrice.toString() }));
+        setAiExplanation(data.explanation || '');
+        addToast(`Prix réajusté à ${data.recommendedPrice} € d'après le marché !`, 'success', 'Estimation IA 💡');
+      }
+    } catch (e: any) {
+      console.error('AI Estimation error', e);
+      addToast('Échec de l\'estimation IA', 'error');
+    } finally {
+      setIsAiEstimating(false);
+    }
+  };
 
   // Edit Job Modal state
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -868,6 +927,45 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
               {/* Form Content - 2 Columns Compact */}
               <div className="relative z-10">
+                {/* AI Assistant Banner */}
+                <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-blue-500/15 border border-amber-500/30">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">Générateur d'Annonce IA ✨</span>
+                    </div>
+                    {aiExplanation && (
+                      <span className="text-[10px] text-amber-300 font-semibold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+                        {aiExplanation}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="Décrivez votre besoin en 1 phrase (ex: Déménagement 5 cartons à Paris)..."
+                      className="flex-1 bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-amber-500 font-medium"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAiGenerateJob}
+                      disabled={isAiGenerating || !aiPrompt.trim()}
+                      className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-lg flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer"
+                    >
+                      {isAiGenerating ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Générer
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
                 {createError && (
                   <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 font-medium">
                     {createError}
@@ -914,9 +1012,20 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                          Budget ({getSelectedCurrency().symbol})
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-semibold text-muted-foreground">
+                            Budget ({getSelectedCurrency().symbol})
+                          </label>
+                          <button
+                            type="button"
+                            onClick={handleAiEstimatePrice}
+                            disabled={isAiEstimating}
+                            className="text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/20 transition-colors cursor-pointer"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-400" />
+                            {isAiEstimating ? 'Calcul...' : 'Estimer 💡'}
+                          </button>
+                        </div>
                         <div className="relative">
                           <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                           <input
