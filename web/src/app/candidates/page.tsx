@@ -232,7 +232,7 @@ export default function CandidatesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredCandidates.map((cand) => {
+            {filteredCandidates.map((cand, idx) => {
               const initials = `${cand.firstName?.[0] || 'C'}${cand.lastName?.[0] || 'P'}`.toUpperCase();
               const rating = cand.reputation?.averageRating || 5.0;
               const fitScore = calculateMatchingScore({ userRating: rating });
