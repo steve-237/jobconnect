@@ -11,6 +11,7 @@ import { calculateMatchingScore } from '@/lib/matching';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import GamificationBadge from '@/components/GamificationBadge';
+import { motion } from 'framer-motion';
 
 interface CandidateUser {
   id: string;
@@ -237,9 +238,13 @@ export default function CandidatesPage() {
               const fitScore = calculateMatchingScore({ userRating: rating });
 
               return (
-                <div
+                <motion.div
                   key={cand.id}
-                  className="glass rounded-2xl p-5 border border-white/10 hover:border-amber-500/30 transition-all duration-200 flex flex-col justify-between space-y-4 shadow-xl hover:scale-[1.01]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                  whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+                  className="glass rounded-2xl p-5 border border-white/10 hover:border-amber-500/30 transition-all duration-200 flex flex-col justify-between space-y-4 shadow-xl"
                 >
                   <div className="space-y-3">
                     {/* Header: Avatar + Badges */}
@@ -333,7 +338,7 @@ export default function CandidatesPage() {
                       {t('candidates.invite')}
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
