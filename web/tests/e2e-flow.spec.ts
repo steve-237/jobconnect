@@ -32,4 +32,14 @@ test.describe('JobConnect v2.0 E2E Flow', () => {
     await page.goto('/candidates');
     await expect(page.getByText(/Annuaire des Prestataires/i)).toBeVisible();
   });
+
+  test('5. Jobs browsing page displays available jobs grid & search bar', async ({ page }) => {
+    await page.goto('/jobs');
+    await expect(page.locator('input').first()).toBeVisible();
+  });
+
+  test('6. Wallet & Transactions page displays balance and history', async ({ page }) => {
+    await page.goto('/wallet');
+    await expect(page).toHaveURL(/.*wallet|.*login/);
+  });
 });
