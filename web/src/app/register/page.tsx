@@ -63,8 +63,6 @@ export default function RegisterPage() {
               <span className="font-bold text-2xl tracking-tight">JobConnect</span>
             </Link>
 
-            <LanguageSwitcher variant="pills" className="mb-6" />
-
             <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('auth.register_title')}</h1>
             <p className="text-muted-foreground text-sm text-center">
               {t('auth.register_subtitle')}
