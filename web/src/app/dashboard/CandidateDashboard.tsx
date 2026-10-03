@@ -289,7 +289,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             {t('dashboard.candidate_hub')}
           </h2>
           <div className="flex items-center gap-2">
-            <LanguageSwitcher variant="compact" />
+            <LanguageSwitcher variant="dropdown" align="right" />
             <ThemeToggle />
           </div>
         </div>
