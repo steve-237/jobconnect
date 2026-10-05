@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Briefcase, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Loader2, Briefcase } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Logo from '@/components/Logo';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -56,12 +57,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg animate-fade-in-up">
         <div className="glass p-8 md:p-10 rounded-3xl relative gradient-border shadow-2xl shadow-primary/5">
           <div className="flex flex-col items-center mb-8">
-            <Link href="/" className="flex items-center gap-2 mb-6 hover:scale-105 transition-transform">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
-                <Briefcase className="w-6 h-6 text-white" />
-              </div>
-              <span className="font-bold text-2xl tracking-tight">JobConnect</span>
-            </Link>
+            <div className="mb-6">
+              <Logo size="lg" showTagline={true} />
+            </div>
 
             <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('auth.register_title')}</h1>
             <p className="text-muted-foreground text-sm text-center">

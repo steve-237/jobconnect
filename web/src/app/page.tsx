@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import Logo from '@/components/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const FEATURES = [
@@ -77,10 +78,7 @@ export default function Home() {
       {/* ========== NAVBAR ========== */}
       <header className="w-full sticky top-0 z-50 glass">
         <nav className="max-w-7xl mx-auto flex justify-between items-center px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <Image src="/icon.svg" alt="JobConnect Logo" width={36} height={36} className="rounded-xl shadow-md group-hover:scale-105 transition-transform" />
-            <span className="font-extrabold text-xl tracking-tight text-white">JobConnect</span>
-          </Link>
+          <Logo size="md" showTagline={true} />
 
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
             <Link href="/jobs" className="hover:text-white transition-colors">{t('nav.browse_jobs')}</Link>

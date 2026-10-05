@@ -22,6 +22,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import GamificationBadge from '@/components/GamificationBadge';
+import Logo from '@/components/Logo';
 
 interface Job {
   id: string;
@@ -468,12 +469,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       {/* Sidebar / Mobile Header Navigation */}
       <aside className="w-full lg:w-72 border-b lg:border-b-0 lg:border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-20 shrink-0">
         <div className="p-4 lg:p-6 border-b border-white/5 flex items-center justify-between">
-          <h2 className="text-lg lg:text-xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center">
-              <Briefcase className="w-5 h-5" />
-            </div>
-            {t('dashboard.employer_hub')}
-          </h2>
+          <Logo size="sm" showTagline={true} />
         </div>
 
         <div className="p-2 lg:p-4 flex-1 overflow-x-auto no-scrollbar">
