@@ -8,9 +8,13 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('jobconnect_theme') as 'dark' | 'light' | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle('light-theme', savedTheme === 'light');
+    const isLight = savedTheme === 'light' || document.documentElement.classList.contains('light-theme');
+    if (isLight) {
+      setTheme('light');
+      document.documentElement.classList.add('light-theme');
+    } else {
+      setTheme('dark');
+      document.documentElement.classList.remove('light-theme');
     }
   }, []);
 
@@ -18,7 +22,14 @@ export default function ThemeToggle() {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
     localStorage.setItem('jobconnect_theme', nextTheme);
-    document.documentElement.classList.toggle('light-theme', nextTheme === 'light');
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('jobconnect_theme_changed'));
+    }
   };
 
   return (

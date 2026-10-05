@@ -26,38 +26,94 @@ html.light-theme, html.light-theme body {
   color: #0f172a !important;
 }
 
-html.light-theme .glass {
-  background: rgba(255, 255, 255, 0.92) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-color: rgba(0, 0, 0, 0.12) !important;
-  color: #0f172a !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
-}
-
-html.light-theme .text-white,
-html.light-theme .text-foreground {
-  color: #0f172a !important;
-}
-
-html.light-theme .text-gray-300,
-html.light-theme .text-gray-400,
-html.light-theme .text-muted-foreground {
-  color: #475569 !important;
-}
-
+/* Containers, Cards, Sidebars & Glass Panels */
+html.light-theme .glass,
+html.light-theme aside,
+html.light-theme [class*="bg-[#0"],
+html.light-theme [class*="bg-[#1"],
+html.light-theme [class*="bg-[#2"],
+html.light-theme [class*="bg-slate-9"],
+html.light-theme [class*="bg-slate-8"],
+html.light-theme [class*="bg-zinc-9"],
+html.light-theme [class*="bg-[#09090b]"],
 html.light-theme .bg-card {
   background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
   color: #0f172a !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Secondary & Hover Backgrounds */
+html.light-theme .bg-white\/5,
+html.light-theme .bg-white\/10,
+html.light-theme .bg-white\/20,
+html.light-theme [class*="hover:bg-[#1"] {
+  background-color: #f1f5f9 !important;
+}
+
+/* Light Theme Borders */
+html.light-theme [class*="border-white\/"],
+html.light-theme [class*="border-slate-8"] {
   border-color: #e2e8f0 !important;
 }
 
+/* Inputs, Selects & Textareas */
 html.light-theme input,
 html.light-theme select,
 html.light-theme textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
+}
+
+html.light-theme input::placeholder,
+html.light-theme textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Typography Overrides */
+html.light-theme .text-white,
+html.light-theme .text-foreground,
+html.light-theme .text-slate-100,
+html.light-theme .text-slate-200,
+html.light-theme .text-slate-300 {
+  color: #0f172a !important;
+}
+
+html.light-theme .text-slate-400,
+html.light-theme .text-slate-500,
+html.light-theme .text-muted-foreground {
+  color: #64748b !important;
+}
+
+/* EXCEPTIONS: Preserve white text inside solid colored buttons & badges */
+html.light-theme .bg-primary,
+html.light-theme .bg-primary *,
+html.light-theme [class*="bg-primary"],
+html.light-theme [class*="bg-primary"] *,
+html.light-theme .bg-amber-500,
+html.light-theme .bg-amber-500 *,
+html.light-theme .bg-emerald-500,
+html.light-theme .bg-emerald-500 *,
+html.light-theme .bg-blue-600,
+html.light-theme .bg-blue-600 *,
+html.light-theme .bg-red-500,
+html.light-theme .bg-red-500 *,
+html.light-theme .bg-purple-600,
+html.light-theme .bg-purple-600 *,
+html.light-theme button[class*="bg-primary"],
+html.light-theme button[class*="bg-amber-500"],
+html.light-theme button[class*="bg-emerald-500"],
+html.light-theme button[class*="bg-red-500"] {
+  color: #ffffff !important;
+}
+
+/* Modals & Dialog Overlays */
+html.light-theme .fixed.inset-0 .glass,
+html.light-theme .fixed.inset-0 [class*="bg-[#"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
 }
 
 @layer base {
