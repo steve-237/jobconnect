@@ -472,9 +472,20 @@ export default function JobsPage({
           </div>
         ) : filteredJobs.length > 0 ? (
           viewMode === 'map' ? (
-            <JobsMap jobs={filteredJobs} userLat={userCoords?.lat || 48.8566} userLng={userCoords?.lng || 2.3522} />
+            <JobsMap
+              jobs={filteredJobs}
+              userLat={userCoords?.lat || 48.8566}
+              userLng={userCoords?.lng || 2.3522}
+              onSelectJob={(jobId) => {
+                if (onJobClick) {
+                  onJobClick(jobId);
+                } else {
+                  window.location.href = `/jobs/${jobId}`;
+                }
+              }}
+            />
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {filteredJobs.map((job) => {
                 const employerInitials = `${job.employer?.firstName?.[0] || 'E'}${job.employer?.lastName?.[0] || 'M'}`;
                 const distanceVal = (job.distanceKm && job.distanceKm > 0) ? job.distanceKm : 2.5;
@@ -483,90 +494,94 @@ export default function JobsPage({
                   <div
                     key={job.id}
                     onClick={() => (onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`))}
-                    className={`bg-[#141414] hover:bg-[#1a1a1a] border border-white/10 ${cardHoverBorder} rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-lg group relative cursor-pointer hover:scale-[1.01] active:scale-[0.99]`}
+                    className={`bg-[#161618]/90 hover:bg-[#1e1e22] border border-white/10 ${cardHoverBorder} rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 shadow-xl group relative cursor-pointer hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5`}
                   >
-                    {/* Top Row: Category + Matching % + Distance + Price + Bookmark */}
                     <div>
-                      <div className="flex items-center justify-between gap-1.5 mb-3 flex-wrap">
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
-                          {job.category?.name || 'Général'}
-                        </span>
-
-                        {/* MATCHING SCORE BADGE */}
-                        <div className="flex items-center gap-1 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-300 text-[11px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                          <Target className="w-3 h-3 text-purple-400" />
-                          <span>🎯 {calculateMatchingScore({ distanceKm: distanceVal, categoryMatch: true })}% Fit</span>
+                      {/* Top Header: Category & Employer Avatar on left, Price & Bookmark on right */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-300 shrink-0">
+                            {job.category?.name || 'Général'}
+                          </span>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className={`w-5 h-5 rounded-full font-bold text-[9px] flex items-center justify-center shrink-0 border ${employerAvatarBg}`}>
+                              {employerInitials}
+                            </div>
+                            <span className="text-muted-foreground font-medium text-[11px] truncate">
+                              {job.employer?.firstName} {job.employer?.lastName?.[0]}.
+                            </span>
+                          </div>
                         </div>
 
-                        {/* CANDIDATE BLUE DISTANCE ESTIMATION BADGE */}
-                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black shadow-md ${distanceBadgeClass}`}>
-                          <MapPin className={`w-3.5 h-3.5 ${iconColor} shrink-0 animate-pulse`} />
-                          <span>📍 {distanceVal} km</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-emerald-400 font-extrabold text-xs bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+                            {formatPrice(job.price, activeCurrency)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleBookmark(job.id);
+                            }}
+                            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
+                              bookmarkedIds.includes(job.id)
+                                ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                                : 'bg-white/5 text-muted-foreground border-white/10 hover:text-white hover:bg-white/10'
+                            }`}
+                            title={bookmarkedIds.includes(job.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                          >
+                            <Heart className={`w-3.5 h-3.5 ${bookmarkedIds.includes(job.id) ? 'fill-rose-500 text-rose-500' : ''}`} />
+                          </button>
                         </div>
-
-                        <div className="text-emerald-400 font-black text-sm bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full ml-auto">
-                          {formatPrice(job.price, activeCurrency)}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(job.id);
-                          }}
-                          className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                            bookmarkedIds.includes(job.id)
-                              ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
-                              : 'bg-white/5 text-muted-foreground border-white/10 hover:text-white hover:bg-white/10'
-                          }`}
-                          title={bookmarkedIds.includes(job.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                        >
-                          <Heart className={`w-3.5 h-3.5 ${bookmarkedIds.includes(job.id) ? 'fill-rose-500' : ''}`} />
-                        </button>
                       </div>
 
                       {/* Job Title */}
-                      <h3 className={`text-sm font-bold text-white group-hover:${textHighlight} transition-colors line-clamp-2 mb-2 leading-snug`}>
+                      <h3 className={`text-base font-bold text-white group-hover:${textHighlight} transition-colors line-clamp-2 mb-2 leading-snug`}>
                         {job.title}
                       </h3>
 
+                      {/* Metadata Row: Distance, Matching, Date */}
+                      <div className="flex items-center gap-2.5 text-xs text-muted-foreground mb-3 flex-wrap">
+                        <span className="flex items-center gap-1 text-blue-400 font-semibold bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-md text-[11px]">
+                          <MapPin className="w-3 h-3" />
+                          {distanceVal} km
+                        </span>
+                        <span className="flex items-center gap-1 text-purple-300 font-semibold bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-md text-[11px]">
+                          <Target className="w-3 h-3 text-purple-400" />
+                          {calculateMatchingScore({ distanceKm: distanceVal, categoryMatch: true })}% Fit
+                        </span>
+                        <span className="flex items-center gap-1 text-[11px] text-slate-400 ml-auto">
+                          <Clock className="w-3 h-3" />
+                          {daysAgo(job.createdAt)}
+                        </span>
+                      </div>
+
                       {/* Description */}
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+                      <p className="text-xs text-slate-400/90 line-clamp-2 leading-relaxed mb-4 font-normal">
                         {job.description}
                       </p>
                     </div>
 
                     {/* Bottom Footer Info */}
-                    <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs mt-auto">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full font-bold text-[10px] flex items-center justify-center shrink-0 border ${employerAvatarBg}`}>
-                          {employerInitials}
-                        </div>
-                        <span className="text-muted-foreground font-medium text-[11px] truncate max-w-[110px]">
-                          {job.employer?.firstName} {job.employer?.lastName?.[0]}.
-                        </span>
-                      </div>
+                    <div className="pt-3 border-t border-white/10 flex items-center justify-between mt-auto">
+                      <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1 truncate max-w-[150px]">
+                        📍 {job.location || 'Localisation disponible'}
+                      </span>
 
-                      <div className="flex items-center gap-3">
-                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-muted-foreground" />
-                          {daysAgo(job.createdAt)}
-                        </span>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onJobClick) {
-                              onJobClick(job.id);
-                            } else {
-                              window.location.href = `/jobs/${job.id}`;
-                            }
-                          }}
-                          className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95`}
-                        >
-                          Postuler ➔
-                        </button>
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onJobClick) {
+                            onJobClick(job.id);
+                          } else {
+                            window.location.href = `/jobs/${job.id}`;
+                          }
+                        }}
+                        className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 flex items-center gap-1 shrink-0`}
+                      >
+                        <span>Voir l'offre</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 );

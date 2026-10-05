@@ -31,6 +31,18 @@ export default function JobsMap({
   const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).jobconnect_open_job = (jobId: string) => {
+        if (onSelectJob) {
+          onSelectJob(jobId);
+        } else {
+          window.location.href = `/jobs/${jobId}`;
+        }
+      };
+    }
+  }, [onSelectJob]);
+
+  useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return;
 
     // Dynamically import Leaflet to prevent SSR issues
@@ -107,7 +119,7 @@ export default function JobsMap({
             color: #ffffff;
             font-weight: 800;
             font-size: 11px;
-            padding: 5px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
             border: 2px solid #ffffff;
             box-shadow: 0 6px 16px rgba(0,0,0,0.35);
@@ -123,43 +135,45 @@ export default function JobsMap({
         const markerIcon = L.divIcon({
           className: 'jobconnect-leaflet-marker',
           html: customMarkerHtml,
-          iconSize: [80, 32],
-          iconAnchor: [40, 16],
+          iconSize: [84, 32],
+          iconAnchor: [42, 16],
+          popupAnchor: [0, -18],
         });
 
         const popupHtml = `
-          <div style="font-family: sans-serif; padding: 4px; max-width: 220px; color: #0f172a;">
-            <div style="font-size: 10px; font-weight: 800; color: #2563eb; text-transform: uppercase; margin-bottom: 2px;">
+          <div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; max-width: 240px; color: #0f172a;">
+            <div style="font-size: 10px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">
               ${categoryText} ${job.distanceKm ? `• ${job.distanceKm.toFixed(1)} km` : ''}
             </div>
-            <div style="font-size: 13px; font-weight: 700; margin-bottom: 6px; line-height: 1.3;">
+            <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 6px; line-height: 1.3;">
               ${job.title}
             </div>
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">
               📍 ${job.location || 'Localisation disponible'}
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; pt: 6px; margin-top: 6px;">
-              <span style="font-size: 14px; font-weight: 800; color: #16a34a;">${priceText}</span>
-              <a href="/jobs/${job.id}" style="
-                background: #3b82f6;
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 4px;">
+              <span style="font-size: 15px; font-weight: 800; color: #16a34a;">${priceText}</span>
+              <button onclick="if(window.jobconnect_open_job) window.jobconnect_open_job('${job.id}')" style="
+                background: linear-gradient(135deg, #2563eb, #1d4ed8);
                 color: #ffffff;
-                text-decoration: none;
-                padding: 5px 12px;
-                border-radius: 8px;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 10px;
                 font-size: 11px;
                 font-weight: 700;
-                display: inline-block;
-              ">Voir l'offre</a>
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+              ">Voir l'offre ➔</button>
             </div>
           </div>
         `;
 
         const marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
-        marker.bindPopup(popupHtml);
+        marker.bindPopup(popupHtml, { autoPan: true });
 
-        if (onSelectJob) {
-          marker.on('click', () => onSelectJob(job.id));
-        }
+        marker.on('click', () => {
+          marker.openPopup();
+        });
       });
 
       // Fit bounds if jobs exist
