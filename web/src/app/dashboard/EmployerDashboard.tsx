@@ -474,17 +474,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </div>
             {t('dashboard.employer_hub')}
           </h2>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher variant="dropdown" align="right" />
-            <ThemeToggle />
-            <button
-              onClick={handleOpenCreateModal}
-              className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Annonce
-            </button>
-          </div>
         </div>
 
         <div className="p-2 lg:p-4 flex-1 overflow-x-auto no-scrollbar">
@@ -551,7 +540,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
       {/* Main Content */}
       <main className="flex-1 p-6 lg:p-12 relative z-10 h-screen overflow-y-auto">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-4">
               {greeting}
@@ -563,8 +552,17 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               {t('dashboard.employer_subtitle')}
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <LanguageSwitcher variant="dropdown" align="right" />
+            <ThemeToggle />
             <NotificationBell userId={userId} theme="amber" />
+            <button
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Annonce
+            </button>
           </div>
         </header>
 

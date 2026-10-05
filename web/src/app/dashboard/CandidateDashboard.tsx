@@ -288,10 +288,6 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
             </div>
             {t('dashboard.candidate_hub')}
           </h2>
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher variant="dropdown" align="right" />
-            <ThemeToggle />
-          </div>
         </div>
 
         <div className="p-2 lg:p-4 flex-1 overflow-x-auto no-scrollbar">
@@ -323,7 +319,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
 
       {/* ─── Main Content ─── */}
       <main className="flex-1 p-6 lg:p-12 relative z-10 h-screen overflow-y-auto">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-4">
               {greeting}
@@ -335,7 +331,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               {t('dashboard.candidate_subtitle')}
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <LanguageSwitcher variant="dropdown" align="right" />
+            <ThemeToggle />
             <NotificationBell userId={userId} theme="primary" />
           </div>
         </header>
