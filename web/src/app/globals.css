@@ -20,50 +20,82 @@
   --color-danger: #ef4444;
 }
 
-/* Light theme overrides */
+/* ==========================================================================
+   PRO LIGHT THEME SYSTEM (Vercel & Stripe Clean Design Standard)
+   ========================================================================== */
+
 html.light-theme, html.light-theme body {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
-/* Containers, Cards, Sidebars & Glass Panels */
-html.light-theme .glass,
+/* Base Layout Containers & Sidebars */
 html.light-theme aside,
-html.light-theme [class*="bg-[#0"],
+html.light-theme header,
+html.light-theme main,
+html.light-theme nav {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Glassmorphism Panels, Cards & Dashboard Sections */
+html.light-theme .glass,
+html.light-theme .bg-card,
 html.light-theme [class*="bg-[#1"],
-html.light-theme [class*="bg-[#2"],
+html.light-theme [class*="bg-[#0"],
 html.light-theme [class*="bg-slate-9"],
 html.light-theme [class*="bg-slate-8"],
-html.light-theme [class*="bg-zinc-9"],
-html.light-theme [class*="bg-[#09090b]"],
-html.light-theme .bg-card {
+html.light-theme [class*="bg-black/"] {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02) !important;
 }
 
-/* Secondary & Hover Backgrounds */
+/* Hover & Interactive Rows */
+html.light-theme [class*="hover:bg-[#1"]:hover,
+html.light-theme [class*="hover:bg-white"]:hover,
 html.light-theme .bg-white\/5,
-html.light-theme .bg-white\/10,
-html.light-theme .bg-white\/20,
-html.light-theme [class*="hover:bg-[#1"] {
+html.light-theme .bg-white\/10 {
   background-color: #f1f5f9 !important;
 }
 
-/* Light Theme Borders */
-html.light-theme [class*="border-white\/"],
-html.light-theme [class*="border-slate-8"] {
-  border-color: #e2e8f0 !important;
+/* Table Design in Light Theme */
+html.light-theme table {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
-/* Inputs, Selects & Textareas */
+html.light-theme thead,
+html.light-theme th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+html.light-theme td {
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+html.light-theme tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Forms, Inputs, Selects & Textareas */
 html.light-theme input,
 html.light-theme select,
 html.light-theme textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light-theme input:focus,
+html.light-theme select:focus,
+html.light-theme textarea:focus {
+  border-color: #3b82f6 !important;
 }
 
 html.light-theme input::placeholder,
@@ -71,7 +103,7 @@ html.light-theme textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Typography Overrides */
+/* Clean Typography for Light Theme */
 html.light-theme .text-white,
 html.light-theme .text-foreground,
 html.light-theme .text-slate-100,
@@ -86,11 +118,15 @@ html.light-theme .text-muted-foreground {
   color: #64748b !important;
 }
 
-/* EXCEPTIONS: Preserve white text inside solid colored buttons & badges */
+/* Badges & Light Sub-elements */
+html.light-theme [class*="bg-white/5"],
+html.light-theme [class*="border-white/"] {
+  border-color: #e2e8f0 !important;
+}
+
+/* PRESERVE HIGH CONTRAST BUTTONS & COLOR ACCENTS */
 html.light-theme .bg-primary,
 html.light-theme .bg-primary *,
-html.light-theme [class*="bg-primary"],
-html.light-theme [class*="bg-primary"] *,
 html.light-theme .bg-amber-500,
 html.light-theme .bg-amber-500 *,
 html.light-theme .bg-emerald-500,
@@ -101,11 +137,51 @@ html.light-theme .bg-red-500,
 html.light-theme .bg-red-500 *,
 html.light-theme .bg-purple-600,
 html.light-theme .bg-purple-600 *,
-html.light-theme button[class*="bg-primary"],
-html.light-theme button[class*="bg-amber-500"],
-html.light-theme button[class*="bg-emerald-500"],
-html.light-theme button[class*="bg-red-500"] {
+html.light-theme button.bg-primary,
+html.light-theme button.bg-amber-500,
+html.light-theme button.bg-emerald-500,
+html.light-theme button.bg-red-500 {
   color: #ffffff !important;
+}
+
+/* Soft Tint Badges in Light Theme */
+html.light-theme .bg-amber-500\/10,
+html.light-theme .bg-amber-500\/20 {
+  background-color: #fffbeb !important;
+  color: #d97706 !important;
+  border-color: #fde68a !important;
+}
+
+html.light-theme .bg-blue-500\/10,
+html.light-theme .bg-blue-500\/20,
+html.light-theme .bg-primary\/10,
+html.light-theme .bg-primary\/20 {
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  border-color: #bfdbfe !important;
+}
+
+html.light-theme .bg-emerald-500\/10,
+html.light-theme .bg-emerald-500\/20 {
+  background-color: #ecfdf5 !important;
+  color: #059669 !important;
+  border-color: #a7f3d0 !important;
+}
+
+html.light-theme .bg-purple-500\/10,
+html.light-theme .bg-purple-500\/20 {
+  background-color: #faf5ff !important;
+  color: #9333ea !important;
+  border-color: #e9d5ff !important;
+}
+
+html.light-theme .bg-rose-500\/10,
+html.light-theme .bg-rose-500\/20,
+html.light-theme .bg-red-500\/10,
+html.light-theme .bg-red-500\/20 {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
 }
 
 /* Modals & Dialog Overlays */
