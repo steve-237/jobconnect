@@ -55,6 +55,7 @@ export const metadata: Metadata = {
 };
 
 import SupportChatbot from "@/components/SupportChatbot";
+import IncomingCallModal from "@/components/IncomingCallModal";
 
 export default function RootLayout({
   children,
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-[family-name:var(--font-inter)]">
         <LanguageProvider>
           {children}
+          <IncomingCallModal />
           <SupportChatbot />
         </LanguageProvider>
       </body>

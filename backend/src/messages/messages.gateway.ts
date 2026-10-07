@@ -31,16 +31,28 @@ export class MessagesGateway
   }
 
   /**
-   * Basic authentication for WebSocket.
-   * Extracts token from handshake headers or auth payload.
+   * Robust authentication for WebSocket.
+   * Extracts token from handshake auth, headers, or query params, with or without 'Bearer ' prefix.
    */
   private authenticateSocket(client: Socket): any {
     try {
-      const token =
-        client.handshake.auth?.token?.split(' ')[1] ||
-        client.handshake.headers.authorization?.split(' ')[1];
-      if (!token) return null;
-      return jwt.verify(token, process.env.JWT_SECRET || 'secretKey');
+      let rawToken =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization ||
+        client.handshake.query?.token;
+
+      if (!rawToken || typeof rawToken !== 'string') return null;
+
+      if (rawToken.startsWith('Bearer ')) {
+        rawToken = rawToken.split(' ')[1];
+      }
+
+      const payload: any = jwt.verify(
+        rawToken,
+        process.env.JWT_SECRET || 'secretKey',
+      );
+      const userId = payload.userId || payload.sub || payload.id;
+      return { ...payload, userId };
     } catch (e) {
       return null;
     }
@@ -52,7 +64,7 @@ export class MessagesGateway
       client.disconnect();
       return;
     }
-    // Auto-join user-specific room for real-time notifications
+    // Auto-join user-specific room for real-time notifications & WebRTC calls
     client.join(`user_${user.userId}`);
   }
 
@@ -123,5 +135,103 @@ export class MessagesGateway
     } catch (e: any) {
       client.emit('chat_error', { message: e?.message || 'Échec de l’envoi du message' });
     }
+  }
+
+  // ─── WebRTC Call Signaling Handlers ───
+
+  @SubscribeMessage('startCall')
+  async handleStartCall(
+    @MessageBody()
+    data: {
+      applicationId: string;
+      receiverId: string;
+      callerName: string;
+      offerSdp?: any;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = this.authenticateSocket(client);
+    if (!user) return;
+
+    this.server.to(`user_${data.receiverId}`).emit('incomingCall', {
+      applicationId: data.applicationId,
+      callerId: user.userId,
+      callerName: data.callerName || 'Un utilisateur',
+      offerSdp: data.offerSdp,
+    });
+  }
+
+  @SubscribeMessage('acceptCall')
+  async handleAcceptCall(
+    @MessageBody()
+    data: {
+      applicationId: string;
+      callerId: string;
+      answerSdp?: any;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = this.authenticateSocket(client);
+    if (!user) return;
+
+    this.server.to(`user_${data.callerId}`).emit('callAccepted', {
+      applicationId: data.applicationId,
+      receiverId: user.userId,
+      answerSdp: data.answerSdp,
+    });
+  }
+
+  @SubscribeMessage('rejectCall')
+  async handleRejectCall(
+    @MessageBody()
+    data: {
+      applicationId: string;
+      callerId: string;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = this.authenticateSocket(client);
+    if (!user) return;
+
+    this.server.to(`user_${data.callerId}`).emit('callRejected', {
+      applicationId: data.applicationId,
+      receiverId: user.userId,
+    });
+  }
+
+  @SubscribeMessage('endCall')
+  async handleEndCall(
+    @MessageBody()
+    data: {
+      applicationId: string;
+      targetUserId: string;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = this.authenticateSocket(client);
+    if (!user) return;
+
+    this.server.to(`user_${data.targetUserId}`).emit('callEnded', {
+      applicationId: data.applicationId,
+      byUserId: user.userId,
+    });
+  }
+
+  @SubscribeMessage('iceCandidate')
+  async handleIceCandidate(
+    @MessageBody()
+    data: {
+      targetUserId: string;
+      candidate: any;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = this.authenticateSocket(client);
+    if (!user) return;
+
+    this.server.to(`user_${data.targetUserId}`).emit('iceCandidate', {
+      senderId: user.userId,
+      candidate: data.candidate,
+    });
   }
 }
