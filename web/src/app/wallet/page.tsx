@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   Wallet, ArrowDownRight, ArrowUpRight, Clock, CheckCircle, XCircle,
   PlusCircle, CreditCard, Download, X, Building, Coins, ShieldCheck,
-  FileText, Printer
+  FileText, Printer, Info, Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -40,42 +40,42 @@ function getTransactionMeta(tx: Transaction, isEmployer: boolean) {
   if (title.includes('rechargement') || title.includes('dépôt') || title.includes('deposit')) {
     return {
       isCredit: true,
-      sign: '+',
-      subtitle: 'Dépôt / Rechargement par carte bancaire',
+      sign: '+ ',
+      subtitle: 'Rechargement / Dépôt par carte bancaire',
       icon: ArrowDownRight,
-      iconClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-      textClass: 'text-emerald-400',
+      iconClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+      textClass: 'text-emerald-400 font-black',
     };
   }
 
   if (title.includes('retrait') || title.includes('virement') || title.includes('withdrawal')) {
     return {
       isCredit: false,
-      sign: '-',
+      sign: '- ',
       subtitle: 'Virement vers votre compte bancaire (IBAN)',
       icon: ArrowUpRight,
-      iconClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-      textClass: 'text-amber-400',
+      iconClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+      textClass: 'text-rose-400 font-black',
     };
   }
 
   if (isEmployer) {
     return {
       isCredit: false,
-      sign: '-',
-      subtitle: tx.candidate ? `Payé à ${tx.candidate.firstName} ${tx.candidate.lastName}` : 'Paiement mission (Séquestre)',
+      sign: '- ',
+      subtitle: tx.candidate ? `Règlement mission à ${tx.candidate.firstName} ${tx.candidate.lastName}` : 'Dépense mission (Séquestre)',
       icon: ArrowUpRight,
-      iconClass: 'bg-red-500/10 text-red-400 border-red-500/20',
-      textClass: 'text-foreground',
+      iconClass: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+      textClass: 'text-rose-400 font-black',
     };
   } else {
     return {
       isCredit: true,
-      sign: '+',
-      subtitle: tx.employer ? `Reçu de ${tx.employer.firstName} ${tx.employer.lastName}` : 'Gain de mission',
+      sign: '+ ',
+      subtitle: tx.employer ? `Gain reçu de ${tx.employer.firstName} ${tx.employer.lastName}` : 'Gain de mission validé',
       icon: ArrowDownRight,
-      iconClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-      textClass: 'text-emerald-400',
+      iconClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+      textClass: 'text-emerald-400 font-black',
     };
   }
 }
@@ -227,31 +227,43 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
                   <Wallet className="w-7 h-7" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                    {isEmployer ? 'Total Dépensé / Solde' : 'Solde Disponible (Gains)'}
+                  <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider">
+                    {isEmployer ? 'Budget & Dépenses Missions' : 'Gains & Portefeuille Prestataire'}
                   </h2>
-                  <span className="text-xs text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Compte & Paiements Sécurisés
+                  <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold mt-0.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Compte & Séquestre Escrow Protégé 🔒
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-6 mt-4">
                 <div>
-                  <span className="text-xs text-muted-foreground font-semibold block mb-0.5">Solde Disponible</span>
-                  <span className="text-4xl font-black text-emerald-400 tracking-tight">
-                    {formatPrice(availableBalance)}
+                  <span className="text-xs text-muted-foreground font-semibold block mb-0.5">
+                    {isEmployer ? 'Total Dépenses Engagées' : 'Gains Retirables (Disponibles)'}
+                  </span>
+                  <span className={`text-4xl font-black tracking-tight ${isEmployer ? 'text-slate-200' : 'text-emerald-400'}`}>
+                    {isEmployer ? `- ${formatPrice(availableBalance)}` : `+ ${formatPrice(availableBalance)}`}
                   </span>
                 </div>
 
                 <div className="pl-6 border-l border-white/10">
                   <span className="text-xs text-amber-400 font-semibold block mb-0.5 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" /> En Séquestre (Escrow)
+                    <Clock className="w-3.5 h-3.5" /> En Séquestre (Missions en cours)
                   </span>
                   <span className="text-2xl font-extrabold text-amber-300 tracking-tight">
                     {formatPrice(pendingEscrowBalance)}
                   </span>
                 </div>
+              </div>
+
+              {/* Informative Escrow Banner */}
+              <div className="mt-4 pt-3 border-t border-white/10 text-xs text-muted-foreground leading-relaxed flex items-start gap-2 bg-white/5 p-3 rounded-2xl">
+                <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                <p>
+                  {isEmployer
+                    ? 'L’argent des missions en cours est conservé temporairement en Séquestre (Escrow) jusqu’à ce que vous validiez la réalisation de la prestation.'
+                    : 'Vos gains de mission sont sécurisés en Séquestre le temps de la réalisation, puis versés sur votre solde disponible dès la clôture.'}
+                </p>
               </div>
             </div>
 
