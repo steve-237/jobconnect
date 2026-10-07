@@ -74,6 +74,19 @@ export class ApplicationsService {
       senderName: `${application.candidate.firstName} ${application.candidate.lastName}`,
     });
 
+    // Send Expo Push Notification if employer has push token
+    const employer = await prisma.user.findUnique({
+      where: { id: job.employerId },
+    });
+    if (employer?.expoPushToken) {
+      await this.notificationsService.sendPushNotification(
+        employer.expoPushToken,
+        'Nouvelle Candidature 📩',
+        `${application.candidate.firstName} ${application.candidate.lastName} a postulé à votre annonce "${job.title}".`,
+        { type: 'new_application', jobId: job.id, applicationId: application.id },
+      );
+    }
+
     return application;
   }
 

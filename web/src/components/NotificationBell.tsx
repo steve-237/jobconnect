@@ -94,6 +94,15 @@ export default function NotificationBell({
           } catch (e) {}
           return updated;
         });
+
+        // Broadcast custom window event so page dashboards show animated toast
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('jobconnect_notification_received', {
+              detail: newNotif,
+            })
+          );
+        }
       };
 
       socket.on('notification', handleSocketNotif);

@@ -245,18 +245,43 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
     }
   };
 
+  const fetchApps = async () => {
+    try {
+      const res = await api.get('/applications/my-applications');
+      setApplications(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchApps = async () => {
-      try {
-        const res = await api.get('/applications/my-applications');
-        setApplications(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
+    fetchApps();
+  }, []);
+
+  // Listen to real-time notification events
+  useEffect(() => {
+    const handleNotificationEvent = (e: any) => {
+      const notif = e.detail;
+      if (notif) {
+        const isSuccess = notif.type === 'APPLICATION_ACCEPTED' || notif.type === 'JOB_COMPLETED';
+        const isError = notif.type === 'APPLICATION_REJECTED';
+        addToast(
+          notif.message || notif.title,
+          isSuccess ? 'success' : isError ? 'error' : 'info',
+          notif.title
+        );
+        fetchApps();
       }
     };
-    fetchApps();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('jobconnect_notification_received', handleNotificationEvent);
+      return () => {
+        window.removeEventListener('jobconnect_notification_received', handleNotificationEvent);
+      };
+    }
   }, []);
 
   const handleLogout = () => {

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { PrismaClient } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 const prisma = new PrismaClient();
 
@@ -87,6 +89,11 @@ function getLocationCoordinates(userLocation?: string, lat?: string, lng?: strin
 
 @Injectable()
 export class JobsService {
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
+
   async create(createJobDto: CreateJobDto, employerId: string) {
     return prisma.job.create({
       data: {
@@ -246,10 +253,41 @@ export class JobsService {
     if (job.employerId !== userId) {
       throw new Error('Unauthorized to update this job');
     }
-    return prisma.job.update({
+    const updated = await prisma.job.update({
       where: { id },
       data: { status },
     });
+
+    if (status === 'COMPLETED') {
+      // Find accepted application candidate
+      const acceptedApp = await prisma.application.findFirst({
+        where: { jobId: id, isAccepted: true },
+        include: { candidate: true },
+      });
+
+      if (acceptedApp) {
+        // Real-time socket notification to candidate
+        this.messagesGateway.sendNotificationToUser(acceptedApp.candidateId, {
+          id: `notif-${Date.now()}`,
+          type: 'JOB_COMPLETED',
+          title: 'Mission Terminée & Paiement Libéré ! 🎉',
+          message: `La mission "${job.title}" est terminée. Le montant de ${job.price} € est désormais disponible sur votre solde !`,
+          jobId: id,
+          jobTitle: job.title,
+        });
+
+        if (acceptedApp.candidate?.expoPushToken) {
+          await this.notificationsService.sendPushNotification(
+            acceptedApp.candidate.expoPushToken,
+            'Mission Terminée & Paiement Libéré ! 🎉',
+            `La mission "${job.title}" a été clôturée. Vous avez reçu ${job.price} € !`,
+            { type: 'job_completed', jobId: id },
+          );
+        }
+      }
+    }
+
+    return updated;
   }
 
   async remove(id: string, userId: string) {

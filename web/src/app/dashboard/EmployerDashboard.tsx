@@ -127,6 +127,27 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     }
   }, [socket, isConnected]);
 
+  // Listen to custom real-time notification events
+  useEffect(() => {
+    const handleNotificationEvent = (e: any) => {
+      const notif = e.detail;
+      if (notif) {
+        addToast(
+          notif.message || notif.title,
+          notif.type === 'NEW_APPLICATION' ? 'success' : 'info',
+          notif.title
+        );
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('jobconnect_notification_received', handleNotificationEvent);
+      return () => {
+        window.removeEventListener('jobconnect_notification_received', handleNotificationEvent);
+      };
+    }
+  }, []);
+
   // Applicants for a specific job modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);

@@ -8,6 +8,7 @@ import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import { Request } from 'express';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,10 @@ const prisma = new PrismaClient();
 export class PaymentsService {
   private stripe: Stripe;
 
-  constructor(private notificationsService: NotificationsService) {
+  constructor(
+    private notificationsService: NotificationsService,
+    private messagesGateway: MessagesGateway,
+  ) {
     this.stripe = new Stripe(
       process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder',
       {
@@ -63,6 +67,17 @@ export class PaymentsService {
           employerId: employerId,
           candidateId: application.candidateId,
         },
+      });
+
+      // Send Socket Notification to Candidate
+      this.messagesGateway.sendNotificationToUser(application.candidateId, {
+        id: `notif-${Date.now()}`,
+        type: 'APPLICATION_ACCEPTED',
+        title: 'Candidature Acceptée 🎉',
+        message: `L'employeur a réglé la mission "${application.job.title}". Vous pouvez maintenant démarrer !`,
+        jobId: application.jobId,
+        jobTitle: application.job.title,
+        applicationId,
       });
 
       // Send push notification to candidate
