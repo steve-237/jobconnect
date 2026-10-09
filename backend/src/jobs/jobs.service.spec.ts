@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JobsService } from './jobs.service';
 import { NotFoundException } from '@nestjs/common';
+import { NotificationsService } from '../notifications/notifications.service';
+import { MessagesGateway } from '../messages/messages.gateway';
 
 // Mock PrismaClient to avoid real database calls during tests
 jest.mock('@prisma/client', () => {
@@ -21,7 +23,22 @@ describe('JobsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [JobsService],
+      providers: [
+        JobsService,
+        {
+          provide: NotificationsService,
+          useValue: { sendPushNotification: jest.fn() },
+        },
+        {
+          provide: MessagesGateway,
+          useValue: {
+            server: {
+              emit: jest.fn(),
+              to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            },
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<JobsService>(JobsService);

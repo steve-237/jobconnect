@@ -40,7 +40,7 @@ export class PaymentsService {
     if (application.isAccepted)
       throw new ForbiddenException('Application is already accepted');
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const isStripeConfigured =
       process.env.STRIPE_SECRET_KEY &&
       !process.env.STRIPE_SECRET_KEY.includes('placeholder');

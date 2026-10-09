@@ -16,6 +16,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "JobConnect — Plateforme de Recrutement & Missions Ponctuelles",
   description:
     "Trouvez rapidement des prestataires qualifiés pour vos missions ou postulez à des offres près de chez vous. Paiement sécurisé Stripe, profils vérifiés et messagerie en temps réel.",
