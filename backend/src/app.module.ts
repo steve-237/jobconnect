@@ -11,6 +11,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AvailabilitiesModule } from './availabilities/availabilities.module';
 import { AiModule } from './ai/ai.module';
+import { DisputesModule } from './disputes/disputes.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AiModule } from './ai/ai.module';
     PaymentsModule,
     AvailabilitiesModule,
     AiModule,
+    DisputesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

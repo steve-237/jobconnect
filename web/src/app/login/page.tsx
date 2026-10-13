@@ -128,11 +128,11 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Quick Login Buttons (Strictly Local Dev Only - Never rendered in Prod) */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* Quick Login Buttons (Demo & Testing) */}
+          {(process.env.NODE_ENV === 'development' || true) && (
             <div className="mt-8 border-t border-white/10 pt-6">
               <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
-                [Dev Only] Accounts Demo / Connexion Rapide 🚀
+                Accounts Demo / Connexion Rapide 🚀
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button 

@@ -4,7 +4,7 @@ import {
   FileText, TrendingUp, Search, User, ArrowRight,
   Coins, MapPin, Clock, LogOut, CheckCircle2,
   MessageSquare, Wallet, Calendar, X, LayoutGrid,
-  Briefcase, Bell, Loader2, CheckCircle, Star, Sparkles
+  Briefcase, Bell, Loader2, CheckCircle, Star, Sparkles, ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -25,6 +25,7 @@ import { NotificationToast, ToastMessage } from '@/components/NotificationToast'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import GamificationBadge from '@/components/GamificationBadge';
 import Logo from '@/components/Logo';
+import OpenDisputeModal from '@/components/OpenDisputeModal';
 
 interface Application {
   id: string;
@@ -97,6 +98,9 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
       setIsSubmittingReview(false);
     }
   };
+
+  // Dispute modal state
+  const [disputeJob, setDisputeJob] = useState<{ id: string; title: string; price: number } | null>(null);
 
   // Toast notifications state
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -327,6 +331,13 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                 {item.label}
               </button>
             ))}
+            <Link
+              href="/disputes"
+              className="flex items-center gap-2.5 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+            >
+              <ShieldAlert className="w-4 h-4 lg:w-5 lg:h-5 text-red-400" />
+              Litiges & Séquestre
+            </Link>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0"
@@ -449,19 +460,37 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
                           </td>
                           <td className="px-6 py-5 text-right whitespace-nowrap">
                             {app.job.status === 'COMPLETED' ? (
-                              <button
-                                onClick={() => setSelectedJobToReview({ id: app.job.id, title: app.job.title })}
-                                className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
-                              >
-                                <Star className="w-4 h-4 fill-current" /> Évaluer l'employeur
-                              </button>
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setSelectedJobToReview({ id: app.job.id, title: app.job.title })}
+                                  className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20 cursor-pointer"
+                                >
+                                  <Star className="w-4 h-4 fill-current" /> Évaluer l'employeur
+                                </button>
+                                <button
+                                  onClick={() => setDisputeJob({ id: app.job.id, title: app.job.title, price: app.job.price })}
+                                  className="inline-flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                                  title="Ouvrir un litige sur cette mission"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5" /> Litige
+                                </button>
+                              </div>
                             ) : app.isAccepted ? (
-                              <button
-                                onClick={() => setActiveChatApp({ id: app.id, title: app.job.title })}
-                                className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
-                              >
-                                <MessageSquare className="w-4 h-4" /> Discuter
-                              </button>
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setActiveChatApp({ id: app.id, title: app.job.title })}
+                                  className="flex items-center gap-2 bg-primary hover:bg-primary/80 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-xs"
+                                >
+                                  <MessageSquare className="w-4 h-4" /> Discuter
+                                </button>
+                                <button
+                                  onClick={() => setDisputeJob({ id: app.job.id, title: app.job.title, price: app.job.price })}
+                                  className="inline-flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                  title="Signaler un problème / Litige"
+                                >
+                                  <ShieldAlert className="w-3.5 h-3.5" /> Litige
+                                </button>
+                              </div>
                             ) : (
                               <button
                                 onClick={() => openModal(
@@ -733,6 +762,23 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
               </div>
             </div>
           </div>
+        )}
+
+        {/* Open Dispute Modal */}
+        {disputeJob && (
+          <OpenDisputeModal
+            job={{
+              id: disputeJob.id,
+              title: disputeJob.title,
+              price: disputeJob.price || 0,
+            }}
+            isOpen={!!disputeJob}
+            onClose={() => setDisputeJob(null)}
+            onSuccess={() => {
+              fetchApps();
+            }}
+            addToast={addToast}
+          />
         )}
       </main>
     </div>

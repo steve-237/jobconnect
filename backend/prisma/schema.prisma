@@ -54,6 +54,8 @@ model User {
   reviewsReceived Review[]  @relation("ReviewsReceived")
   employerTransactions  Transaction[] @relation("EmployerTransactions")
   candidateTransactions Transaction[] @relation("CandidateTransactions")
+  disputesInitiated     Dispute[]     @relation("DisputesInitiated")
+  disputesDefended      Dispute[]     @relation("DisputesDefended")
   availabilities  Availability[]
   
   createdAt       DateTime  @default(now())
@@ -109,6 +111,7 @@ model Job {
   applications Application[]
   reviews      Review[]
   transactions Transaction[]
+  disputes     Dispute[]
   
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -185,3 +188,29 @@ model Transaction {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model Dispute {
+  id              String   @id @default(uuid())
+  reason          String   // MISSION_INCOMPLETE, NO_SHOW, QUALITY_ISSUE, DAMAGE_CLAIM, PAYMENT_DISPUTE, OTHER
+  description     String
+  evidenceUrls    String[] @default([])
+  status          String   @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED_REFUND_EMPLOYER, RESOLVED_PAY_CANDIDATE, RESOLVED_SPLIT, DISMISSED
+  resolutionNotes String?
+  
+  // Response from defendant
+  defendantReply  String?
+  defendantProof  String[] @default([])
+  
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  initiatorId     String
+  initiator       User     @relation("DisputesInitiated", fields: [initiatorId], references: [id], onDelete: Cascade)
+  
+  defendantId     String
+  defendant       User     @relation("DisputesDefended", fields: [defendantId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

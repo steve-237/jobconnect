@@ -3,7 +3,7 @@
 import {
   Briefcase, Users, MessageSquare, Plus, ArrowRight, User, MoreVertical,
   LayoutGrid, CheckCircle, Bell, LogOut, Loader2, X, Check, Star, Wallet,
-  Trash2, Edit3, Coins, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight, Search, Sparkles
+  Trash2, Edit3, Coins, MapPin, Calendar, Clock, List, AlignLeft, ChevronRight, Search, Sparkles, ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import GamificationBadge from '@/components/GamificationBadge';
 import Logo from '@/components/Logo';
+import OpenDisputeModal from '@/components/OpenDisputeModal';
 
 interface Job {
   id: string;
@@ -161,6 +162,9 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   const [selectedJobToReview, setSelectedJobToReview] = useState<Job | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+
+  // Dispute modal state
+  const [disputeJob, setDisputeJob] = useState<Job | null>(null);
 
   // Create Job Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -540,6 +544,13 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
               <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
               {t('dashboard.my_wallet')}
             </button>
+            <Link
+              href="/disputes"
+              className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 rounded-xl text-xs lg:text-sm font-semibold transition-all shrink-0 text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+            >
+              <ShieldAlert className="w-4 h-4 lg:w-5 lg:h-5 text-red-400" />
+              Litiges & Séquestre
+            </Link>
             <button onClick={handleLogout} className="flex items-center gap-2 px-3.5 py-2.5 lg:px-4 lg:py-3 text-red-400 hover:bg-red-500/10 rounded-xl text-xs lg:text-sm font-semibold transition-all lg:mt-4 border border-transparent hover:border-red-500/20 shrink-0">
               <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
               <span className="hidden lg:inline">{t('dashboard.logout')}</span>
@@ -685,20 +696,38 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                           </td>
                           <td className="px-6 py-5 text-right whitespace-nowrap">
                             {job.status === 'IN_PROGRESS' && (
-                              <button
-                                onClick={() => handleCompleteJob(job.id)}
-                                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
-                              >
-                                <CheckCircle className="inline w-4 h-4 mr-1" /> Terminer
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => handleCompleteJob(job.id)}
+                                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2 cursor-pointer"
+                                >
+                                  <CheckCircle className="inline w-4 h-4 mr-1" /> Terminer
+                                </button>
+                                <button
+                                  onClick={() => setDisputeJob(job)}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-colors mr-2 cursor-pointer"
+                                  title="Signaler un litige / Bloquer le séquestre"
+                                >
+                                  <ShieldAlert className="inline w-4 h-4 mr-1" /> Litige
+                                </button>
+                              </>
                             )}
                             {job.status === 'COMPLETED' && (
-                              <button
-                                onClick={() => setSelectedJobToReview(job)}
-                                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2"
-                              >
-                                <Star className="inline w-4 h-4 mr-1" /> Noter
-                              </button>
+                              <>
+                                <button
+                                  onClick={() => setSelectedJobToReview(job)}
+                                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2 cursor-pointer"
+                                >
+                                  <Star className="inline w-4 h-4 mr-1" /> Noter
+                                </button>
+                                <button
+                                  onClick={() => setDisputeJob(job)}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-colors mr-2 cursor-pointer"
+                                  title="Ouvrir une contestation d'assurance"
+                                >
+                                  <ShieldAlert className="inline w-4 h-4 mr-1" /> Litige
+                                </button>
+                              </>
                             )}
                             {(job.status === 'PENDING' || job.status === 'PUBLISHED') && (
                               <>
@@ -1394,6 +1423,23 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             </button>
           </div>
         )}
+        {/* Open Dispute Modal */}
+        {disputeJob && (
+          <OpenDisputeModal
+            job={{
+              id: disputeJob.id,
+              title: disputeJob.title,
+              price: disputeJob.price || 0,
+            }}
+            isOpen={!!disputeJob}
+            onClose={() => setDisputeJob(null)}
+            onSuccess={() => {
+              fetchJobs();
+            }}
+            addToast={addToast}
+          />
+        )}
+
         {/* Confirm Modal & Toast Notifications */}
         <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
         {confirmDialog && <ConfirmModal dialog={confirmDialog} onClose={() => setConfirmDialog(null)} />}

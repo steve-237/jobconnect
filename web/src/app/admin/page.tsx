@@ -22,6 +22,8 @@ import {
   Building,
   User,
   FileText,
+  ShieldAlert,
+  Scale,
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -71,7 +73,7 @@ export default function AdminPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const [ready, setReady] = useState(false);
-  const [activeTab, setActiveTab] = useState<'kyc' | 'users'>('kyc');
+  const [activeTab, setActiveTab] = useState<'kyc' | 'users' | 'disputes'>('kyc');
   const [inspectingUser, setInspectingUser] = useState<UserData | null>(null);
 
   // Stats
@@ -88,6 +90,8 @@ export default function AdminPage() {
   // Data lists
   const [usersList, setUsersList] = useState<UserData[]>([]);
   const [pendingKycList, setPendingKycList] = useState<UserData[]>([]);
+  const [disputesList, setDisputesList] = useState<any[]>([]);
+  const [arbitrateNotes, setArbitrateNotes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -106,14 +110,16 @@ export default function AdminPage() {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const [usersRes, kycRes, statsRes] = await Promise.all([
+      const [usersRes, kycRes, statsRes, disputesRes] = await Promise.all([
         api.get('/users'),
         api.get('/users/admin/kyc/pending'),
         api.get('/users/admin/stats'),
+        api.get('/disputes/my-disputes').catch(() => ({ data: [] })),
       ]);
 
       setUsersList(Array.isArray(usersRes.data) ? usersRes.data : []);
       setPendingKycList(Array.isArray(kycRes.data) ? kycRes.data : []);
+      setDisputesList(Array.isArray(disputesRes.data) ? disputesRes.data : []);
       if (statsRes.data) {
         setStats(statsRes.data);
       }
@@ -182,6 +188,26 @@ export default function AdminPage() {
         }
       },
     });
+  };
+
+  // Dispute Arbitration Handler
+  const handleArbitrateDispute = async (
+    disputeId: string,
+    decision: 'REFUND_EMPLOYER' | 'PAY_CANDIDATE' | 'SPLIT' | 'DISMISS',
+    title: string
+  ) => {
+    const notes = arbitrateNotes[disputeId] || 'Décision arbitrale rendue par l\'administration JobConnect.';
+    try {
+      await api.patch(`/disputes/${disputeId}/arbitrate`, {
+        decision,
+        resolutionNotes: notes,
+      });
+      addToast(`Arbitrage validé pour le dossier "${title}"`, 'success', 'Décision Exécutée ⚖️');
+      fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      addToast(err.response?.data?.message || 'Erreur lors de l\'arbitrage', 'error');
+    }
   };
 
   // Delete User Handler
@@ -339,6 +365,18 @@ export default function AdminPage() {
           >
             <Users className="w-4 h-4" />
             {t('admin.users_tab')} ({usersList.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab('disputes')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'disputes'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Scale className="w-4 h-4" />
+            Litiges & Séquestre ({disputesList.length})
           </button>
         </div>
 
@@ -498,6 +536,144 @@ export default function AdminPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </section>
+        )}
+
+        {/* ─── TAB 3: DISPUTES & ESCROW ARBITRATION ─── */}
+        {activeTab === 'disputes' && (
+          <section className="glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Scale className="w-5 h-5 text-purple-400" />
+                  Arbitrage des Litiges & Déblocage du Séquestre
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Prenez les décisions équitables pour rembourser les employeurs ou libérer les paiements prestataires.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {disputesList.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Aucun litige ouvert nécessitant un arbitrage.</p>
+                </div>
+              ) : (
+                disputesList.map((d: any) => {
+                  const isResolved = d.status.startsWith('RESOLVED_') || d.status === 'DISMISSED';
+
+                  return (
+                    <div
+                      key={d.id}
+                      className="p-6 rounded-2xl bg-white/[0.03] border border-white/10 space-y-4 hover:border-white/20 transition-all"
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-[10px] font-bold px-3 py-1 rounded-full border ${
+                            isResolved
+                              ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                              : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                          }`}>
+                            {d.status}
+                          </span>
+                          <h3 className="text-base font-bold text-white">{d.job.title}</h3>
+                        </div>
+                        <span className="text-sm font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                          Séquestre : {d.job.price} €
+                        </span>
+                      </div>
+
+                      {/* Complaint Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div className="p-3.5 rounded-xl bg-red-500/5 border border-red-500/15 space-y-1">
+                          <span className="font-bold text-red-400 block">
+                            Plaignant : {d.initiator.firstName} {d.initiator.lastName} ({d.initiator.email})
+                          </span>
+                          <p className="text-muted-foreground">
+                            Motif : <strong className="text-white">{d.reason}</strong>
+                          </p>
+                          <p className="text-gray-300 italic">&quot;{d.description}&quot;</p>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-blue-500/5 border border-blue-500/15 space-y-1">
+                          <span className="font-bold text-blue-400 block">
+                            Défenseur : {d.defendant.firstName} {d.defendant.lastName} ({d.defendant.email})
+                          </span>
+                          <p className="text-muted-foreground">
+                            Réponse :{' '}
+                            {d.defendantReply ? (
+                              <span className="text-gray-300 italic">&quot;{d.defendantReply}&quot;</span>
+                            ) : (
+                              <span className="italic text-muted-foreground/60">Aucune réponse formulée pour l&apos;instant.</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Resolution note input & Arbitration Buttons */}
+                      {!isResolved && (
+                        <div className="pt-3 border-t border-white/5 space-y-3">
+                          <div>
+                            <label className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                              Motif de la décision arbitrale (notifié aux deux parties)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Expliquez brièvement les motifs de votre arbitrage..."
+                              value={arbitrateNotes[d.id] || ''}
+                              onChange={(e) =>
+                                setArbitrateNotes((prev) => ({ ...prev, [d.id]: e.target.value }))
+                              }
+                              className="w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs text-white placeholder:text-muted-foreground/50 focus:outline-none focus:border-purple-500"
+                            />
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => handleArbitrateDispute(d.id, 'REFUND_EMPLOYER', d.job.title)}
+                              className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              💰 Rembourser l&apos;Employeur ({d.job.price} €)
+                            </button>
+
+                            <button
+                              onClick={() => handleArbitrateDispute(d.id, 'PAY_CANDIDATE', d.job.title)}
+                              className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              ✅ Libérer les Fonds au Prestataire ({d.job.price} €)
+                            </button>
+
+                            <button
+                              onClick={() => handleArbitrateDispute(d.id, 'SPLIT', d.job.title)}
+                              className="px-4 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-xs font-bold transition-all cursor-pointer"
+                            >
+                              ⚖️ Partage Équitable 50/50 ({d.job.price / 2} € chacun)
+                            </button>
+
+                            <button
+                              onClick={() => handleArbitrateDispute(d.id, 'DISMISS', d.job.title)}
+                              className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white border border-white/10 text-xs font-semibold transition-all cursor-pointer ml-auto"
+                            >
+                              Classer sans suite
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {isResolved && d.resolutionNotes && (
+                        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
+                          <strong>Décision appliquée :</strong> {d.resolutionNotes}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
         )}
