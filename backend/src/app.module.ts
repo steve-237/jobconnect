@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { JobsModule } from './jobs/jobs.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -12,9 +13,11 @@ import { PaymentsModule } from './payments/payments.module';
 import { AvailabilitiesModule } from './availabilities/availabilities.module';
 import { AiModule } from './ai/ai.module';
 import { DisputesModule } from './disputes/disputes.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
+    PrismaModule,
     UsersModule,
     JobsModule,
     CategoriesModule,
@@ -26,6 +29,7 @@ import { DisputesModule } from './disputes/disputes.module';
     AvailabilitiesModule,
     AiModule,
     DisputesModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

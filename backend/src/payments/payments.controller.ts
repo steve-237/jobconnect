@@ -9,11 +9,10 @@ import {
   Req,
   Headers,
   BadRequestException,
-  RawBodyRequest,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Request as ExpressRequest } from 'express';
+import { DepositDto, WithdrawDto } from './dto/payment.dto';
 
 @Controller('payments')
 export class PaymentsController {
@@ -39,14 +38,14 @@ export class PaymentsController {
 
   @UseGuards(JwtAuthGuard)
   @Post('deposit')
-  deposit(@Body('amount') amount: number, @Request() req: any) {
-    return this.paymentsService.depositFunds(req.user.userId, amount);
+  deposit(@Body() depositDto: DepositDto, @Request() req: any) {
+    return this.paymentsService.depositFunds(req.user.userId, depositDto.amount);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('withdraw')
-  withdraw(@Body('amount') amount: number, @Body('iban') iban: string, @Request() req: any) {
-    return this.paymentsService.withdrawFunds(req.user.userId, amount, iban);
+  withdraw(@Body() withdrawDto: WithdrawDto, @Request() req: any) {
+    return this.paymentsService.withdrawFunds(req.user.userId, withdrawDto.amount, withdrawDto.iban);
   }
 
   @Post('webhook')
@@ -54,15 +53,9 @@ export class PaymentsController {
     @Req() req: any,
     @Headers('stripe-signature') signature: string,
   ) {
-    // Si signature manque (ex: requete curl de test), on continue pour pouvoir tester localement sans webhooks
     if (!signature && process.env.NODE_ENV === 'production') {
       throw new BadRequestException('Missing stripe-signature header');
     }
-
-    try {
-      return await this.paymentsService.handleWebhook(req, signature || '');
-    } catch (err: any) {
-      throw new BadRequestException(err.message);
-    }
+    return this.paymentsService.handleWebhook(req, signature);
   }
 }

@@ -4,16 +4,15 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
 
-const prisma = new PrismaClient();
-
 @Injectable()
 export class ApplicationsService {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly messagesGateway: MessagesGateway,
   ) {}
@@ -22,7 +21,7 @@ export class ApplicationsService {
     createApplicationDto: CreateApplicationDto,
     candidateId: string,
   ) {
-    const job = await prisma.job.findUnique({
+    const job = await this.prisma.job.findUnique({
       where: { id: createApplicationDto.jobId },
     });
 
@@ -37,7 +36,7 @@ export class ApplicationsService {
     }
 
     // Check if already applied
-    const existing = await prisma.application.findUnique({
+    const existing = await this.prisma.application.findUnique({
       where: {
         jobId_candidateId: {
           jobId: createApplicationDto.jobId,
@@ -50,7 +49,7 @@ export class ApplicationsService {
       throw new ConflictException('You have already applied for this job');
     }
 
-    const application = await prisma.application.create({
+    const application = await this.prisma.application.create({
       data: {
         jobId: createApplicationDto.jobId,
         candidateId,
@@ -75,7 +74,7 @@ export class ApplicationsService {
     });
 
     // Send Expo Push Notification if employer has push token
-    const employer = await prisma.user.findUnique({
+    const employer = await this.prisma.user.findUnique({
       where: { id: job.employerId },
     });
     if (employer?.expoPushToken) {
@@ -91,7 +90,7 @@ export class ApplicationsService {
   }
 
   async findAllForCandidate(candidateId: string) {
-    return prisma.application.findMany({
+    return this.prisma.application.findMany({
       where: { candidateId },
       include: {
         job: true,
@@ -101,7 +100,7 @@ export class ApplicationsService {
   }
 
   async findAllForJob(jobId: string, employerId: string) {
-    const job = await prisma.job.findUnique({
+    const job = await this.prisma.job.findUnique({
       where: { id: jobId },
     });
 
@@ -109,7 +108,7 @@ export class ApplicationsService {
       throw new ForbiddenException('You do not own this job');
     }
 
-    return prisma.application.findMany({
+    return this.prisma.application.findMany({
       where: { jobId },
       include: {
         candidate: {
@@ -127,7 +126,7 @@ export class ApplicationsService {
   }
 
   async acceptApplication(id: string, employerId: string) {
-    const application = await prisma.application.findUnique({
+    const application = await this.prisma.application.findUnique({
       where: { id },
       include: { job: true },
     });
@@ -140,16 +139,17 @@ export class ApplicationsService {
       throw new ForbiddenException('You do not own this job');
     }
 
-    const updated = await prisma.application.update({
-      where: { id },
-      data: { isAccepted: true, status: 'ACCEPTED' },
-    });
-
-    // Automatically set job to IN_PROGRESS when candidate is accepted
-    await prisma.job.update({
-      where: { id: application.jobId },
-      data: { status: 'IN_PROGRESS' },
-    });
+    // Atomic transaction for updating application and job status
+    const [updated] = await this.prisma.$transaction([
+      this.prisma.application.update({
+        where: { id },
+        data: { isAccepted: true, status: 'ACCEPTED' },
+      }),
+      this.prisma.job.update({
+        where: { id: application.jobId },
+        data: { status: 'IN_PROGRESS' },
+      }),
+    ]);
 
     // Real-time socket notification to candidate
     this.messagesGateway.sendNotificationToUser(application.candidateId, {
@@ -162,7 +162,7 @@ export class ApplicationsService {
     });
 
     // Push notification if token available
-    const candidate = await prisma.user.findUnique({
+    const candidate = await this.prisma.user.findUnique({
       where: { id: application.candidateId },
     });
     if (candidate?.expoPushToken) {
@@ -178,7 +178,7 @@ export class ApplicationsService {
   }
 
   async rejectApplication(id: string, employerId: string) {
-    const application = await prisma.application.findUnique({
+    const application = await this.prisma.application.findUnique({
       where: { id },
       include: { job: true },
     });
@@ -191,7 +191,7 @@ export class ApplicationsService {
       throw new ForbiddenException('You do not own this job');
     }
 
-    const updated = await prisma.application.update({
+    const updated = await this.prisma.application.update({
       where: { id },
       data: { isAccepted: false, status: 'REJECTED' },
     });
@@ -207,7 +207,7 @@ export class ApplicationsService {
     });
 
     // Push notification if token available
-    const candidate = await prisma.user.findUnique({
+    const candidate = await this.prisma.user.findUnique({
       where: { id: application.candidateId },
     });
     if (candidate?.expoPushToken) {
@@ -228,20 +228,20 @@ export class ApplicationsService {
     jobId: string,
     message?: string,
   ) {
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await this.prisma.job.findUnique({ where: { id: jobId } });
     if (!job) throw new NotFoundException('Job not found');
     if (job.employerId !== employerId) throw new ForbiddenException('You do not own this job');
 
-    const candidate = await prisma.user.findUnique({ where: { id: candidateId } });
+    const candidate = await this.prisma.user.findUnique({ where: { id: candidateId } });
     if (!candidate || candidate.role !== 'CANDIDATE') throw new NotFoundException('Candidate not found');
 
-    const existing = await prisma.application.findUnique({
+    const existing = await this.prisma.application.findUnique({
       where: { jobId_candidateId: { jobId, candidateId } },
     });
 
     let app = existing;
     if (!app) {
-      app = await prisma.application.create({
+      app = await this.prisma.application.create({
         data: {
           jobId,
           candidateId,
@@ -251,7 +251,7 @@ export class ApplicationsService {
       });
     }
 
-    const employer = await prisma.user.findUnique({ where: { id: employerId } });
+    const employer = await this.prisma.user.findUnique({ where: { id: employerId } });
     const employerName = employer ? `${employer.firstName} ${employer.lastName}` : 'Un employeur';
 
     // WebSocket Notification to Candidate

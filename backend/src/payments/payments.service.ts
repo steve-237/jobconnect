@@ -4,21 +4,20 @@ import {
   ForbiddenException,
   RawBodyRequest,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import Stripe from 'stripe';
 import { Request } from 'express';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
-
-const prisma = new PrismaClient();
 
 @Injectable()
 export class PaymentsService {
   private stripe: Stripe;
 
   constructor(
-    private notificationsService: NotificationsService,
-    private messagesGateway: MessagesGateway,
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+    private readonly messagesGateway: MessagesGateway,
   ) {
     this.stripe = new Stripe(
       process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder',
@@ -29,7 +28,7 @@ export class PaymentsService {
   }
 
   async createCheckoutSession(applicationId: string, employerId: string) {
-    const application = await prisma.application.findUnique({
+    const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: { job: true },
     });
@@ -47,27 +46,27 @@ export class PaymentsService {
 
     if (!isStripeConfigured) {
       // Dev mode fallback when Stripe API key is missing or placeholder:
-      // Accept application directly and simulate successful transaction!
-      await prisma.application.update({
-        where: { id: applicationId },
-        data: { isAccepted: true },
-      });
-
-      await prisma.job.update({
-        where: { id: application.jobId },
-        data: { isPaid: true, status: 'IN_PROGRESS' },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          amount: application.job.price,
-          stripeSessionId: `simulated_${Date.now()}`,
-          status: 'COMPLETED',
-          jobId: application.job.id,
-          employerId: employerId,
-          candidateId: application.candidateId,
-        },
-      });
+      // Accept application directly and simulate successful transaction atomically!
+      await this.prisma.$transaction([
+        this.prisma.application.update({
+          where: { id: applicationId },
+          data: { isAccepted: true },
+        }),
+        this.prisma.job.update({
+          where: { id: application.jobId },
+          data: { isPaid: true, status: 'IN_PROGRESS' },
+        }),
+        this.prisma.transaction.create({
+          data: {
+            amount: application.job.price,
+            stripeSessionId: `simulated_${Date.now()}`,
+            status: 'COMPLETED',
+            jobId: application.job.id,
+            employerId: employerId,
+            candidateId: application.candidateId,
+          },
+        }),
+      ]);
 
       // Send Socket Notification to Candidate
       this.messagesGateway.sendNotificationToUser(application.candidateId, {
@@ -81,7 +80,7 @@ export class PaymentsService {
       });
 
       // Send push notification to candidate
-      const candidate = await prisma.user.findUnique({
+      const candidate = await this.prisma.user.findUnique({
         where: { id: application.candidateId },
       });
       if (candidate?.expoPushToken) {
@@ -121,45 +120,46 @@ export class PaymentsService {
         },
       });
 
-      await prisma.job.update({
-        where: { id: application.jobId },
-        data: { stripeSessionId: session.id },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          amount: application.job.price,
-          stripeSessionId: session.id,
-          status: 'PENDING',
-          jobId: application.job.id,
-          employerId: employerId,
-          candidateId: application.candidateId,
-        },
-      });
+      await this.prisma.$transaction([
+        this.prisma.job.update({
+          where: { id: application.jobId },
+          data: { stripeSessionId: session.id },
+        }),
+        this.prisma.transaction.create({
+          data: {
+            amount: application.job.price,
+            stripeSessionId: session.id,
+            status: 'PENDING',
+            jobId: application.job.id,
+            employerId: employerId,
+            candidateId: application.candidateId,
+          },
+        }),
+      ]);
 
       return { url: session.url };
     } catch (e) {
       // Fallback if Stripe API call fails in dev
-      await prisma.application.update({
-        where: { id: applicationId },
-        data: { isAccepted: true },
-      });
-
-      await prisma.job.update({
-        where: { id: application.jobId },
-        data: { isPaid: true, status: 'IN_PROGRESS' },
-      });
-
-      await prisma.transaction.create({
-        data: {
-          amount: application.job.price,
-          stripeSessionId: `simulated_fallback_${Date.now()}`,
-          status: 'COMPLETED',
-          jobId: application.job.id,
-          employerId: employerId,
-          candidateId: application.candidateId,
-        },
-      });
+      await this.prisma.$transaction([
+        this.prisma.application.update({
+          where: { id: applicationId },
+          data: { isAccepted: true },
+        }),
+        this.prisma.job.update({
+          where: { id: application.jobId },
+          data: { isPaid: true, status: 'IN_PROGRESS' },
+        }),
+        this.prisma.transaction.create({
+          data: {
+            amount: application.job.price,
+            stripeSessionId: `simulated_fallback_${Date.now()}`,
+            status: 'COMPLETED',
+            jobId: application.job.id,
+            employerId: employerId,
+            candidateId: application.candidateId,
+          },
+        }),
+      ]);
 
       return { url: `${frontendUrl}/dashboard?payment_success=true` };
     }
@@ -191,27 +191,27 @@ export class PaymentsService {
       const candidateId = session.metadata?.candidateId;
 
       if (applicationId && jobId) {
-        // Accepter la candidature
-        await prisma.application.update({
-          where: { id: applicationId },
-          data: { isAccepted: true },
-        });
-
-        // Marquer le job comme payé et en cours
-        await prisma.job.update({
-          where: { id: jobId },
-          data: { isPaid: true, status: 'IN_PROGRESS' },
-        });
-
-        // Marquer la transaction comme complétée
-        await prisma.transaction.updateMany({
-          where: { stripeSessionId: session.id },
-          data: { status: 'COMPLETED' },
-        });
+        await this.prisma.$transaction([
+          // Accepter la candidature
+          this.prisma.application.update({
+            where: { id: applicationId },
+            data: { isAccepted: true },
+          }),
+          // Marquer le job comme payé et en cours
+          this.prisma.job.update({
+            where: { id: jobId },
+            data: { isPaid: true, status: 'IN_PROGRESS' },
+          }),
+          // Marquer la transaction comme complétée
+          this.prisma.transaction.updateMany({
+            where: { stripeSessionId: session.id },
+            data: { status: 'COMPLETED' },
+          }),
+        ]);
 
         // Notifier le candidat
         if (candidateId) {
-          const candidate = await prisma.user.findUnique({
+          const candidate = await this.prisma.user.findUnique({
             where: { id: candidateId },
           });
           if (candidate?.expoPushToken) {
@@ -230,18 +230,18 @@ export class PaymentsService {
   }
 
   async getUserTransactions(userId: string) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     let rawTx: any[] = [];
     if (user.role === 'EMPLOYER') {
-      rawTx = await prisma.transaction.findMany({
+      rawTx = await this.prisma.transaction.findMany({
         where: { employerId: userId },
         include: { job: true, candidate: { select: { firstName: true, lastName: true } } },
         orderBy: { createdAt: 'desc' },
       });
     } else {
-      rawTx = await prisma.transaction.findMany({
+      rawTx = await this.prisma.transaction.findMany({
         where: { candidateId: userId },
         include: { job: true, employer: { select: { firstName: true, lastName: true } } },
         orderBy: { createdAt: 'desc' },
@@ -275,14 +275,14 @@ export class PaymentsService {
 
   async depositFunds(userId: string, amount: number) {
     if (!amount || amount <= 0) throw new ForbiddenException('Invalid amount');
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     // Create a dummy job or direct deposit record
-    const dummyJob = await prisma.job.findFirst();
+    const dummyJob = await this.prisma.job.findFirst();
     if (!dummyJob) throw new NotFoundException('No reference job found');
 
-    return prisma.transaction.create({
+    return this.prisma.transaction.create({
       data: {
         amount,
         status: 'COMPLETED',
@@ -296,13 +296,13 @@ export class PaymentsService {
 
   async withdrawFunds(userId: string, amount: number, iban: string) {
     if (!amount || amount <= 0) throw new ForbiddenException('Invalid amount');
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const dummyJob = await prisma.job.findFirst();
+    const dummyJob = await this.prisma.job.findFirst();
     if (!dummyJob) throw new NotFoundException('No reference job found');
 
-    return prisma.transaction.create({
+    return this.prisma.transaction.create({
       data: {
         amount: -amount,
         status: 'COMPLETED',

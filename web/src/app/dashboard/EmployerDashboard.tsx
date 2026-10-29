@@ -24,41 +24,12 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import GamificationBadge from '@/components/GamificationBadge';
 import Logo from '@/components/Logo';
 import OpenDisputeModal from '@/components/OpenDisputeModal';
-
-interface Job {
-  id: string;
-  title: string;
-  description?: string;
-  price?: number;
-  location?: string;
-  categoryId?: string;
-  scheduledDate?: string | null;
-  estimatedDuration?: number | null;
-  status: string;
-  createdAt: string;
-  _count: { applications: number };
-}
-
-interface Application {
-  id: string;
-  message: string;
-  isAccepted: boolean;
-  status?: string;
-  createdAt: string;
-  jobId?: string;
-  jobTitle?: string;
-  candidate: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { Job, Application, Category, EmployerApplication } from '@/types';
+import ReviewModal from '@/components/dashboard/ReviewModal';
+import EditJobModal from '@/components/dashboard/EditJobModal';
+import CreateJobModal from '@/components/dashboard/CreateJobModal';
+import EmployerStatsGrid from '@/components/dashboard/EmployerStatsGrid';
+import JobApplicantsModal from '@/components/dashboard/JobApplicantsModal';
 
 export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
@@ -151,107 +122,24 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
 
   // Applicants for a specific job modal
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<EmployerApplication[]>([]);
   const [isLoadingApps, setIsLoadingApps] = useState(false);
 
   // All candidates applications state (for the Candidates tab)
-  const [allCandidatesApps, setAllCandidatesApps] = useState<Application[]>([]);
+  const [allCandidatesApps, setAllCandidatesApps] = useState<EmployerApplication[]>([]);
   const [isLoadingAllCandidates, setIsLoadingAllCandidates] = useState(false);
 
   // Review modal state
   const [selectedJobToReview, setSelectedJobToReview] = useState<Job | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
 
   // Dispute modal state
   const [disputeJob, setDisputeJob] = useState<Job | null>(null);
 
   // Create Job Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCreatingJob, setIsCreatingJob] = useState(false);
-  const [createError, setCreateError] = useState('');
-  const [createFormData, setCreateFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    location: '',
-    categoryId: '',
-    scheduledDate: '',
-    estimatedDuration: '',
-  });
-
-  // AI Assistant States
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [isAiEstimating, setIsAiEstimating] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState('');
-
-  const handleAiGenerateJob = async () => {
-    if (!aiPrompt.trim()) return;
-    setIsAiGenerating(true);
-    try {
-      const res = await api.post('/ai/generate-job', {
-        prompt: aiPrompt,
-        location: createFormData.location || 'Paris',
-      });
-      const data = res.data;
-      setCreateFormData((prev) => ({
-        ...prev,
-        title: data.title || prev.title,
-        description: data.description || prev.description,
-        price: data.recommendedPrice ? data.recommendedPrice.toString() : prev.price,
-        categoryId: data.categoryId || prev.categoryId,
-        estimatedDuration: data.estimatedDuration ? (data.estimatedDuration * 60).toString() : prev.estimatedDuration,
-      }));
-      setAiExplanation(data.explanation || '');
-      addToast('Annonce générée par l\'IA avec succès !', 'success', 'Assistant IA ✨');
-    } catch (e: any) {
-      console.error('AI Generation error', e);
-      addToast(e.response?.data?.message || 'Erreur lors de la génération IA', 'error');
-    } finally {
-      setIsAiGenerating(false);
-    }
-  };
-
-  const handleAiEstimatePrice = async () => {
-    if (!createFormData.title && !createFormData.description) {
-      addToast('Veuillez d\'abord saisir un titre ou une description', 'error');
-      return;
-    }
-    setIsAiEstimating(true);
-    try {
-      const res = await api.post('/ai/estimate-price', {
-        title: createFormData.title,
-        description: createFormData.description,
-        location: createFormData.location,
-      });
-      const data = res.data;
-      if (data.recommendedPrice) {
-        setCreateFormData((prev) => ({ ...prev, price: data.recommendedPrice.toString() }));
-        setAiExplanation(data.explanation || '');
-        addToast(`Prix réajusté à ${data.recommendedPrice} € d'après le marché !`, 'success', 'Estimation IA 💡');
-      }
-    } catch (e: any) {
-      console.error('AI Estimation error', e);
-      addToast('Échec de l\'estimation IA', 'error');
-    } finally {
-      setIsAiEstimating(false);
-    }
-  };
 
   // Edit Job Modal state
   const [editingJob, setEditingJob] = useState<Job | null>(null);
-  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
-  const [editError, setEditError] = useState('');
-  const [editFormData, setEditFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    location: '',
-    categoryId: '',
-    scheduledDate: '',
-    estimatedDuration: '',
-  });
 
   useEffect(() => {
     fetchJobs();
@@ -360,22 +248,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     });
   };
 
-  const submitReview = async () => {
-    if (!selectedJobToReview) return;
-    try {
-      await api.post('/reviews', {
-        jobId: selectedJobToReview.id,
-        rating: reviewRating,
-        comment: reviewComment
-      });
-      setSelectedJobToReview(null);
-      setReviewRating(5);
-      setReviewComment('');
-      addToast('Avis publié avec succès !', 'success');
-    } catch (e: any) {
-      addToast(e.response?.data?.message || 'Erreur lors de la publication de l\'avis', 'error');
-    }
-  };
 
   const handleRejectApplication = (appId: string) => {
     setConfirmDialog({
@@ -397,96 +269,10 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
     });
   };
 
-  // Create Job Handler
-  const handleOpenCreateModal = () => {
-    setCreateFormData({
-      title: '',
-      description: '',
-      price: '',
-      location: '',
-      categoryId: categories.length > 0 ? categories[0].id : '',
-      scheduledDate: '',
-      estimatedDuration: '',
-    });
-    setCreateError('');
-    setIsCreateModalOpen(true);
-  };
-
-  const handleCreateJobSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreatingJob(true);
-    setCreateError('');
-
-    try {
-      await api.post('/jobs', {
-        title: createFormData.title,
-        description: createFormData.description,
-        price: parseFloat(createFormData.price),
-        location: createFormData.location,
-        categoryId: createFormData.categoryId,
-        scheduledDate: createFormData.scheduledDate ? new Date(createFormData.scheduledDate).toISOString() : undefined,
-        estimatedDuration: createFormData.estimatedDuration ? parseInt(createFormData.estimatedDuration) : undefined,
-      });
-      setIsCreateModalOpen(false);
-      await fetchJobs();
-    } catch (err: any) {
-      console.error(err);
-      setCreateError(err.response?.data?.message || 'Erreur lors de la création de l\'annonce');
-    } finally {
-      setIsCreatingJob(false);
-    }
-  };
 
   // Edit Job Handler
-  const handleOpenEditModal = async (job: Job) => {
-    setEditError('');
+  const handleOpenEditModal = (job: Job) => {
     setEditingJob(job);
-    try {
-      const res = await api.get(`/jobs/${job.id}`);
-      const fullJob = res.data;
-      let formattedDate = '';
-      if (fullJob.scheduledDate) {
-        const d = new Date(fullJob.scheduledDate);
-        formattedDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-      }
-      setEditFormData({
-        title: fullJob.title || '',
-        description: fullJob.description || '',
-        price: fullJob.price ? fullJob.price.toString() : '',
-        location: fullJob.location || '',
-        categoryId: fullJob.categoryId || (categories.length > 0 ? categories[0].id : ''),
-        scheduledDate: formattedDate,
-        estimatedDuration: fullJob.estimatedDuration ? fullJob.estimatedDuration.toString() : '',
-      });
-    } catch (e) {
-      console.error('Failed to load job details', e);
-    }
-  };
-
-  const handleEditJobSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingJob) return;
-    setIsUpdatingJob(true);
-    setEditError('');
-
-    try {
-      await api.patch(`/jobs/${editingJob.id}`, {
-        title: editFormData.title,
-        description: editFormData.description,
-        price: parseFloat(editFormData.price),
-        location: editFormData.location,
-        categoryId: editFormData.categoryId,
-        scheduledDate: editFormData.scheduledDate ? new Date(editFormData.scheduledDate).toISOString() : null,
-        estimatedDuration: editFormData.estimatedDuration ? parseInt(editFormData.estimatedDuration) : null,
-      });
-      setEditingJob(null);
-      await fetchJobs();
-    } catch (err: any) {
-      console.error(err);
-      setEditError(err.response?.data?.message || 'Erreur lors de la modification');
-    } finally {
-      setIsUpdatingJob(false);
-    }
   };
 
   return (
@@ -559,7 +345,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         </div>
 
         <div className="hidden lg:block p-6 border-t border-white/5">
-          <button onClick={handleOpenCreateModal} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer">
+          <button onClick={() => setIsCreateModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer">
             <Plus className="w-5 h-5" />
             Créer une annonce
           </button>
@@ -585,7 +371,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
             <ThemeToggle />
             <NotificationBell userId={userId} theme="amber" />
             <button
-              onClick={handleOpenCreateModal}
+              onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -597,35 +383,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         {activeTab === 'overview' && (
           <>
             {/* Top Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
-              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-                <div className="flex justify-between items-start">
-                  <div className="bg-amber-500/20 text-amber-500 p-3 rounded-xl"><Briefcase className="w-6 h-6" /></div>
-                </div>
-                <h3 className="text-4xl font-bold mt-4 mb-1">{jobs.length}</h3>
-                <p className="text-muted-foreground font-medium">{t('dashboard.stat_jobs_posted')}</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-                <div className="flex justify-between items-start">
-                  <div className="bg-blue-500/20 text-blue-400 p-3 rounded-xl"><Users className="w-6 h-6" /></div>
-                </div>
-                <h3 className="text-4xl font-bold mt-4 mb-1">
-                  {jobs.reduce((acc, job) => acc + (job._count?.applications || 0), 0)}
-                </h3>
-                <p className="text-muted-foreground font-medium">Total Candidatures</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/10 rounded-2xl p-6 shadow-xl">
-                <div className="flex justify-between items-start">
-                  <div className="bg-emerald-500/20 text-emerald-400 p-3 rounded-xl"><CheckCircle className="w-6 h-6" /></div>
-                </div>
-                <h3 className="text-4xl font-bold mt-4 mb-1">
-                  {jobs.filter(j => j.status === 'COMPLETED').length}
-                </h3>
-                <p className="text-muted-foreground font-medium">Missions Terminées</p>
-              </div>
-            </div>
+            <EmployerStatsGrid jobs={jobs} statJobsPostedLabel={t('dashboard.stat_jobs_posted')} />
 
             {/* Gamification Level & Employer Analytics */}
             <div className="mb-10 space-y-6">
@@ -665,7 +423,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
                       <tr>
                         <td colSpan={5} className="p-8 text-center">
                           <p className="text-muted-foreground mb-4">Vous n'avez pas encore publié d'annonce.</p>
-                          <button onClick={handleOpenCreateModal} className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                          <button onClick={() => setIsCreateModalOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                             Publier votre première annonce
                           </button>
                         </td>
@@ -882,508 +640,60 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
         )}
 
         {/* Modal for Applicants of a specific job */}
-        {selectedJob && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
-              <div className="flex justify-between items-center p-6 border-b border-white/10">
-                <div>
-                  <h3 className="text-xl font-bold">Candidats pour "{selectedJob.title}"</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{applications.length} candidat(s) au total</p>
-                </div>
-                <button onClick={() => setSelectedJob(null)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <JobApplicantsModal
+          job={selectedJob}
+          isOpen={!!selectedJob}
+          applications={applications}
+          isLoading={isLoadingApps}
+          onClose={() => setSelectedJob(null)}
+          onStartChat={(appId, candidateName) =>
+            setActiveChatApp({ id: appId, title: `Chat — ${candidateName}` })
+          }
+          onReject={handleRejectApplication}
+          acceptLabel={t('dashboard.accept')}
+          rejectLabel={t('dashboard.reject')}
+        />
 
-              <div className="flex-1 overflow-y-auto p-6">
-                {isLoadingApps ? (
-                  <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-amber-500" /></div>
-                ) : applications.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">Aucun candidat pour le moment.</div>
-                ) : (
-                  <div className="space-y-4">
-                    {applications.map(app => (
-                      <div key={app.id} className="bg-white/5 border border-white/10 p-5 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-                        <div>
-                          <h4 className="font-bold text-lg">{app.candidate.firstName} {app.candidate.lastName}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">{app.candidate.email}</p>
-                          <div className="bg-black/30 p-3 rounded-lg text-sm italic text-gray-300">
-                            "{app.message || "Je suis très intéressé par cette opportunité."}"
-                          </div>
-                        </div>
-                        <div className="shrink-0 flex items-center gap-2">
-                          {app.isAccepted || app.status === 'ACCEPTED' ? (
-                            <>
-                              <span className="hidden sm:inline-flex items-center gap-2 text-emerald-400 px-2 text-sm font-semibold">
-                                <CheckCircle className="w-4 h-4" /> Accepté
-                              </span>
-                              <button
-                                onClick={() => setActiveChatApp({ id: app.id, title: `Chat — ${app.candidate.firstName} ${app.candidate.lastName}` })}
-                                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-lg font-semibold transition-colors"
-                              >
-                                <MessageSquare className="w-4 h-4" /> Discuter
-                              </button>
-                            </>
-                          ) : app.status === 'REJECTED' ? (
-                            <span className="inline-flex items-center gap-2 text-red-400 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg text-sm font-semibold">
-                              <X className="w-4 h-4" /> Refusée
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const res = await api.post(`/payments/checkout/${app.id}`);
-                                    if (res.data.url) {
-                                      window.location.href = res.data.url;
-                                    }
-                                  } catch (e) {
-                                    alert('Erreur lors de l\'initiation du paiement');
-                                  }
-                                }}
-                                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
-                              >
-                                <Check className="w-4 h-4" /> {t('dashboard.accept')}
-                              </button>
-                              <button
-                                onClick={() => handleRejectApplication(app.id)}
-                                className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
-                              >
-                                <X className="w-4 h-4" /> {t('dashboard.reject')}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Create Job Modal */}
+        <CreateJobModal
+          isOpen={isCreateModalOpen}
+          categories={categories}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={fetchJobs}
+          addToast={addToast}
+        />
 
-        {/* Create Job Modal (No Scrollbar Layout) */}
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsCreateModalOpen(false)}>
-            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-
-              {/* Header */}
-              <div className="flex justify-between items-center pb-5 mb-5 border-b border-white/10 relative z-10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Publier une nouvelle annonce</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Remplissez les informations pour trouver un candidat qualifié</p>
-                  </div>
-                </div>
-                <button onClick={() => setIsCreateModalOpen(false)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form Content - 2 Columns Compact */}
-              <div className="relative z-10">
-                {/* AI Assistant Banner */}
-                <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-purple-500/15 to-blue-500/15 border border-amber-500/30">
-                  <div className="flex items-center justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-                      <span className="text-xs font-bold text-white uppercase tracking-wider">Générateur d'Annonce IA ✨</span>
-                    </div>
-                    {aiExplanation && (
-                      <span className="text-[10px] text-amber-300 font-semibold bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
-                        {aiExplanation}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="Décrivez votre besoin en 1 phrase (ex: Déménagement 5 cartons à Paris)..."
-                      className="flex-1 bg-black/50 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder:text-muted-foreground/60 focus:outline-none focus:border-amber-500 font-medium"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAiGenerateJob}
-                      disabled={isAiGenerating || !aiPrompt.trim()}
-                      className="bg-gradient-to-r from-amber-500 to-purple-600 hover:from-amber-600 hover:to-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-lg flex items-center gap-1.5 shrink-0 disabled:opacity-50 cursor-pointer"
-                    >
-                      {isAiGenerating ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5" />
-                          Générer
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {createError && (
-                  <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 font-medium">
-                    {createError}
-                  </div>
-                )}
-
-                <form onSubmit={handleCreateJobSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Left Column: Essential Fields */}
-                  <div className="space-y-3.5">
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Titre de l'annonce</label>
-                      <div className="relative">
-                        <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          required
-                          value={createFormData.title}
-                          onChange={e => setCreateFormData({ ...createFormData, title: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-                          placeholder="ex: Déménagement appartement 3 pièces"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Catégorie</label>
-                      <div className="relative">
-                        <List className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        <select
-                          required
-                          value={createFormData.categoryId}
-                          onChange={e => setCreateFormData({ ...createFormData, categoryId: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-white/10 bg-[#141414] pl-10 pr-8 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium cursor-pointer"
-                        >
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id} className="bg-[#141414] text-white">
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-semibold text-muted-foreground">
-                            Budget ({getSelectedCurrency().symbol})
-                          </label>
-                          <button
-                            type="button"
-                            onClick={handleAiEstimatePrice}
-                            disabled={isAiEstimating}
-                            className="text-[10px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/20 transition-colors cursor-pointer"
-                          >
-                            <Sparkles className="w-3 h-3 text-amber-400" />
-                            {isAiEstimating ? 'Calcul...' : 'Estimer 💡'}
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
-                          <input
-                            type="number"
-                            required
-                            min="1"
-                            step="0.01"
-                            value={createFormData.price}
-                            onChange={e => setCreateFormData({ ...createFormData, price: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-emerald-400 font-bold focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                            placeholder="150"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Localisation</label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="text"
-                            value={createFormData.location}
-                            onChange={e => setCreateFormData({ ...createFormData, location: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-                            placeholder="Paris 11e"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Date prévue</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="datetime-local"
-                            value={createFormData.scheduledDate}
-                            onChange={e => setCreateFormData({ ...createFormData, scheduledDate: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-2 py-2 text-[11px] text-foreground focus:border-amber-500 focus:outline-none font-medium"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Durée (min)</label>
-                        <div className="relative">
-                          <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="number"
-                            min="15"
-                            step="15"
-                            value={createFormData.estimatedDuration}
-                            onChange={e => setCreateFormData({ ...createFormData, estimatedDuration: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none font-medium"
-                            placeholder="120 min"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Description & Publish Button */}
-                  <div className="flex flex-col justify-between space-y-3.5">
-                    <div className="flex-1 flex flex-col">
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Description détaillée</label>
-                      <div className="relative flex-1 flex flex-col">
-                        <AlignLeft className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground" />
-                        <textarea
-                          required
-                          value={createFormData.description}
-                          onChange={e => setCreateFormData({ ...createFormData, description: e.target.value })}
-                          className="w-full flex-1 min-h-[145px] rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none leading-relaxed font-normal"
-                          placeholder="Décrivez précisément la mission, le matériel nécessaire et les consignes particulières..."
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isCreatingJob}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-                    >
-                      {isCreatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier l\'annonce maintenant'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Job Modal (No Scrollbar Layout) */}
-        {editingJob && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setEditingJob(null)}>
-            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-
-              {/* Header */}
-              <div className="flex justify-between items-center pb-5 mb-5 border-b border-white/10 relative z-10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl">
-                    <Edit3 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white tracking-tight">Modifier l'annonce</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Mettez à jour les détails de votre offre de mission</p>
-                  </div>
-                </div>
-                <button onClick={() => setEditingJob(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form Content - 2 Columns Compact */}
-              <div className="relative z-10">
-                {editError && (
-                  <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 font-medium">
-                    {editError}
-                  </div>
-                )}
-
-                <form onSubmit={handleEditJobSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Left Column */}
-                  <div className="space-y-3.5">
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Titre de l'annonce</label>
-                      <div className="relative">
-                        <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          required
-                          value={editFormData.title}
-                          onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Catégorie</label>
-                      <div className="relative">
-                        <List className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        <select
-                          required
-                          value={editFormData.categoryId}
-                          onChange={e => setEditFormData({ ...editFormData, categoryId: e.target.value })}
-                          className="w-full appearance-none rounded-xl border border-white/10 bg-[#141414] pl-10 pr-8 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium cursor-pointer"
-                        >
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id} className="bg-[#141414] text-white">
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 rotate-90 text-muted-foreground pointer-events-none" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                          Budget ({getSelectedCurrency().symbol})
-                        </label>
-                        <div className="relative">
-                          <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
-                          <input
-                            type="number"
-                            required
-                            min="1"
-                            step="0.01"
-                            value={editFormData.price}
-                            onChange={e => setEditFormData({ ...editFormData, price: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-emerald-400 font-bold focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Localisation</label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="text"
-                            value={editFormData.location}
-                            onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 font-medium"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Date prévue</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="datetime-local"
-                            value={editFormData.scheduledDate}
-                            onChange={e => setEditFormData({ ...editFormData, scheduledDate: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-2 py-2 text-[11px] text-foreground focus:border-amber-500 focus:outline-none font-medium"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1">Durée (min)</label>
-                        <div className="relative">
-                          <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <input
-                            type="number"
-                            min="15"
-                            step="15"
-                            value={editFormData.estimatedDuration}
-                            onChange={e => setEditFormData({ ...editFormData, estimatedDuration: e.target.value })}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-2.5 text-xs text-foreground focus:border-amber-500 focus:outline-none font-medium"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column */}
-                  <div className="flex flex-col justify-between space-y-3.5">
-                    <div className="flex-1 flex flex-col">
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Description détaillée</label>
-                      <div className="relative flex-1 flex flex-col">
-                        <AlignLeft className="absolute left-3.5 top-3.5 w-4 h-4 text-muted-foreground" />
-                        <textarea
-                          required
-                          value={editFormData.description}
-                          onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
-                          className="w-full flex-1 min-h-[145px] rounded-xl border border-white/10 bg-white/5 pl-10 pr-3 py-3 text-xs text-foreground focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 resize-none leading-relaxed font-normal"
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isUpdatingJob}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold py-3.5 shadow-lg shadow-amber-500/25 transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-                    >
-                      {isUpdatingJob ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Edit Job Modal */}
+        <EditJobModal
+          job={editingJob}
+          isOpen={!!editingJob}
+          categories={categories}
+          onClose={() => setEditingJob(null)}
+          onSuccess={fetchJobs}
+          addToast={addToast}
+        />
 
         {/* Review Modal */}
-        {selectedJobToReview && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedJobToReview(null)}>
-            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
-                    <Star className="w-5 h-5 fill-current" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Évaluer le candidat</h3>
-                </div>
-                <button onClick={() => setSelectedJobToReview(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Comment s'est passée la mission <span className="text-white font-semibold">"{selectedJobToReview.title}"</span> ?
-                </p>
-                <div className="flex gap-2 justify-center mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setReviewRating(star)}
-                      className={`p-2 rounded-xl transition-all ${reviewRating >= star ? 'text-amber-400 scale-110' : 'text-white/20 hover:text-white/40'}`}
-                    >
-                      <Star className="w-7 h-7 fill-current" />
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  placeholder="Laissez un commentaire sur le travail effectué..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full h-28 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white focus:border-amber-500/50 focus:outline-none resize-none mb-5"
-                />
-                <button
-                  onClick={submitReview}
-                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
-                >
-                  Publier l'avis
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ReviewModal
+          job={selectedJobToReview}
+          isOpen={!!selectedJobToReview}
+          onClose={() => setSelectedJobToReview(null)}
+          onSubmit={async (jobId, rating, comment) => {
+            try {
+              await api.post('/reviews', {
+                jobId,
+                rating,
+                comment,
+              });
+              addToast('Avis publié avec succès !', 'success');
+            } catch (e: any) {
+              addToast(
+                e.response?.data?.message || "Erreur lors de la publication de l'avis",
+                'error',
+              );
+            }
+          }}
+        />
 
         {/* Chat Modal */}
         {activeChatApp && (

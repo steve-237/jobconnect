@@ -7,7 +7,6 @@ import {
   Param,
   UseGuards,
   Request,
-  ForbiddenException,
 } from '@nestjs/common';
 import { DisputesService } from './disputes.service';
 import {
@@ -16,9 +15,11 @@ import {
   ArbitrateDisputeDto,
 } from './dto/dispute.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('disputes')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DisputesController {
   constructor(private readonly disputesService: DisputesService) {}
 
@@ -46,17 +47,12 @@ export class DisputesController {
     return this.disputesService.respond(id, respondDto, req.user.userId);
   }
 
+  @Roles('ADMIN')
   @Patch(':id/arbitrate')
   arbitrate(
     @Param('id') id: string,
     @Body() arbitrateDto: ArbitrateDisputeDto,
-    @Request() req: any,
   ) {
-    if (req.user.role !== 'ADMIN') {
-      throw new ForbiddenException(
-        "Seul l'administrateur peut arbitrer un dossier de litige",
-      );
-    }
     return this.disputesService.arbitrate(id, arbitrateDto);
   }
 }

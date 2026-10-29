@@ -1,0 +1,36 @@
+{
+  "name": "jobconnect-platform",
+  "version": "1.0.0",
+  "description": "JobConnect - Plateforme de Jobs Ponctuels et Services entre Particuliers & Professionnels",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:web": "npm --prefix web run dev",
+    "dev:mobile": "npm --prefix mobile run start",
+    "build": "npm --prefix backend run build && npm --prefix web run build",
+    "build:backend": "npm --prefix backend run build",
+    "build:web": "npm --prefix web run build",
+    "test": "npm --prefix backend run test",
+    "test:backend": "npm --prefix backend run test",
+    "lint": "npm --prefix backend run lint && npm --prefix web run lint",
+    "typecheck:backend": "npm --prefix backend exec -- tsc -p backend/tsconfig.json --noEmit",
+    "typecheck:web": "npm --prefix web exec -- tsc -p web/tsconfig.json --noEmit",
+    "typecheck:mobile": "npm --prefix mobile exec -- tsc -p mobile/tsconfig.json --noEmit",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:web && npm run typecheck:mobile"
+  },
+  "keywords": [
+    "jobconnect",
+    "nestjs",
+    "nextjs",
+    "react-native",
+    "expo",
+    "prisma"
+  ],
+  "author": "",
+  "license": "UNLICENSED"
+}

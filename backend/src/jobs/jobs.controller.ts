@@ -8,24 +8,23 @@ import {
   Delete,
   UseGuards,
   Request,
-  ForbiddenException,
   Query,
 } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('jobs')
 export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('EMPLOYER', 'ADMIN')
   @Post()
   create(@Body() createJobDto: CreateJobDto, @Request() req: any) {
-    if (req.user.role === 'CANDIDATE') {
-      throw new ForbiddenException('Candidates are not allowed to post jobs');
-    }
     return this.jobsService.create(createJobDto, req.user.userId);
   }
 
@@ -34,14 +33,15 @@ export class JobsController {
     return this.jobsService.findAll(query);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CANDIDATE', 'ADMIN')
   @Get('candidate/calendar')
   async getMyCalendar(@Request() req: any) {
-    // Obtenir toutes les applications acceptées pour ce candidat
     return this.jobsService.findMyCalendar(req.user.userId);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('EMPLOYER', 'ADMIN')
   @Get('employer/my-jobs')
   findMyJobs(@Request() req: any) {
     return this.jobsService.findMyJobs(req.user.userId);

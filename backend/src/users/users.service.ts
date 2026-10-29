@@ -1,18 +1,20 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaClient, User } from '@prisma/client';
+import { User } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { MessagesGateway } from '../messages/messages.gateway';
 
-const prisma = new PrismaClient();
-
 @Injectable()
 export class UsersService {
-  constructor(private readonly messagesGateway: MessagesGateway) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messagesGateway: MessagesGateway,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email: createUserDto.email },
     });
     if (existingUser) {
@@ -22,7 +24,7 @@ export class UsersService {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(createUserDto.password, salt);
 
-    const user = await prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: createUserDto.email,
         passwordHash,
@@ -37,7 +39,7 @@ export class UsersService {
   }
 
   async findAll() {
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       select: {
         id: true,
         email: true,
@@ -54,7 +56,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
         appliedJobs: true,
@@ -82,14 +84,14 @@ export class UsersService {
   }
 
   async updatePushToken(id: string, token: string) {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: { expoPushToken: token },
     });
   }
 
   async requestKyc(id: string, docType?: string, docUrl?: string, selfieUrl?: string) {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: {
         kycStatus: 'PENDING',
@@ -102,14 +104,14 @@ export class UsersService {
   }
 
   async simulateApproveKyc(id: string) {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: { kycStatus: 'APPROVED', isVerified: true },
     });
   }
 
   async findOne(id: string) {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -128,18 +130,18 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { email } });
+    return this.prisma.user.findUnique({ where: { email } });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { id },
       data: updateUserDto,
     });
   }
 
   async findPendingKyc() {
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       where: { kycStatus: 'PENDING' },
       select: {
         id: true,
@@ -161,7 +163,7 @@ export class UsersService {
   }
 
   async approveKyc(id: string) {
-    const updated = await prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { kycStatus: 'APPROVED', isVerified: true },
     });
@@ -177,7 +179,7 @@ export class UsersService {
   }
 
   async rejectKyc(id: string) {
-    const updated = await prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { kycStatus: 'REJECTED', isVerified: false },
     });
@@ -193,14 +195,14 @@ export class UsersService {
   }
 
   async getAdminStats() {
-    const totalUsers = await prisma.user.count();
-    const candidatesCount = await prisma.user.count({ where: { role: 'CANDIDATE' } });
-    const employersCount = await prisma.user.count({ where: { role: 'EMPLOYER' } });
-    const totalJobs = await prisma.job.count();
-    const completedJobs = await prisma.job.count({ where: { status: 'COMPLETED' } });
-    const pendingKycCount = await prisma.user.count({ where: { kycStatus: 'PENDING' } });
+    const totalUsers = await this.prisma.user.count();
+    const candidatesCount = await this.prisma.user.count({ where: { role: 'CANDIDATE' } });
+    const employersCount = await this.prisma.user.count({ where: { role: 'EMPLOYER' } });
+    const totalJobs = await this.prisma.job.count();
+    const completedJobs = await this.prisma.job.count({ where: { status: 'COMPLETED' } });
+    const pendingKycCount = await this.prisma.user.count({ where: { kycStatus: 'PENDING' } });
     
-    const transactions = await prisma.transaction.aggregate({
+    const transactions = await this.prisma.transaction.aggregate({
       where: { status: 'COMPLETED' },
       _sum: { amount: true },
     });
@@ -217,6 +219,6 @@ export class UsersService {
   }
 
   async remove(id: string) {
-    return prisma.user.delete({ where: { id } });
+    return this.prisma.user.delete({ where: { id } });
   }
 }

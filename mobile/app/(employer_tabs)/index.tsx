@@ -16,6 +16,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Users, ChevronRight, Star, X } from 'lucide-react-native';
 import api from '../../src/api/client';
+import { Job } from '../../src/types';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -26,7 +27,7 @@ const getStatusColor = (status: string) => {
 };
 
 export default function EmployerJobsScreen() {
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Review Modal State

@@ -26,26 +26,15 @@ import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import GamificationBadge from '@/components/GamificationBadge';
 import Logo from '@/components/Logo';
 import OpenDisputeModal from '@/components/OpenDisputeModal';
-
-interface Application {
-  id: string;
-  isAccepted: boolean;
-  status?: string;
-  createdAt: string;
-  job: {
-    id: string;
-    title: string;
-    price: number;
-    location: string;
-    status?: string;
-  };
-}
+import { CandidateApplication } from '@/types';
+import ReviewModal from '@/components/dashboard/ReviewModal';
+import CandidateJobApplyModal from '@/components/dashboard/CandidateJobApplyModal';
 
 export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
   const router = useRouter();
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | undefined>(undefined);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const [applications, setApplications] = useState<CandidateApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'calendar' | 'profile' | 'wallet'>('overview');
 
@@ -63,41 +52,14 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{ title: string; content: React.ReactNode } | null>(null);
 
-  // Job detail modal state
-  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
-  const [jobDetail, setJobDetail] = useState<any>(null);
-  const [isLoadingJob, setIsLoadingJob] = useState(false);
-  const [applyMessage, setApplyMessage] = useState('');
-  const [isApplying, setIsApplying] = useState(false);
-  const [hasApplied, setHasApplied] = useState(false);
+  // Job detail & apply modal state
+  const [selectedApplyJobId, setSelectedApplyJobId] = useState<string | null>(null);
 
   // Chat Modal state
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
 
   // Review Modal state for candidate
   const [selectedJobToReview, setSelectedJobToReview] = useState<{ id: string; title: string } | null>(null);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-
-  const submitReview = async () => {
-    if (!selectedJobToReview) return;
-    setIsSubmittingReview(true);
-    try {
-      await api.post('/reviews', {
-        jobId: selectedJobToReview.id,
-        rating: reviewRating,
-        comment: reviewComment,
-      });
-      addToast('Votre avis sur l\'employeur a été publié avec succès !', 'success', 'Avis Publié ⭐');
-      setSelectedJobToReview(null);
-      setReviewComment('');
-    } catch (e: any) {
-      addToast(e.response?.data?.message || 'Erreur lors de la publication de l\'avis', 'error');
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
 
   // Dispute modal state
   const [disputeJob, setDisputeJob] = useState<{ id: string; title: string; price: number } | null>(null);
@@ -188,65 +150,8 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
     setIsModalOpen(true);
   };
 
-  const handleJobClick = async (jobId: string) => {
-    setIsJobModalOpen(true);
-    setIsLoadingJob(true);
-    setJobDetail(null);
-    setApplyMessage('');
-    setIsApplying(false);
-    setHasApplied(false);
-    try {
-      const res = await api.get(`/jobs/${jobId}`);
-      setJobDetail(res.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoadingJob(false);
-    }
-  };
-
-  const [isAiGeneratingPitch, setIsAiGeneratingPitch] = useState(false);
-
-  const handleAiGeneratePitch = async () => {
-    if (!jobDetail) return;
-    setIsAiGeneratingPitch(true);
-    try {
-      const res = await api.post('/ai/generate-pitch', {
-        jobTitle: jobDetail.title,
-        jobDescription: jobDetail.description || '',
-      });
-      if (res.data?.pitch) {
-        setApplyMessage(res.data.pitch);
-        addToast('Pitch de candidature généré par l\'IA avec succès !', 'success', 'Assistant IA 🤖');
-      }
-    } catch (e: any) {
-      console.error('AI Pitch error', e);
-      addToast('Échec de la génération du pitch IA', 'error');
-    } finally {
-      setIsAiGeneratingPitch(false);
-    }
-  };
-
-  const handleApplyFromModal = async () => {
-    if (!jobDetail) return;
-    setIsApplying(true);
-    try {
-      await api.post('/applications', { jobId: jobDetail.id, message: applyMessage });
-      setHasApplied(true);
-      addToast('Candidature envoyée avec succès !', 'success', 'Candidature enregistrée');
-      // Refresh applications list
-      const res = await api.get('/applications/my-applications');
-      setApplications(res.data);
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setHasApplied(true);
-        addToast('Vous avez déjà postulé à cette mission.', 'info');
-      } else {
-        addToast(err.response?.data?.message || 'Erreur lors de la candidature', 'error');
-      }
-    } finally {
-      setIsApplying(false);
-    }
+  const handleJobClick = (jobId: string) => {
+    setSelectedApplyJobId(jobId);
   };
 
   const fetchApps = async () => {
@@ -547,134 +452,14 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
           </div>
         )}
 
-        {/* ─── Job Detail Modal ─── */}
-        {isJobModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setIsJobModalOpen(false)}>
-            <div className="bg-[#121212] border border-white/15 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative" onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-
-              {/* Header */}
-              <div className="flex justify-between items-center p-6 border-b border-white/10 shrink-0 relative z-10">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-full bg-primary/20 border border-primary/30 px-3 py-0.5 text-xs font-bold text-primary">
-                    {jobDetail?.category?.name || 'Général'}
-                  </span>
-                  <h3 className="text-xl font-bold text-white line-clamp-1">{isLoadingJob ? 'Chargement...' : jobDetail?.title || 'Détails de la mission'}</h3>
-                </div>
-                <button onClick={() => setIsJobModalOpen(false)} className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors text-muted-foreground hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto p-6 relative z-10 space-y-6">
-                {isLoadingJob ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                  </div>
-                ) : jobDetail ? (
-                  <div className="space-y-6">
-                    {/* Info Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5">
-                        <div className="flex items-center gap-1.5 text-emerald-400 font-extrabold text-lg">
-                          <Coins className="w-4 h-4 shrink-0" />
-                          {formatPrice(jobDetail.price)}
-                        </div>
-                        <p className="text-[11px] text-emerald-400/80 font-semibold mt-0.5">Rémunération</p>
-                      </div>
-
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
-                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
-                          <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-                          <span className="truncate">
-                            {jobDetail.location || 'Sur place'}
-                            {jobDetail.distanceKm !== undefined ? ` (📍 ${jobDetail.distanceKm} km)` : ''}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Localisation & Distance</p>
-                      </div>
-
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
-                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
-                          <User className="w-4 h-4 text-blue-400 shrink-0" />
-                          <span className="truncate">{jobDetail.employer?.firstName} {jobDetail.employer?.lastName[0]}.</span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Employeur</p>
-                      </div>
-
-                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5">
-                        <div className="flex items-center gap-1.5 text-foreground font-bold text-sm">
-                          <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                          <span>{new Date(jobDetail.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground font-semibold mt-0.5">Publication</p>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <h4 className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
-                        <Briefcase className="w-4 h-4 text-primary" />
-                        Description de la mission
-                      </h4>
-                      <div className="text-muted-foreground text-xs leading-relaxed whitespace-pre-wrap bg-white/5 p-4 rounded-2xl border border-white/5 font-normal">
-                        {jobDetail.description}
-                      </div>
-                    </div>
-
-                    {/* Apply Section */}
-                    <div className="border-t border-white/10 pt-6">
-                      {hasApplied ? (
-                        <div className="flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 px-6 py-4 rounded-2xl font-bold border border-emerald-500/30 text-sm">
-                          <CheckCircle className="w-5 h-5" />
-                          Candidature envoyée avec succès !
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex justify-between items-center mb-2">
-                            <label className="text-xs font-semibold text-muted-foreground block">Message à l'employeur (optionnel)</label>
-                            <button
-                              type="button"
-                              onClick={handleAiGeneratePitch}
-                              disabled={isAiGeneratingPitch}
-                              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-xl border border-primary/20 transition-all cursor-pointer"
-                            >
-                              <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                              {isAiGeneratingPitch ? 'Rédaction...' : 'Rédiger avec l\'IA 🤖'}
-                            </button>
-                          </div>
-                          <textarea
-                            value={applyMessage}
-                            onChange={(e) => setApplyMessage(e.target.value)}
-                            placeholder="Présentez brièvement vos compétences pour cette mission..."
-                            rows={3}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-primary/50 transition-colors resize-none mb-4"
-                          />
-                          <button
-                            onClick={handleApplyFromModal}
-                            disabled={isApplying}
-                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 text-white px-6 py-3.5 rounded-2xl font-bold text-sm transition-all hover:scale-[1.01] active:scale-[0.99] shadow-xl shadow-primary/25 disabled:opacity-50 cursor-pointer"
-                          >
-                            {isApplying ? (
-                              <><Loader2 className="w-5 h-5 animate-spin" /> Envoi en cours...</>
-                            ) : (
-                              'Postuler pour cette mission'
-                            )}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground text-xs">
-                    Impossible de charger les détails de cette mission.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* ─── Job Detail & Apply Modal ─── */}
+        <CandidateJobApplyModal
+          jobId={selectedApplyJobId}
+          isOpen={!!selectedApplyJobId}
+          onClose={() => setSelectedApplyJobId(null)}
+          onApplied={fetchApps}
+          addToast={addToast}
+        />
         {/* ─── Chat Modal ─── */}
         {activeChatApp && (
           <ChatModal
@@ -717,52 +502,30 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
         )}
 
         {/* Review Modal for Candidate */}
-        {selectedJobToReview && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200" onClick={() => setSelectedJobToReview(null)}>
-            <div className="bg-[#121212] border border-amber-500/30 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative p-6" onClick={e => e.stopPropagation()}>
-              <div className="flex justify-between items-center pb-4 mb-4 border-b border-white/10">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
-                    <Star className="w-5 h-5 fill-current" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Évaluer l'employeur</h3>
-                </div>
-                <button onClick={() => setSelectedJobToReview(null)} className="p-1.5 text-muted-foreground hover:text-white rounded-lg hover:bg-white/10">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Comment s'est passée votre collaboration sur la mission <span className="text-white font-semibold">"{selectedJobToReview.title}"</span> ?
-                </p>
-                <div className="flex gap-2 justify-center mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setReviewRating(star)}
-                      className={`p-2 rounded-xl transition-all cursor-pointer ${reviewRating >= star ? 'text-amber-400 scale-110' : 'text-white/20 hover:text-white/40'}`}
-                    >
-                      <Star className="w-7 h-7 fill-current" />
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  placeholder="Partagez votre avis sur l'employeur (ponctualité, clarté des consignes, communication...)..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full h-28 bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-white focus:border-amber-500/50 focus:outline-none resize-none mb-5"
-                />
-                <button
-                  onClick={submitReview}
-                  disabled={isSubmittingReview}
-                  className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-amber-500/25 transition-all disabled:opacity-50 cursor-pointer"
-                >
-                  {isSubmittingReview ? 'Publication de l\'avis...' : 'Publier mon avis sur l\'employeur'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ReviewModal
+          job={selectedJobToReview}
+          isOpen={!!selectedJobToReview}
+          onClose={() => setSelectedJobToReview(null)}
+          onSubmit={async (jobId, rating, comment) => {
+            try {
+              await api.post('/reviews', {
+                jobId,
+                rating,
+                comment,
+              });
+              addToast(
+                "Votre avis sur l'employeur a été publié avec succès !",
+                'success',
+                'Avis Publié ⭐',
+              );
+            } catch (e: any) {
+              addToast(
+                e.response?.data?.message || "Erreur lors de la publication de l'avis",
+                'error',
+              );
+            }
+          }}
+        />
 
         {/* Open Dispute Modal */}
         {disputeJob && (

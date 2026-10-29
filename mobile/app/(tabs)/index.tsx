@@ -5,9 +5,10 @@ import { MapPin, DollarSign, Clock, Search, Filter, List, Map as MapIcon, Naviga
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
 import api from '../../src/api/client';
+import { Job } from '../../src/types';
 
 export default function JobsScreen() {
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -163,14 +164,16 @@ export default function JobsScreen() {
             }}
             showsUserLocation={true}
           >
-            {filteredJobs.filter(j => j.latitude && j.longitude).map(job => (
-              <Marker
-                key={job.id}
-                coordinate={{ latitude: job.latitude, longitude: job.longitude }}
-                title={job.title}
-                description={`${job.price}€ - ${job.employer?.firstName}`}
-              />
-            ))}
+            {filteredJobs
+              .filter((j): j is Job & { latitude: number; longitude: number } => typeof j.latitude === 'number' && typeof j.longitude === 'number')
+              .map(job => (
+                <Marker
+                  key={job.id}
+                  coordinate={{ latitude: job.latitude, longitude: job.longitude }}
+                  title={job.title}
+                  description={`${job.price}€ - ${job.employer?.firstName || ''}`}
+                />
+              ))}
           </MapView>
           {userLocation && (
             <View style={styles.myLocationBtn}>

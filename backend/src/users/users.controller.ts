@@ -8,15 +8,16 @@ import {
   Delete,
   UseGuards,
   Request,
-  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('users')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -60,27 +61,27 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Roles('ADMIN')
   @Get('admin/kyc/pending')
-  getPendingKyc(@Request() req: any) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+  getPendingKyc() {
     return this.usersService.findPendingKyc();
   }
 
+  @Roles('ADMIN')
   @Get('admin/stats')
-  getAdminStats(@Request() req: any) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+  getAdminStats() {
     return this.usersService.getAdminStats();
   }
 
+  @Roles('ADMIN')
   @Patch('admin/kyc/:id/approve')
-  approveKyc(@Param('id') id: string, @Request() req: any) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+  approveKyc(@Param('id') id: string) {
     return this.usersService.approveKyc(id);
   }
 
+  @Roles('ADMIN')
   @Patch('admin/kyc/:id/reject')
-  rejectKyc(@Param('id') id: string, @Request() req: any) {
-    if (req.user.role !== 'ADMIN') throw new ForbiddenException('Admin access required');
+  rejectKyc(@Param('id') id: string) {
     return this.usersService.rejectKyc(id);
   }
 
@@ -94,11 +95,9 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
+  @Roles('ADMIN')
   @Delete(':id')
-  remove(@Param('id') id: string, @Request() req: any) {
-    if (req.user.role !== 'ADMIN') {
-      throw new ForbiddenException('Only administrators can delete users');
-    }
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }

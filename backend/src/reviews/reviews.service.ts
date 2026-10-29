@@ -3,12 +3,12 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ReviewsService {
+  constructor(private readonly prisma: PrismaService) {}
+
   async createReview(
     jobId: string,
     rating: number,
@@ -16,7 +16,7 @@ export class ReviewsService {
     reviewerId: string,
   ) {
     // 1. Verify Job exists and is COMPLETED
-    const job = await prisma.job.findUnique({
+    const job = await this.prisma.job.findUnique({
       where: { id: jobId },
       include: { applications: { where: { isAccepted: true } } },
     });
@@ -40,7 +40,7 @@ export class ReviewsService {
     const revieweeId = isEmployer ? acceptedApp.candidateId : job.employerId;
 
     // 3. Check if already reviewed
-    const existing = await prisma.review.findFirst({
+    const existing = await this.prisma.review.findFirst({
       where: { jobId, reviewerId },
     });
     if (existing)
@@ -48,7 +48,7 @@ export class ReviewsService {
         'You have already left a review for this job',
       );
 
-    return prisma.review.create({
+    return this.prisma.review.create({
       data: {
         rating,
         comment,
@@ -60,7 +60,7 @@ export class ReviewsService {
   }
 
   async getReviewsForUser(userId: string) {
-    return prisma.review.findMany({
+    return this.prisma.review.findMany({
       where: { revieweeId: userId },
       include: {
         reviewer: {
@@ -80,7 +80,7 @@ export class ReviewsService {
   }
 
   async getUserReputation(userId: string) {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         reviewsReceived: { select: { rating: true } },

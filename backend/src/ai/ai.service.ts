@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { PrismaService } from '../prisma/prisma.service';
 
 interface MarketRateRule {
   keywords: string[];
@@ -102,6 +100,7 @@ const SUPPORT_FAQ = [
 
 @Injectable()
 export class AiService {
+  constructor(private readonly prisma: PrismaService) {}
   /**
    * AI Generator for Job Post creation
    */
@@ -121,7 +120,7 @@ export class AiService {
     const locationMultiplier = location.toLowerCase().includes('paris') ? 1.2 : 1.0;
     const calculatedPrice = Math.round(matchedRule.hourlyRate * matchedRule.baseHours * locationMultiplier);
 
-    const categories = await prisma.category.findMany();
+    const categories = await this.prisma.category.findMany();
     const matchedCategory = categories.find((c) =>
       c.name.toLowerCase().includes(matchedRule.categoryName.toLowerCase())
     ) || categories[0];

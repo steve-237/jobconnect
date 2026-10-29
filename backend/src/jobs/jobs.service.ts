@@ -1,11 +1,9 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
-
-const prisma = new PrismaClient();
 
 const CITY_COORDINATES: Record<string, { lat: number; lng: number }> = {
   paris: { lat: 48.8566, lng: 2.3522 },
@@ -90,17 +88,20 @@ function getLocationCoordinates(userLocation?: string, lat?: string, lng?: strin
 @Injectable()
 export class JobsService {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly messagesGateway: MessagesGateway,
   ) {}
 
   async create(createJobDto: CreateJobDto, employerId: string) {
-    return prisma.job.create({
+    return this.prisma.job.create({
       data: {
         title: createJobDto.title,
         description: createJobDto.description,
         price: createJobDto.price,
         location: createJobDto.location,
+        latitude: createJobDto.latitude,
+        longitude: createJobDto.longitude,
         categoryId: createJobDto.categoryId,
         employerId: employerId,
         scheduledDate: createJobDto.scheduledDate ? new Date(createJobDto.scheduledDate) : null,
@@ -134,7 +135,7 @@ export class JobsService {
     // Hide completed and cancelled jobs from public browse feed
     where.status = { notIn: ['COMPLETED', 'CANCELLED'] };
 
-    const jobs = await prisma.job.findMany({
+    const jobs = await this.prisma.job.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -172,7 +173,7 @@ export class JobsService {
   }
 
   async findOne(id: string) {
-    const job = await prisma.job.findUnique({
+    const job = await this.prisma.job.findUnique({
       where: { id },
       include: {
         category: true,
@@ -194,7 +195,7 @@ export class JobsService {
   }
 
   async findMyJobs(employerId: string) {
-    return prisma.job.findMany({
+    return this.prisma.job.findMany({
       where: { employerId },
       include: {
         category: true,
@@ -215,34 +216,34 @@ export class JobsService {
   }
 
   async findMyCalendar(candidateId: string) {
-    return prisma.job.findMany({
+    return this.prisma.job.findMany({
       where: {
         applications: {
           some: {
             candidateId,
             isAccepted: true,
-          }
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
       include: {
         employer: {
-          select: { id: true, firstName: true, lastName: true, avatarUrl: true }
+          select: { id: true, firstName: true, lastName: true, avatarUrl: true },
         },
         applications: {
           where: { candidateId, isAccepted: true },
-          select: { id: true, isAccepted: true, status: true }
-        }
-      }
+          select: { id: true, isAccepted: true, status: true },
+        },
+      },
     });
   }
 
   async update(id: string, updateJobDto: UpdateJobDto, userId: string) {
     const job = await this.findOne(id);
     if (job.employerId !== userId) {
-      throw new Error('Unauthorized to update this job');
+      throw new ForbiddenException('Unauthorized to update this job');
     }
-    return prisma.job.update({
+    return this.prisma.job.update({
       where: { id },
       data: updateJobDto,
     });
@@ -251,16 +252,16 @@ export class JobsService {
   async updateStatus(id: string, status: any, userId: string) {
     const job = await this.findOne(id);
     if (job.employerId !== userId) {
-      throw new Error('Unauthorized to update this job');
+      throw new ForbiddenException('Unauthorized to update this job');
     }
-    const updated = await prisma.job.update({
+    const updated = await this.prisma.job.update({
       where: { id },
       data: { status },
     });
 
     if (status === 'COMPLETED') {
       // Find accepted application candidate
-      const acceptedApp = await prisma.application.findFirst({
+      const acceptedApp = await this.prisma.application.findFirst({
         where: { jobId: id, isAccepted: true },
         include: { candidate: true },
       });
@@ -295,7 +296,7 @@ export class JobsService {
     if (job.employerId !== userId) {
       throw new ForbiddenException('Unauthorized to delete this job');
     }
-    return prisma.job.delete({
+    return this.prisma.job.delete({
       where: { id },
     });
   }

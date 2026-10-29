@@ -1,30 +1,35 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JobsService } from './jobs.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
 
-// Mock PrismaClient to avoid real database calls during tests
-jest.mock('@prisma/client', () => {
-  const mPrismaClient = {
-    job: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-  };
-  return { PrismaClient: jest.fn(() => mPrismaClient) };
-});
-
 describe('JobsService', () => {
   let service: JobsService;
+  let prisma: any;
 
   beforeEach(async () => {
+    prisma = {
+      job: {
+        create: jest.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
+      },
+      application: {
+        findFirst: jest.fn(),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         JobsService,
+        {
+          provide: PrismaService,
+          useValue: prisma,
+        },
         {
           provide: NotificationsService,
           useValue: { sendPushNotification: jest.fn() },
@@ -32,21 +37,13 @@ describe('JobsService', () => {
         {
           provide: MessagesGateway,
           useValue: {
-            server: {
-              emit: jest.fn(),
-              to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            },
+            sendNotificationToUser: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<JobsService>(JobsService);
-
-    // Clear all mocks before each test
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -55,8 +52,6 @@ describe('JobsService', () => {
 
   describe('findOne', () => {
     it('should throw NotFoundException if job does not exist', async () => {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
       prisma.job.findUnique.mockResolvedValue(null);
 
       await expect(service.findOne('non-existent-id')).rejects.toThrow(
@@ -65,8 +60,6 @@ describe('JobsService', () => {
     });
 
     it('should return the job if it exists', async () => {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
       const mockJob = { id: '123', title: 'Test Job', employerId: 'emp-1' };
       prisma.job.findUnique.mockResolvedValue(mockJob);
 
@@ -80,15 +73,13 @@ describe('JobsService', () => {
   });
 
   describe('update', () => {
-    it('should throw error if user is not the employer', async () => {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
+    it('should throw ForbiddenException if user is not the employer', async () => {
       const mockJob = { id: '123', title: 'Test Job', employerId: 'emp-1' };
       prisma.job.findUnique.mockResolvedValue(mockJob);
 
       await expect(
         service.update('123', { title: 'New Title' }, 'hacker-user'),
-      ).rejects.toThrow('Unauthorized to update this job');
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

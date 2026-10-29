@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   CreateDisputeDto,
   RespondDisputeDto,
@@ -13,17 +13,16 @@ import {
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
 
-const prisma = new PrismaClient();
-
 @Injectable()
 export class DisputesService {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly messagesGateway: MessagesGateway,
   ) {}
 
   async create(createDto: CreateDisputeDto, userId: string) {
-    const job = await prisma.job.findUnique({
+    const job = await this.prisma.job.findUnique({
       where: { id: createDto.jobId },
       include: {
         applications: {
@@ -49,7 +48,7 @@ export class DisputesService {
     }
 
     // Check if a dispute is already open
-    const existingDispute = await prisma.dispute.findFirst({
+    const existingDispute = await this.prisma.dispute.findFirst({
       where: {
         jobId: job.id,
         status: { in: ['OPEN', 'UNDER_REVIEW'] },
@@ -66,7 +65,7 @@ export class DisputesService {
         : job.employerId
       : job.employerId;
 
-    const dispute = await prisma.dispute.create({
+    const dispute = await this.prisma.dispute.create({
       data: {
         jobId: job.id,
         initiatorId: userId,
@@ -98,7 +97,7 @@ export class DisputesService {
 
   async findAllForUser(userId: string, role: string) {
     if (role === 'ADMIN') {
-      return prisma.dispute.findMany({
+      return this.prisma.dispute.findMany({
         include: {
           job: true,
           initiator: true,
@@ -108,7 +107,7 @@ export class DisputesService {
       });
     }
 
-    return prisma.dispute.findMany({
+    return this.prisma.dispute.findMany({
       where: {
         OR: [{ initiatorId: userId }, { defendantId: userId }],
       },
@@ -122,7 +121,7 @@ export class DisputesService {
   }
 
   async findOne(id: string, userId: string, role: string) {
-    const dispute = await prisma.dispute.findUnique({
+    const dispute = await this.prisma.dispute.findUnique({
       where: { id },
       include: {
         job: {
@@ -155,7 +154,7 @@ export class DisputesService {
   }
 
   async respond(id: string, respondDto: RespondDisputeDto, userId: string) {
-    const dispute = await prisma.dispute.findUnique({
+    const dispute = await this.prisma.dispute.findUnique({
       where: { id },
       include: { job: true },
     });
@@ -174,7 +173,7 @@ export class DisputesService {
       throw new BadRequestException('Ce litige est déjà clôturé ou résolu');
     }
 
-    const updated = await prisma.dispute.update({
+    const updated = await this.prisma.dispute.update({
       where: { id },
       data: {
         defendantReply: respondDto.reply,
@@ -201,7 +200,7 @@ export class DisputesService {
   }
 
   async arbitrate(id: string, arbitrateDto: ArbitrateDisputeDto) {
-    const dispute = await prisma.dispute.findUnique({
+    const dispute = await this.prisma.dispute.findUnique({
       where: { id },
       include: {
         job: {
@@ -224,34 +223,25 @@ export class DisputesService {
 
     let nextStatus: string;
     let explanation: string;
+    let jobStatusUpdate: string | null = null;
 
     switch (arbitrateDto.decision) {
       case 'REFUND_EMPLOYER':
         nextStatus = 'RESOLVED_REFUND_EMPLOYER';
         explanation = "L'employeur a été intégralement remboursé des fonds sous séquestre.";
-        // Update job status
-        await prisma.job.update({
-          where: { id: dispute.jobId },
-          data: { status: 'CANCELLED' },
-        });
+        jobStatusUpdate = 'CANCELLED';
         break;
 
       case 'PAY_CANDIDATE':
         nextStatus = 'RESOLVED_PAY_CANDIDATE';
         explanation = "Les fonds sous séquestre ont été libérés en faveur du prestataire.";
-        await prisma.job.update({
-          where: { id: dispute.jobId },
-          data: { status: 'COMPLETED' },
-        });
+        jobStatusUpdate = 'COMPLETED';
         break;
 
       case 'SPLIT':
         nextStatus = 'RESOLVED_SPLIT';
         explanation = "Médiation équitable : Les fonds ont été partagés à 50% entre les deux parties.";
-        await prisma.job.update({
-          where: { id: dispute.jobId },
-          data: { status: 'COMPLETED' },
-        });
+        jobStatusUpdate = 'COMPLETED';
         break;
 
       case 'DISMISS':
@@ -261,17 +251,26 @@ export class DisputesService {
         break;
     }
 
-    const updated = await prisma.dispute.update({
-      where: { id },
-      data: {
-        status: nextStatus,
-        resolutionNotes: arbitrateDto.resolutionNotes,
-      },
-      include: {
-        job: true,
-        initiator: true,
-        defendant: true,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (jobStatusUpdate) {
+        await tx.job.update({
+          where: { id: dispute.jobId },
+          data: { status: jobStatusUpdate as any },
+        });
+      }
+
+      return tx.dispute.update({
+        where: { id },
+        data: {
+          status: nextStatus,
+          resolutionNotes: arbitrateDto.resolutionNotes,
+        },
+        include: {
+          job: true,
+          initiator: true,
+          defendant: true,
+        },
+      });
     });
 
     // Notify both parties
