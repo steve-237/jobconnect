@@ -21,7 +21,9 @@ import {
   Clock,
   Plus,
   ArrowLeft,
-  Coins
+  Coins,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -34,6 +36,7 @@ interface UserProfile {
   lastName: string;
   email: string;
   bio: string;
+  avatarUrl?: string;
   role: 'CANDIDATE' | 'EMPLOYER' | 'ADMIN';
   createdAt: string;
   isVerified: boolean;
@@ -110,15 +113,56 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   const [kycDocUrl, setKycDocUrl] = useState('');
   const [kycSelfieUrl, setKycSelfieUrl] = useState('');
   const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isUploadingKycDoc, setIsUploadingKycDoc] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setUrl: (url: string) => void) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    setIsUploadingKycDoc(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setUrl(res.data.url);
+      addToast('Justificatif téléversé avec succès !', 'success', 'Fichier Reçu');
+    } catch (err: any) {
+      console.warn('API upload fallback to local preview', err);
       const reader = new FileReader();
       reader.onloadend = () => {
         setUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
+      addToast(err.response?.data?.message || 'Justificatif chargé en aperçu', 'info');
+    } finally {
+      setIsUploadingKycDoc(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const newAvatarUrl = res.data.url;
+      await api.patch('/users/me', { avatarUrl: newAvatarUrl });
+      setProfile((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
+      setDraft((prev) => ({ ...prev, avatarUrl: newAvatarUrl }));
+      addToast('Photo de profil mise à jour avec succès !', 'success', 'Avatar Actualisé 📸');
+    } catch (err: any) {
+      console.error('Avatar upload failed', err);
+      addToast(err.response?.data?.message || 'Erreur lors du téléversement de l\'avatar', 'error');
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -309,11 +353,39 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
         <div className="glass rounded-2xl p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {/* Avatar */}
-            <div className="relative shrink-0">
-              <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-primary/25">
-                {initials}
+            <div className="relative shrink-0 group">
+              <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-primary/25 overflow-hidden">
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={`${profile.firstName} ${profile.lastName}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
               </div>
-              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-card" />
+              <label
+                className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center cursor-pointer transition-opacity z-10"
+                title="Modifier la photo de profil"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="w-5 h-5 text-white mb-0.5" />
+                    <span className="text-[9px] font-semibold text-white">Changer</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleAvatarUpload}
+                  disabled={isUploadingAvatar}
+                  className="hidden"
+                />
+              </label>
+              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-green-500 border-2 border-card z-20" />
             </div>
 
             {/* Info */}

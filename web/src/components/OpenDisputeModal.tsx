@@ -9,6 +9,7 @@ import {
   FileText,
   ShieldAlert,
   Info,
+  Upload,
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -45,8 +46,31 @@ export default function OpenDisputeModal({
   const [evidenceUrl, setEvidenceUrl] = useState('');
   const [evidenceList, setEvidenceList] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingEvidence(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setEvidenceList((prev) => [...prev, res.data.url]);
+      addToast('Fichier justificatif téléversé avec succès', 'success', 'Preuve Ajoutée');
+    } catch (err: any) {
+      console.error('Evidence upload error', err);
+      addToast(err.response?.data?.message || 'Erreur lors du téléversement du fichier', 'error');
+    } finally {
+      setIsUploadingEvidence(false);
+      e.target.value = '';
+    }
+  };
 
   const handleAddEvidence = () => {
     if (evidenceUrl.trim()) {
@@ -161,7 +185,7 @@ export default function OpenDisputeModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Pièces justificatives ou liens photos (optionnel)
             </label>
-            <div className="flex gap-2 mb-2">
+            <div className="flex flex-col sm:flex-row gap-2 mb-2">
               <input
                 type="url"
                 value={evidenceUrl}
@@ -174,8 +198,23 @@ export default function OpenDisputeModal({
                 onClick={handleAddEvidence}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-colors"
               >
-                Ajouter
+                Ajouter URL
               </button>
+              <label className="px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer">
+                {isUploadingEvidence ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5" />
+                )}
+                <span>Téléverser fichier</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,application/pdf"
+                  onChange={handleFileUpload}
+                  disabled={isUploadingEvidence}
+                  className="hidden"
+                />
+              </label>
             </div>
 
             {evidenceList.length > 0 && (

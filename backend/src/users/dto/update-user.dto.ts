@@ -8,6 +8,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   bio?: string;
 
   @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   skills?: string[];

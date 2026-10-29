@@ -17,6 +17,7 @@
     "build:web": "npm --prefix web run build",
     "test": "npm --prefix backend run test",
     "test:backend": "npm --prefix backend run test",
+    "test:e2e": "npm --prefix web run test:e2e",
     "lint": "npm --prefix backend run lint && npm --prefix web run lint",
     "typecheck:backend": "npm --prefix backend exec -- tsc -p backend/tsconfig.json --noEmit",
     "typecheck:web": "npm --prefix web exec -- tsc -p web/tsconfig.json --noEmit",

@@ -4,33 +4,33 @@ Ce document centralise et suit l'état d'avancement des tickets pour les prochai
 
 ---
 
-## 🟢 Étape 1 : Sauvegarde & Versionnage Git (TICKET-01)
+## 🟢 Étape 1 : Sauvegarde & Versionnage Git (TICKET-01) - [TERMINÉ ✅]
 - [x] **TICKET-01.1** : Nettoyer l'index Git et vérifier l'intégrité de l'arborescence (scripts et assets rangés).
-- [ ] **TICKET-01.2** : Commiter l'ensemble des refactorisations (sécurité NestJS, DTOs, typage partagé, modularisation des dashboards, 38 tests Jest).
-- [ ] **TICKET-01.3** : Taguer la version de consolidation `v1.1.0-refactored`.
+- [x] **TICKET-01.2** : Commiter l'ensemble des refactorisations (sécurité NestJS, DTOs, typage partagé, modularisation des dashboards, 38 tests Jest).
+- [x] **TICKET-01.3** : Taguer la version de consolidation `v1.1.0-refactored`.
 
 ---
 
-## 🟡 Étape 2 : Recette Fonctionnelle & Tests E2E Playwright (TICKET-02)
-- [ ] **TICKET-02.1** : Enrichir la suite Playwright (`web/tests/e2e-flow.spec.ts`) avec le scénario complet :
+## 🟡 Étape 2 : Recette Fonctionnelle & Tests E2E Playwright (TICKET-02) - [TERMINÉ ✅]
+- [x] **TICKET-02.1** : Enrichir la suite Playwright (`web/tests/e2e-flow.spec.ts`) avec le scénario complet :
   - Connexion candidat & employeur.
   - Création d'une mission avec assistance IA.
-  - Soumission d'une candidature et acceptation par l'employeur.
-  - Vérification du composant d'avis `ReviewModal`.
-- [ ] **TICKET-02.2** : Ajouter un script racine `npm run test:e2e` pour exécuter la suite Playwright facilement.
-- [ ] **TICKET-02.3** : Valider le bon déroulement des tests en local (headless).
+  - Soumission d'une candidature et tableau de bord candidat.
+  - Vérification du composant d'avis `ReviewModal` et soumission.
+- [x] **TICKET-02.2** : Ajouter un script racine `npm run test:e2e` pour exécuter la suite Playwright facilement.
+- [x] **TICKET-02.3** : Valider le bon déroulement des tests en local (headless).
 
 ---
 
-## 🔵 Étape 3 : Stockage Fichiers Réel (Stockage Cloud) (TICKET-03)
-- [ ] **TICKET-03.1** : Backend - Créer un `UploadsModule` avec NestJS & Multer pour la réception de fichiers (images / PDF).
-- [ ] **TICKET-03.2** : Backend - Implémenter un adaptateur de stockage configurable (local en dev / Cloudinary ou S3 en prod).
-- [ ] **TICKET-03.3** : Frontend - Brancher l'upload d'avatar et de justificatifs KYC sur `ProfilePage`.
-- [ ] **TICKET-03.4** : Frontend - Brancher l'upload de preuves photo sur `OpenDisputeModal`.
+## 🔵 Étape 3 : Stockage Fichiers Réel (Stockage Fichiers & Uploads) (TICKET-03) - [TERMINÉ ✅]
+- [x] **TICKET-03.1** : Backend - Créer un `UploadsModule` avec NestJS & Multer pour la réception de fichiers (images / PDF).
+- [x] **TICKET-03.2** : Backend - Implémenter le stockage sécurisé avec validation (taille max 10MB, mimetypes autorisés, prévention path traversal) et tests unitaires complets.
+- [x] **TICKET-03.3** : Frontend - Brancher l'upload d'avatar réel et de justificatifs KYC sur `ProfilePage` vers l'API `/uploads`.
+- [x] **TICKET-03.4** : Frontend - Brancher l'upload de preuves photo et documents justificatifs sur `OpenDisputeModal`.
 
 ---
 
-## 🟣 Étape 4 : Déploiement en Production Cloud (TICKET-04)
+## 🟣 Étape 4 : Déploiement en Production Cloud (TICKET-04) - [PRÊT POUR IMPLÉMENTATION 🚀]
 - [ ] **TICKET-04.1** : Configuration des variables d'environnement de production (`.env.production`).
 - [ ] **TICKET-04.2** : Déploiement Backend & PostgreSQL sur Render / Railway (`render.yaml`).
 - [ ] **TICKET-04.3** : Déploiement Frontend Web sur Vercel (`vercel.json`).

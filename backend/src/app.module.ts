@@ -14,6 +14,7 @@ import { AvailabilitiesModule } from './availabilities/availabilities.module';
 import { AiModule } from './ai/ai.module';
 import { DisputesModule } from './disputes/disputes.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     AiModule,
     DisputesModule,
     ReviewsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
