@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Users, Search, Star, ShieldCheck, ArrowLeft, Send,
   X, Briefcase, CheckCircle2, Target, MapPin
@@ -12,6 +13,8 @@ import { NotificationToast, ToastMessage } from '@/components/NotificationToast'
 import { useLanguage } from '@/contexts/LanguageContext';
 import GamificationBadge from '@/components/GamificationBadge';
 import { motion } from 'framer-motion';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface CandidateUser {
   id: string;
@@ -39,6 +42,7 @@ interface EmployerJob {
 }
 
 export default function CandidatesPage() {
+  const router = useRouter();
   const { t } = useLanguage();
   const [candidates, setCandidates] = useState<CandidateUser[]>([]);
   const [myJobs, setMyJobs] = useState<EmployerJob[]>([]);
@@ -151,19 +155,17 @@ export default function CandidatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <NavigationHeader />
       <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
-      <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header Back Button */}
-        <div>
-          <Link
-            href="/jobs"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group mb-4"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-            Retour aux offres
-          </Link>
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <Breadcrumbs
+            items={[{ label: 'Candidats' }]}
+            showBackButton
+            backHref="/jobs"
+          />
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -176,7 +178,6 @@ export default function CandidatesPage() {
               </p>
             </div>
           </div>
-        </div>
 
         {/* ─── Search & Control Panel ─── */}
         <div className="glass rounded-2xl p-4 border border-amber-500/20 shadow-xl space-y-3">
@@ -466,7 +467,8 @@ export default function CandidatesPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

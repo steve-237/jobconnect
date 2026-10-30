@@ -30,14 +30,30 @@ import EditJobModal from '@/components/dashboard/EditJobModal';
 import CreateJobModal from '@/components/dashboard/CreateJobModal';
 import EmployerStatsGrid from '@/components/dashboard/EmployerStatsGrid';
 import JobApplicantsModal from '@/components/dashboard/JobApplicantsModal';
+import { clearStoredToken } from '@/lib/auth';
 
-export default function EmployerDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
+export default function EmployerDashboard({
+  greeting,
+  userRole,
+  initialTab = 'overview',
+}: {
+  greeting: string;
+  userRole: string;
+  initialTab?: 'overview' | 'candidates' | 'annuaire' | 'profile' | 'wallet';
+}) {
   const router = useRouter();
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'annuaire' | 'profile' | 'wallet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab && ['overview', 'candidates', 'annuaire', 'profile', 'wallet'].includes(initialTab)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -48,8 +64,6 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
       } catch (e) {}
     }
   }, []);
-
-  const [activeTab, setActiveTab] = useState<'overview' | 'candidates' | 'annuaire' | 'profile' | 'wallet'>('overview');
 
   // Toast & Confirm states
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -206,7 +220,7 @@ export default function EmployerDashboard({ greeting, userRole }: { greeting: st
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    clearStoredToken();
     router.replace('/login');
   };
 

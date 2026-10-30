@@ -30,6 +30,7 @@ import api from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { NotificationToast, ConfirmModal, ToastMessage, ConfirmDialog } from '@/components/NotificationToast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getStoredToken, decodeToken, isTokenExpired, clearStoredToken } from '@/lib/auth';
 
 function decodeUserFromToken(): { email: string; role?: string } | null {
   try {
@@ -131,13 +132,13 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/admin');
       return;
     }
 
-    const user = decodeUserFromToken();
+    const user = decodeToken(token);
     if (user?.role !== 'ADMIN') {
       router.replace('/dashboard');
       return;
@@ -148,7 +149,7 @@ export default function AdminPage() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    clearStoredToken();
     router.replace('/login');
   };
 

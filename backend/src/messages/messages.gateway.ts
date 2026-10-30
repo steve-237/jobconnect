@@ -13,7 +13,27 @@ import * as jwt from 'jsonwebtoken';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // For MVP, allow all. In prod, restrict to frontend URL
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      const allowed = [
+        process.env.FRONTEND_URL,
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+      ].filter(Boolean) as string[];
+
+      const isAllowed = allowed.some((allowedOrigin) =>
+        origin === allowedOrigin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')
+      );
+
+      if (isAllowed) {
+        callback(null, true);
+      } else {
+        callback(new Error('Non autorisé par la politique CORS WebSocket'));
+      }
+    },
+    credentials: true,
   },
 })
 export class MessagesGateway
@@ -49,7 +69,7 @@ export class MessagesGateway
 
       const payload: any = jwt.verify(
         rawToken,
-        process.env.JWT_SECRET || 'secretKey',
+        process.env.JWT_SECRET || 'jobconnect_dev_insecure_jwt_secret_min_32_chars',
       );
       const userId = payload.userId || payload.sub || payload.id;
       return { ...payload, userId };

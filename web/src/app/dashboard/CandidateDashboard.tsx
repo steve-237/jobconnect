@@ -29,14 +29,29 @@ import OpenDisputeModal from '@/components/OpenDisputeModal';
 import { CandidateApplication } from '@/types';
 import ReviewModal from '@/components/dashboard/ReviewModal';
 import CandidateJobApplyModal from '@/components/dashboard/CandidateJobApplyModal';
+import { clearStoredToken } from '@/lib/auth';
 
-export default function CandidateDashboard({ greeting, userRole }: { greeting: string, userRole: string }) {
+export default function CandidateDashboard({
+  greeting,
+  userRole,
+  initialTab = 'overview',
+}: {
+  greeting: string;
+  userRole: string;
+  initialTab?: 'overview' | 'jobs' | 'calendar' | 'profile' | 'wallet';
+}) {
   const router = useRouter();
   const { t } = useLanguage();
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [applications, setApplications] = useState<CandidateApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'calendar' | 'profile' | 'wallet'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'calendar' | 'profile' | 'wallet'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab && ['overview', 'jobs', 'calendar', 'profile', 'wallet'].includes(initialTab)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -194,7 +209,7 @@ export default function CandidateDashboard({ greeting, userRole }: { greeting: s
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    clearStoredToken();
     router.replace('/login');
   };
 

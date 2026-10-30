@@ -30,6 +30,19 @@ Ce document centralise et suit l'état d'avancement des tickets pour les prochai
 
 ---
 
+## 🛡️ Étape 3bis : Plan de Durcissement de la Sécurité (SECURITY-TICKETS) - [TERMINÉ ✅]
+> Voir le détail complet dans [`SECURITY_TICKETS.md`](file:///d:/formations_personnelles/platforme-jobs/SECURITY_TICKETS.md)
+- [x] **SEC-01** : Protection contre la Faille IDOR sur `PATCH /users/:id` (Issue #1)
+- [x] **SEC-02** : Contrôle d'accès & garde d'authentification sur `POST /uploads` (Issue #2)
+- [x] **SEC-03** : Élimination du fallback `'secretKey'` et validation stricte de `JWT_SECRET` (Issue #3)
+- [x] **SEC-04** : Désactivation des endpoints de contournement KYC (`simulateApproveKyc`) en production (Issue #4)
+- [x] **SEC-05** : Durcissement de la vérification de signature du Webhook Stripe (Issue #5)
+- [x] **SEC-06** : En-têtes HTTP de sécurité avec Helmet (Issue #6)
+- [x] **SEC-07** : Restriction stricte des politiques CORS (API & WebSockets) (Issue #7)
+- [x] **SEC-08** : Rate limiting & anti-brute force avec `@nestjs/throttler` (Issue #8)
+
+---
+
 ## 🟣 Étape 4 : Déploiement en Production Cloud (TICKET-04) - [PRÊT POUR IMPLÉMENTATION 🚀]
 - [ ] **TICKET-04.1** : Configuration des variables d'environnement de production (`.env.production`).
 - [ ] **TICKET-04.2** : Déploiement Backend & PostgreSQL sur Render / Railway (`render.yaml`).

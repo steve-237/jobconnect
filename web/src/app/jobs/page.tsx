@@ -21,10 +21,13 @@ import {
   Target,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { formatPrice, getSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import { calculateMatchingScore, getBookmarks, toggleBookmark } from '@/lib/matching';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 const JobsMap = dynamic(() => import('@/components/JobsMap'), {
   ssr: false,
@@ -77,6 +80,7 @@ export default function JobsPage({
   excludeJobIds?: string[];
   onlyMyJobs?: boolean;
 } = {}) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes les catégories');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -285,16 +289,13 @@ export default function JobsPage({
     setRadiusKm(500);
   };
 
-  return (
-    <div className={isEmbedded ? 'w-full space-y-4' : 'mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 space-y-4'}>
+  const content = (
+    <div className={isEmbedded ? 'w-full space-y-4' : 'space-y-4'}>
       {!isEmbedded && (
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors group mb-2"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-          Accueil
-        </Link>
+        <Breadcrumbs
+          items={[{ label: 'Missions' }]}
+          showBackButton
+        />
       )}
 
       {/* ─── Ultra-Compact Search & Geographic Control Bar (Candidate Blue Theme) ─── */}
@@ -480,7 +481,7 @@ export default function JobsPage({
                 if (onJobClick) {
                   onJobClick(jobId);
                 } else {
-                  window.location.href = `/jobs/${jobId}`;
+                  router.push(`/jobs/${jobId}`);
                 }
               }}
             />
@@ -493,7 +494,7 @@ export default function JobsPage({
                 return (
                   <div
                     key={job.id}
-                    onClick={() => (onJobClick ? onJobClick(job.id) : (window.location.href = `/jobs/${job.id}`))}
+                    onClick={() => (onJobClick ? onJobClick(job.id) : router.push(`/jobs/${job.id}`))}
                     className={`bg-[#161618]/90 hover:bg-[#1e1e22] border border-white/10 ${cardHoverBorder} rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 shadow-xl group relative cursor-pointer hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/5`}
                   >
                     <div>
@@ -574,7 +575,7 @@ export default function JobsPage({
                           if (onJobClick) {
                             onJobClick(job.id);
                           } else {
-                            window.location.href = `/jobs/${job.id}`;
+                            router.push(`/jobs/${job.id}`);
                           }
                         }}
                         className={`${primaryBtnClass} font-bold px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 flex items-center gap-1 shrink-0`}
@@ -604,6 +605,19 @@ export default function JobsPage({
           </div>
         )}
       </section>
+    </div>
+  );
+
+  if (isEmbedded) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <NavigationHeader />
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        {content}
+      </main>
     </div>
   );
 }

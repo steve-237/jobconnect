@@ -22,6 +22,9 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import { getStoredToken, decodeToken, isTokenExpired } from '@/lib/auth';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Dispute {
   id: string;
@@ -132,17 +135,13 @@ export default function DisputesCenterPage() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/disputes');
       return;
     }
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      setCurrentUserId(payload.sub || payload.userId || '');
-    } catch (e) {
-      // ignore
-    }
+    const user = decodeToken(token);
+    setCurrentUserId(user?.sub || user?.id || '');
     fetchDisputes();
   }, [router]);
 
@@ -169,28 +168,32 @@ export default function DisputesCenterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <NavigationHeader />
       <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
 
-      <div className="mx-auto max-w-7xl">
-        {/* Navigation & Header */}
-        <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-white transition-colors mb-3 group"
-            >
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-              Retour au tableau de bord
-            </Link>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <ShieldAlert className="w-8 h-8 text-red-500" />
-              Centre de Résolution des Litiges & Arbitrage Séquestre
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1">
-              Plateforme de médiation équitable JobConnect avec garantie de protection des paiements.
-            </p>
-          </div>
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <Breadcrumbs
+            items={[
+              { label: 'Tableau de bord', href: '/dashboard' },
+              { label: 'Litiges & Séquestre' },
+            ]}
+            showBackButton
+            backHref="/dashboard"
+          />
+
+          {/* Navigation & Header */}
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                <ShieldAlert className="w-8 h-8 text-red-500" />
+                Centre de Résolution des Litiges & Arbitrage Séquestre
+              </h1>
+              <p className="text-xs text-muted-foreground mt-1">
+                Plateforme de médiation équitable JobConnect avec garantie de protection des paiements.
+              </p>
+            </div>
 
           <button
             onClick={fetchDisputes}
@@ -429,6 +432,7 @@ export default function DisputesCenterPage() {
           </div>
         )}
       </div>
-    </div>
+    </main>
+  </div>
   );
 }

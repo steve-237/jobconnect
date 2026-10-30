@@ -12,6 +12,9 @@ import { formatPrice } from '@/lib/currency';
 import { useRouter } from 'next/navigation';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getStoredToken, isTokenExpired } from '@/lib/auth';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Transaction {
   id: string;
@@ -131,9 +134,9 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/wallet');
       return;
     }
     setRole(decodeRole());
@@ -199,11 +202,20 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8 relative">
-      <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+  const content = (
+    <div className={isEmbedded ? "w-full space-y-6" : "space-y-6"}>
+      {!isEmbedded && (
+        <Breadcrumbs
+          items={[
+            { label: 'Tableau de bord', href: '/dashboard' },
+            { label: 'Portefeuille' },
+          ]}
+          showBackButton
+          backHref="/dashboard"
+        />
+      )}
 
-      <div className="mx-auto max-w-4xl">
+      <div>
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -576,6 +588,27 @@ export default function WalletPage({ isEmbedded }: { isEmbedded?: boolean } = {}
           </div>
         )}
       </div>
+    </div>
+  );
+
+  if (isEmbedded) {
+    return (
+      <>
+        <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+        {content}
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <NavigationHeader currentRole={role} />
+      <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          {content}
+        </div>
+      </main>
     </div>
   );
 }

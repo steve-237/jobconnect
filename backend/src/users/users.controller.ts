@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -53,6 +54,9 @@ export class UsersController {
 
   @Post('me/kyc/simulate-approve')
   simulateApproveKyc(@Request() req: any) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new ForbiddenException('La simulation KYC est désactivée en environnement de production.');
+    }
     return this.usersService.simulateApproveKyc(req.user.userId);
   }
 
@@ -91,7 +95,20 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() req: any,
+  ) {
+    const isOwner = req.user?.userId === id;
+    const isAdmin = req.user?.role === 'ADMIN';
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException(
+        'Accès refusé : vous ne pouvez modifier que votre propre profil utilisateur.',
+      );
+    }
+
     return this.usersService.update(id, updateUserDto);
   }
 

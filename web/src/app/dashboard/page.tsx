@@ -1,68 +1,87 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import CandidateDashboard from './CandidateDashboard';
 import EmployerDashboard from './EmployerDashboard';
+import { decodeToken, isTokenExpired, getDisplayNameFromEmail } from '@/lib/auth';
+import { Loader2 } from 'lucide-react';
 
-function decodeUserFromToken(): { email: string, role?: string } | null {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    const payload = token.split('.')[1];
-    const decoded = JSON.parse(atob(payload));
-    return { email: decoded.email ?? decoded.sub ?? '', role: decoded.role };
-  } catch {
-    return null;
-  }
-}
-
-function firstNameFromEmail(email: string): string {
-  const local = email.split('@')[0];
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
-
-export default function DashboardRouterPage() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') || undefined;
+
   const [greeting, setGreeting] = useState('');
   const [userRole, setUserRole] = useState<string>('');
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace('/login');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/dashboard');
       return;
     }
 
-    const user = decodeUserFromToken();
-    if (user?.role === 'ADMIN') {
+    const user = decodeToken(token);
+    if (!user) {
+      router.replace('/login?redirect=/dashboard');
+      return;
+    }
+
+    if (user.role === 'ADMIN') {
       router.replace('/admin');
       return;
     }
 
-    if (user?.email) {
-      setGreeting(`Welcome back, ${firstNameFromEmail(user.email)}!`);
+    if (user.email) {
+      setGreeting(`Welcome back, ${getDisplayNameFromEmail(user.email)}!`);
     } else {
       setGreeting('Welcome back!');
     }
-    
-    setUserRole(user?.role || 'CANDIDATE');
+
+    setUserRole(user.role || 'CANDIDATE');
     setReady(true);
   }, [router]);
 
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
-  // Dashboard Visual Routing
+  // Dashboard Visual Routing with tab persistence
   if (userRole === 'EMPLOYER') {
-    return <EmployerDashboard greeting={greeting} userRole={userRole} />;
+    return (
+      <EmployerDashboard
+        greeting={greeting}
+        userRole={userRole}
+        initialTab={tabParam as any}
+      />
+    );
   }
 
-  return <CandidateDashboard greeting={greeting} userRole={userRole} />;
+  return (
+    <CandidateDashboard
+      greeting={greeting}
+      userRole={userRole}
+      initialTab={tabParam as any}
+    />
+  );
+}
+
+export default function DashboardRouterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
+  );
 }

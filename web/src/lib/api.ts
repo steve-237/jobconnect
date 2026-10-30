@@ -33,4 +33,29 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Intercepteur pour gérer l'expiration de session et les erreurs 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== 'undefined' && error?.response?.status === 401) {
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('token');
+        const pathname = window.location.pathname;
+        const search = window.location.search;
+        const currentPath = pathname + search;
+
+        // Éviter une boucle si déjà sur /login ou /register
+        if (!pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+          const redirectUrl = `/login?expired=true&redirect=${encodeURIComponent(currentPath)}`;
+          window.location.href = redirectUrl;
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

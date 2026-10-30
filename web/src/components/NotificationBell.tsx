@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, Check, Trash2, MessageSquare, CheckCircle, XCircle, Briefcase, Star, ExternalLink } from 'lucide-react';
 import { useSocket } from '@/hooks/useSocket';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -25,6 +26,7 @@ export default function NotificationBell({
   theme?: 'primary' | 'amber';
   onNotificationClick?: (notif: NotificationItem) => void;
 }) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -143,7 +145,11 @@ export default function NotificationBell({
     if (onNotificationClick) {
       onNotificationClick(notif);
     } else if (notif.link) {
-      window.location.href = notif.link;
+      if (notif.link.startsWith('/')) {
+        router.push(notif.link);
+      } else {
+        window.location.href = notif.link;
+      }
     }
   };
 

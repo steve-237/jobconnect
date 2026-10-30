@@ -10,6 +10,8 @@ import {
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Job {
   id: string;
@@ -110,15 +112,23 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
 
   if (error || !job) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
-        <div className="p-4 bg-white/5 rounded-full mb-4">
-          <Briefcase className="w-10 h-10 text-muted-foreground" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2 text-foreground">Mission Introuvable</h2>
-        <p className="text-muted-foreground mb-8 text-sm">{error || 'Cette offre n\'existe plus ou a été retirée.'}</p>
-        <Link href="/jobs" className="bg-primary hover:bg-primary/80 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-lg shadow-primary/25">
-          Parcourir les missions
-        </Link>
+      <div className="min-h-screen bg-background flex flex-col">
+        <NavigationHeader />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-lg mx-auto">
+          <div className="p-4 bg-white/5 rounded-2xl mb-4 border border-white/10 text-muted-foreground">
+            <Briefcase className="w-10 h-10" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2 text-foreground">Mission Introuvable</h2>
+          <p className="text-muted-foreground mb-8 text-xs sm:text-sm">{error || 'Cette offre n\'existe plus ou a été retirée.'}</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link href="/jobs" className="bg-primary hover:bg-primary/80 text-white px-6 py-3 rounded-xl font-bold text-xs transition-all shadow-lg shadow-primary/25">
+              Parcourir les missions
+            </Link>
+            <Link href="/dashboard" className="bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-xl font-semibold text-xs transition-all border border-white/10">
+              Tableau de bord
+            </Link>
+          </div>
+        </main>
       </div>
     );
   }
@@ -132,19 +142,22 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
   const employerInitials = `${job.employer.firstName[0]}${job.employer.lastName[0]}`.toUpperCase();
 
   return (
-    <div className="min-h-screen bg-background py-10 px-4 sm:px-6 lg:px-8 relative">
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavigationHeader />
       <NotificationToast toasts={toasts} onDismiss={(toastId) => setToasts((prev) => prev.filter((t) => t.id !== toastId))} />
 
-      <div className="mx-auto max-w-4xl">
-        <Link
-          href="/jobs"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-8 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Retour aux missions
-        </Link>
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl space-y-6">
+          <Breadcrumbs
+            items={[
+              { label: 'Missions', href: '/jobs' },
+              { label: job.title },
+            ]}
+            showBackButton
+            backHref="/jobs"
+          />
 
-        {/* Main Job Card Container */}
+          {/* Main Job Card Container */}
         <div className="glass rounded-3xl p-8 sm:p-12 relative overflow-hidden border border-white/10 shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/15 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
 
@@ -288,7 +301,10 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
             ) : (
               <div className="p-6 bg-white/5 border border-white/10 rounded-2xl text-center">
                 <p className="text-sm text-muted-foreground mb-4">Connectez-vous pour pouvoir postuler à cette offre.</p>
-                <Link href="/login" className="inline-block bg-primary hover:bg-primary/80 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg shadow-primary/25">
+                <Link
+                  href={`/login?redirect=${encodeURIComponent(`/jobs/${id}`)}`}
+                  className="inline-block bg-primary hover:bg-primary/80 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg shadow-primary/25 cursor-pointer"
+                >
                   Se connecter
                 </Link>
               </div>
@@ -296,6 +312,7 @@ export default function JobDetailsPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       </div>
-    </div>
+    </main>
+  </div>
   );
 }

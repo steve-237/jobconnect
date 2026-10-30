@@ -53,8 +53,8 @@ export class PaymentsController {
     @Req() req: any,
     @Headers('stripe-signature') signature: string,
   ) {
-    if (!signature && process.env.NODE_ENV === 'production') {
-      throw new BadRequestException('Missing stripe-signature header');
+    if (!signature) {
+      throw new BadRequestException('En-tête stripe-signature manquant ou invalide');
     }
     return this.paymentsService.handleWebhook(req, signature);
   }

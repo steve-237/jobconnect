@@ -6,6 +6,8 @@ import { ArrowLeft, Send, Loader2, User } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { useSocket } from '@/hooks/useSocket';
+import { getStoredToken, decodeToken, isTokenExpired } from '@/lib/auth';
+import { LayoutDashboard } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -32,13 +34,13 @@ export default function ChatRoomPage({ params }: { params: Promise<{ application
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.replace('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace(`/login?redirect=${encodeURIComponent(`/messages/${applicationId}`)}`);
       return;
     }
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    setCurrentUserId(payload.sub || payload.userId || payload.id);
+    const user = decodeToken(token);
+    setCurrentUserId(user?.sub || user?.id || null);
 
     if (!applicationId || applicationId === 'undefined') {
       setIsLoading(false);
@@ -101,17 +103,35 @@ export default function ChatRoomPage({ params }: { params: Promise<{ application
       {/* Header */}
       <header className="bg-[#111] border-b border-white/10 px-6 py-4 flex items-center justify-between z-10 shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+              } else {
+                router.push('/dashboard');
+              }
+            }}
+            className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            title="Retour"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-lg font-bold">Chat Room</h1>
+            <h1 className="text-lg font-bold">Messagerie en direct</h1>
             <p className="text-xs text-muted-foreground flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}></span>
-              {isConnected ? 'Connected' : 'Connecting...'}
+              {isConnected ? 'Connecté en temps réel' : 'Connexion...'}
             </p>
           </div>
         </div>
+
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white border border-white/10 text-xs font-semibold transition-all"
+        >
+          <LayoutDashboard className="w-3.5 h-3.5" />
+          <span>Dashboard</span>
+        </Link>
       </header>
 
       {/* Messages Area */}

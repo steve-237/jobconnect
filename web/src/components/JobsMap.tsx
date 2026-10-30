@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/currency';
 
 interface JobMapItem {
@@ -27,6 +28,7 @@ export default function JobsMap({
   userLng = 2.3522,
   onSelectJob,
 }: JobsMapProps) {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
 
@@ -36,11 +38,11 @@ export default function JobsMap({
         if (onSelectJob) {
           onSelectJob(jobId);
         } else {
-          window.location.href = `/jobs/${jobId}`;
+          router.push(`/jobs/${jobId}`);
         }
       };
     }
-  }, [onSelectJob]);
+  }, [onSelectJob, router]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) return;

@@ -14,6 +14,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { isAuthenticated, clearStoredToken } from '@/lib/auth';
 
 const FEATURES = [
   {
@@ -56,14 +57,9 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // User already logged in → redirect to dashboard
-      router.replace('/dashboard');
-      return;
-    }
+    setIsLoggedIn(isAuthenticated());
     setIsChecking(false);
-  }, [router]);
+  }, []);
 
   if (isChecking) {
     return (
@@ -102,7 +98,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => {
-                    localStorage.removeItem('token');
+                    clearStoredToken();
                     setIsLoggedIn(false);
                     router.push('/login');
                   }}

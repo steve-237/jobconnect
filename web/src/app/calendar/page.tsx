@@ -11,6 +11,9 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import ChatModal from '@/components/ChatModal';
+import { getStoredToken, isTokenExpired } from '@/lib/auth';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Application {
   id: string;
@@ -74,9 +77,9 @@ export default function CalendarPage({
   const [activeChatApp, setActiveChatApp] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/calendar');
       return;
     }
 
@@ -168,20 +171,21 @@ export default function CalendarPage({
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className={isEmbedded ? 'w-full' : 'mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8'}>
-        {!isEmbedded && (
-          <div className="mb-8 flex items-center justify-between">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-              Retour au Dashboard
-            </Link>
-          </div>
-        )}
+  const content = (
+    <div className={isEmbedded ? 'w-full' : 'space-y-6'}>
+      {!isEmbedded && (
+        <Breadcrumbs
+          items={[
+            { label: 'Tableau de bord', href: '/dashboard' },
+            { label: 'Mon Planning' },
+          ]}
+          showBackButton
+          backHref="/dashboard"
+        />
+      )}
 
-        {/* ─── Page Header ─── */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ─── Page Header ─── */}
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-gradient-to-br from-primary/20 to-blue-500/10 text-primary p-4 rounded-2xl border border-primary/20 shadow-lg shadow-primary/10">
               <CalendarIcon className="w-8 h-8" />
@@ -536,6 +540,20 @@ export default function CalendarPage({
           />
         )}
       </div>
+  );
+
+  if (isEmbedded) {
+    return content;
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavigationHeader />
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          {content}
+        </div>
+      </main>
     </div>
   );
 }

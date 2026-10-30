@@ -1,24 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import Logo from '@/components/Logo';
+import { decodeToken, isTokenExpired, sanitizeRedirectUrl } from '@/lib/auth';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
+
+  const redirectParam = searchParams.get('redirect');
+  const isExpired = searchParams.get('expired') === 'true';
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token && !isTokenExpired(token)) {
+      const decoded = decodeToken(token);
+      const defaultDest = decoded?.role === 'ADMIN' ? '/admin' : '/dashboard';
+      const targetUrl = sanitizeRedirectUrl(redirectParam, defaultDest);
+      router.replace(targetUrl);
+      return;
+    }
+    setIsCheckingAuth(false);
+  }, [redirectParam, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,14 +48,19 @@ export default function LoginPage() {
     try {
       const response = await api.post('/auth/login', formData);
       const { access_token } = response.data;
-      
+
       localStorage.setItem('token', access_token);
-      
-      window.location.href = '/dashboard';
+      window.dispatchEvent(new Event('jobconnect_auth_changed'));
+
+      const decoded = decodeToken(access_token);
+      const defaultDest = decoded?.role === 'ADMIN' ? '/admin' : '/dashboard';
+      const targetUrl = sanitizeRedirectUrl(redirectParam, defaultDest);
+
+      router.push(targetUrl);
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.message === 'Network Error' || err.code === 'ERR_NETWORK') {
-        setError('Impossible de contacter le serveur backend (http://localhost:4000). Veuillez vérifier que le serveur backend est démarré.');
+        setError('Impossible de contacter le serveur backend. Veuillez vérifier votre connexion.');
       } else {
         setError(err.response?.data?.message || 'Identifiants incorrects. Veuillez réessayer.');
       }
@@ -44,11 +69,23 @@ export default function LoginPage() {
     }
   };
 
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const registerHref = redirectParam
+    ? `/register?redirect=${encodeURIComponent(redirectParam)}`
+    : '/register';
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-900/20 blur-[120px] pointer-events-none" />
-      
+
       {/* Floating Top Right Language Switcher */}
       <div className="absolute top-6 right-6 z-20">
         <LanguageSwitcher variant="dropdown" align="right" />
@@ -60,12 +97,20 @@ export default function LoginPage() {
             <div className="mb-6">
               <Logo size="lg" showTagline={true} />
             </div>
-            
+
             <h1 className="text-3xl font-bold mb-2 tracking-tight">{t('auth.login_title')}</h1>
             <p className="text-muted-foreground text-sm text-center">
               {t('auth.login_subtitle')}
             </p>
           </div>
+
+          {/* Session Expired Notice */}
+          {isExpired && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-xl mb-6 text-xs flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Votre session a expiré. Veuillez vous reconnecter pour poursuivre.</span>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm flex items-center gap-2">
@@ -79,13 +124,13 @@ export default function LoginPage() {
               <label className="text-sm font-medium text-gray-300">{t('auth.email')}</label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
-                <input 
+                <input
                   type="email"
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
                   placeholder={t('auth.email_placeholder')}
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -94,18 +139,18 @@ export default function LoginPage() {
               <label className="text-sm font-medium text-gray-300">{t('auth.password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-primary transition-colors" />
-                <input 
+                <input
                   type="password"
                   required
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-12 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
                   placeholder="••••••••"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="w-full bg-primary hover:bg-primary/80 text-white font-semibold py-4 rounded-xl mt-4 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
@@ -123,68 +168,80 @@ export default function LoginPage() {
 
           <div className="mt-8 text-center text-sm text-gray-400">
             {t('auth.no_account')}{' '}
-            <Link href="/register" className="text-primary hover:underline transition-colors font-medium">
+            <Link href={registerHref} className="text-primary hover:underline transition-colors font-medium">
               {t('auth.register_link')}
             </Link>
           </div>
 
           {/* Quick Login Buttons (Demo & Testing) */}
-          {(process.env.NODE_ENV === 'development' || true) && (
-            <div className="mt-8 border-t border-white/10 pt-6">
-              <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
-                Accounts Demo / Connexion Rapide 🚀
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setFormData({ email: 'admin@jobconnect.com', password: 'password123' });
-                  }}
-                  className="col-span-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
-                >
-                  👑 Admin (admin@jobconnect.com)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' });
-                  }}
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
-                >
-                  💼 Employeur (Jean)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' });
-                  }}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
-                >
-                  👷 Candidat (Marc)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setFormData({ email: 'employer@test.com', password: 'password123' });
-                  }}
-                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
-                >
-                  Employeur Test
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setFormData({ email: 'candidate@test.com', password: 'password123' });
-                  }}
-                  className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
-                >
-                  Candidat Test
-                </button>
-              </div>
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-semibold">
+              Accounts Demo / Connexion Rapide 🚀
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'admin@jobconnect.com', password: 'password123' });
+                }}
+                className="col-span-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                👑 Admin (admin@jobconnect.com)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'jean.dupont@employeur.com', password: 'password123' });
+                }}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                💼 Employeur (Jean)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'marc.bricole@candidat.com', password: 'password123' });
+                }}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                👷 Candidat (Marc)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'employer@test.com', password: 'password123' });
+                }}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                Employeur Test
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({ email: 'candidate@test.com', password: 'password123' });
+                }}
+                className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-xs py-2 px-3 rounded-xl transition-colors font-medium cursor-pointer"
+              >
+                Candidat Test
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

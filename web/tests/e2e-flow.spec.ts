@@ -158,7 +158,7 @@ test.describe('JobConnect v2.0 E2E Flow', () => {
       });
     });
 
-    await page.route('**/applications/my', async (route) => {
+    await page.route('**/applications/my*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

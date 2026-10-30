@@ -29,6 +29,9 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { CURRENCIES, getSelectedCurrency, setSelectedCurrency, CurrencyConfig } from '@/lib/currency';
 import { NotificationToast, ToastMessage } from '@/components/NotificationToast';
+import { getStoredToken, isTokenExpired } from '@/lib/auth';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface UserProfile {
   id?: string;
@@ -192,9 +195,9 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      router.push('/login');
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/profile');
       return;
     }
     
@@ -332,7 +335,8 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+      {!isEmbedded && <NavigationHeader currentRole={profile.role} />}
       <NotificationToast toasts={toasts} onDismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
       {/* ─── Background Elements ─── */}
       {!isEmbedded && (
@@ -342,12 +346,16 @@ export default function ProfilePage({ isEmbedded }: { isEmbedded?: boolean } = {
         </>
       )}
 
-      <div className={isEmbedded ? "w-full space-y-8" : "mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8 space-y-8"}>
+      <div className={isEmbedded ? "w-full space-y-8" : "mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-8"}>
         {!isEmbedded && (
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
+          <Breadcrumbs
+            items={[
+              { label: 'Tableau de bord', href: '/dashboard' },
+              { label: 'Mon Profil' },
+            ]}
+            showBackButton
+            backHref="/dashboard"
+          />
         )}
         {/* ─── Profile Header ─── */}
         <div className="glass rounded-2xl p-6 sm:p-8">

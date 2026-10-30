@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Briefcase, MapPin, Coins, AlignLeft, List, Loader2, Calendar, Clock } from 'lucide-react';
 import api from '@/lib/api';
+import { getStoredToken, decodeToken, isTokenExpired } from '@/lib/auth';
+import NavigationHeader from '@/components/NavigationHeader';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface Category {
   id: string;
@@ -29,18 +32,17 @@ export default function CreateJobPage() {
   });
 
   useEffect(() => {
-    // Role check
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.role === 'CANDIDATE') {
-          router.replace('/dashboard');
-          return;
-        }
-      }
-    } catch (e) {
-      // ignore
+    // Auth & Role check
+    const token = getStoredToken();
+    if (!token || isTokenExpired(token)) {
+      router.replace('/login?redirect=/jobs/create');
+      return;
+    }
+
+    const user = decodeToken(token);
+    if (user?.role === 'CANDIDATE') {
+      router.replace('/dashboard');
+      return;
     }
 
     const fetchCategories = async () => {
@@ -89,14 +91,21 @@ export default function CreateJobPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-3xl">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-white transition-colors mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavigationHeader />
 
-        <div className="glass rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <Breadcrumbs
+            items={[
+              { label: 'Missions', href: '/jobs' },
+              { label: 'Publier une mission' },
+            ]}
+            showBackButton
+            backHref="/dashboard"
+          />
+
+          <div className="glass rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
           {/* Decorative background blur */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
 
@@ -270,6 +279,7 @@ export default function CreateJobPage() {
           </form>
         </div>
       </div>
-    </div>
+    </main>
+  </div>
   );
 }
