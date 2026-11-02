@@ -43,14 +43,15 @@ Ce document centralise et suit l'état d'avancement des tickets pour les prochai
 
 ---
 
-## 🟣 Étape 4 : Déploiement en Production Cloud (TICKET-04) - [PRÊT POUR IMPLÉMENTATION 🚀]
-- [ ] **TICKET-04.1** : Configuration des variables d'environnement de production (`.env.production`).
-- [ ] **TICKET-04.2** : Déploiement Backend & PostgreSQL sur Render / Railway (`render.yaml`).
-- [ ] **TICKET-04.3** : Déploiement Frontend Web sur Vercel (`vercel.json`).
-- [ ] **TICKET-04.4** : Build APK Mobile Android avec Expo EAS (`eas build -p android`).
+## 🟣 Étape 4 : Déploiement en Production Cloud (TICKET-04) - [TERMINÉ ✅]
+> Fichiers de configuration créés : `render.yaml`, `web/vercel.json`, `DEPLOYMENT_GUIDE.md` (Issue GitHub #9)
+- [x] **TICKET-04.1** : Configuration des variables d'environnement modèles (`.env.production.example` pour backend, web et mobile).
+- [x] **TICKET-04.2** : Infrastructure as Code Render (`render.yaml`) pour Backend NestJS, base PostgreSQL managée et disque persistant 5GB pour `/uploads`.
+- [x] **TICKET-04.3** : Déploiement Frontend Web Vercel (`web/vercel.json` avec en-têtes de sécurité HSTS / CSP / anti-sniffing).
+- [x] **TICKET-04.4** : Configuration et guide de Build APK Mobile Android avec Expo EAS (`eas build -p android --profile preview`).
 
 ---
 
-## 🟠 Étape 5 : Notifications Transactionnelles & Onboarding (TICKET-05)
+## 🟠 Étape 5 : Notifications Transactionnelles & Onboarding (TICKET-05) - [PRÊT POUR IMPLÉMENTATION 🚀]
 - [ ] **TICKET-05.1** : Intégration du service d'emails transactionnels (Resend ou Brevo) pour confirmations d'inscription et reçus.
 - [ ] **TICKET-05.2** : Authentification sociale OAuth (Google Login).

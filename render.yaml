@@ -1,0 +1,42 @@
+# Configuration Blueprint Render Infrastructure as Code (IaC)
+# Déploiement automatique du Backend NestJS, Base PostgreSQL et Disque persistant pour les Uploads
+
+databases:
+  - name: jobconnect-postgres
+    databaseName: jobconnect
+    user: jobconnect_admin
+    region: frankfurt # ou oregon / ohio
+    plan: starter # Plan avec base PostgreSQL managée
+
+services:
+  # Backend API NestJS
+  - type: web
+    name: jobconnect-backend
+    env: node
+    region: frankfurt
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm run start:prod
+    healthCheckPath: /
+    disk:
+      name: jobconnect-uploads-storage
+      mountPath: /opt/render/project/src/backend/uploads
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jobconnect-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true # Render génère automatiquement une clé aléatoire cryptographique
+      - key: FRONTEND_URL
+        value: https://jobconnect-web.vercel.app # Remplacer par votre domaine Vercel réel
+      - key: STRIPE_SECRET_KEY
+        sync: false # À définir manuellement dans le dashboard Render
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
