@@ -9,6 +9,7 @@ import Stripe from 'stripe';
 import { Request } from 'express';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class PaymentsService {
@@ -18,6 +19,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly messagesGateway: MessagesGateway,
+    private readonly mailService: MailService,
   ) {
     this.stripe = new Stripe(
       process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder',
@@ -90,6 +92,20 @@ export class PaymentsService {
           `L'employeur a réglé la mission "${application.job.title}". Vous pouvez maintenant démarrer !`,
           { type: 'application_accepted', applicationId },
         );
+      }
+
+      // Send email receipt to employer
+      const employer = await this.prisma.user.findUnique({ where: { id: employerId } });
+      if (employer?.email) {
+        this.mailService
+          .sendPaymentReceipt(
+            employer.email,
+            `${employer.firstName} ${employer.lastName}`,
+            application.job.title,
+            application.job.price,
+            `TX-${Date.now()}`,
+          )
+          .catch((err) => console.error('Failed to send payment receipt email', err));
       }
 
       return { url: `${frontendUrl}/dashboard?payment_success=true` };

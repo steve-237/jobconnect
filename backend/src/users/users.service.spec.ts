@@ -2,12 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 import { ConflictException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
   let prisma: any;
   let messagesGateway: { sendNotificationToUser: jest.Mock };
+  let mailService: { sendWelcomeEmail: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -23,11 +25,16 @@ describe('UsersService', () => {
       sendNotificationToUser: jest.fn(),
     };
 
+    mailService = {
+      sendWelcomeEmail: jest.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: PrismaService, useValue: prisma },
         { provide: MessagesGateway, useValue: messagesGateway },
+        { provide: MailService, useValue: mailService },
       ],
     }).compile();
 

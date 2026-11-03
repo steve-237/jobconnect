@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ApplicationsService {
@@ -15,6 +16,7 @@ export class ApplicationsService {
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
     private readonly messagesGateway: MessagesGateway,
+    private readonly mailService: MailService,
   ) {}
 
   async create(
@@ -84,6 +86,18 @@ export class ApplicationsService {
         `${application.candidate.firstName} ${application.candidate.lastName} a postulé à votre annonce "${job.title}".`,
         { type: 'new_application', jobId: job.id, applicationId: application.id },
       );
+    }
+
+    // Send email notification to employer
+    if (employer?.email) {
+      this.mailService
+        .sendNewApplicationNotification(
+          employer.email,
+          `${employer.firstName} ${employer.lastName}`,
+          `${application.candidate.firstName} ${application.candidate.lastName}`,
+          job.title,
+        )
+        .catch((err) => console.error('Failed to send application email notification', err));
     }
 
     return application;
@@ -172,6 +186,18 @@ export class ApplicationsService {
         `Votre candidature pour "${application.job.title}" a été acceptée. Vous pouvez maintenant discuter avec l'employeur !`,
         { type: 'application_accepted', applicationId: id },
       );
+    }
+
+    // Send email notification to candidate
+    if (candidate?.email) {
+      this.mailService
+        .sendApplicationAcceptedNotification(
+          candidate.email,
+          `${candidate.firstName} ${candidate.lastName}`,
+          application.job.title,
+          application.job.price,
+        )
+        .catch((err) => console.error('Failed to send acceptance email', err));
     }
 
     return updated;

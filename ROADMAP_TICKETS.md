@@ -52,6 +52,14 @@ Ce document centralise et suit l'état d'avancement des tickets pour les prochai
 
 ---
 
-## 🟠 Étape 5 : Notifications Transactionnelles & Onboarding (TICKET-05) - [PRÊT POUR IMPLÉMENTATION 🚀]
-- [ ] **TICKET-05.1** : Intégration du service d'emails transactionnels (Resend ou Brevo) pour confirmations d'inscription et reçus.
-- [ ] **TICKET-05.2** : Authentification sociale OAuth (Google Login).
+## 🟠 Étape 5 : Notifications Transactionnelles & Onboarding (TICKET-05) - [TERMINÉ ✅]
+> Issues GitHub résolues : [#10](https://github.com/steve-237/jobconnect/issues/10) (Emails transactionnels) et [#11](https://github.com/steve-237/jobconnect/issues/11) (Google OAuth)
+- [x] **TICKET-05.1** : Intégration du service d'emails transactionnels (MailModule avec templates responsives HTML/texte) :
+  - Email de bienvenue personnalisé selon le rôle (Candidat ou Employeur).
+  - Notification par email pour l'employeur lors de la réception d'une candidature.
+  - Notification par email pour le candidat lorsque sa candidature est acceptée.
+  - Reçu de paiement et confirmation de mise sous séquestre des fonds.
+- [x] **TICKET-05.2** : Authentification sociale OAuth (Google Login / Register) :
+  - Endpoint backend sécurisé `POST /auth/google` avec création automatique ou liaison de compte.
+  - Boutons "Continuer avec Google" intégrés sur les formulaires de connexion et d'inscription Web.
+  - Tests unitaires complets sur `auth.service.spec.ts` et `mail.service.spec.ts` (51 tests passants).

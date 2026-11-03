@@ -3,6 +3,7 @@ import { PaymentsService } from './payments.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 
 describe('PaymentsService', () => {
@@ -10,6 +11,7 @@ describe('PaymentsService', () => {
   let prisma: any;
   let notificationsService: { sendPushNotification: jest.Mock };
   let messagesGateway: { sendNotificationToUser: jest.Mock };
+  let mailService: { sendPaymentReceipt: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -48,12 +50,17 @@ describe('PaymentsService', () => {
       sendNotificationToUser: jest.fn(),
     };
 
+    mailService = {
+      sendPaymentReceipt: jest.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationsService, useValue: notificationsService },
         { provide: MessagesGateway, useValue: messagesGateway },
+        { provide: MailService, useValue: mailService },
       ],
     }).compile();
 

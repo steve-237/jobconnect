@@ -79,7 +79,52 @@ describe('AuthService', () => {
         sub: 'u1',
         role: 'CANDIDATE',
       });
-      expect(res).toEqual({ access_token: 'mock_jwt_token' });
+      expect(res.access_token).toBe('mock_jwt_token');
+      expect(res.user).toBeDefined();
+    });
+  });
+
+  describe('loginWithGoogle', () => {
+    it('should log in existing user if email exists', async () => {
+      const existingUser = {
+        id: 'u-google-1',
+        email: 'google.user@gmail.com',
+        firstName: 'Google',
+        lastName: 'User',
+        role: 'CANDIDATE',
+      };
+      usersService.findByEmail.mockResolvedValue(existingUser);
+
+      const res = await service.loginWithGoogle({
+        email: 'google.user@gmail.com',
+        firstName: 'Google',
+        lastName: 'User',
+      });
+
+      expect(usersService.create).not.toHaveBeenCalled();
+      expect(res.access_token).toBe('mock_jwt_token');
+      expect(res.user.email).toBe('google.user@gmail.com');
+    });
+
+    it('should auto-register and log in new user if email does not exist', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      usersService.create.mockResolvedValue({
+        id: 'u-google-new',
+        email: 'new.google@gmail.com',
+        firstName: 'New',
+        lastName: 'Candidate',
+        role: 'CANDIDATE',
+      });
+
+      const res = await service.loginWithGoogle({
+        email: 'new.google@gmail.com',
+        firstName: 'New',
+        lastName: 'Candidate',
+        role: 'CANDIDATE',
+      });
+
+      expect(usersService.create).toHaveBeenCalled();
+      expect(res.access_token).toBe('mock_jwt_token');
     });
   });
 });

@@ -3,6 +3,7 @@ import { ApplicationsService } from './applications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
 describe('ApplicationsService', () => {
@@ -10,6 +11,7 @@ describe('ApplicationsService', () => {
   let prisma: any;
   let notificationsService: { sendPushNotification: jest.Mock };
   let messagesGateway: { sendNotificationToUser: jest.Mock };
+  let mailService: { sendNewApplicationNotification: jest.Mock; sendApplicationAcceptedNotification: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -25,6 +27,7 @@ describe('ApplicationsService', () => {
       user: {
         findUnique: jest.fn(),
       },
+      $transaction: jest.fn().mockImplementation((promises) => Promise.all(promises)),
     };
 
     notificationsService = {
@@ -35,12 +38,18 @@ describe('ApplicationsService', () => {
       sendNotificationToUser: jest.fn(),
     };
 
+    mailService = {
+      sendNewApplicationNotification: jest.fn().mockResolvedValue({ success: true }),
+      sendApplicationAcceptedNotification: jest.fn().mockResolvedValue({ success: true }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ApplicationsService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationsService, useValue: notificationsService },
         { provide: MessagesGateway, useValue: messagesGateway },
+        { provide: MailService, useValue: mailService },
       ],
     }).compile();
 

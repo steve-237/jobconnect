@@ -5,12 +5,14 @@ import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { MessagesGateway } from '../messages/messages.gateway';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messagesGateway: MessagesGateway,
+    private readonly mailService: MailService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -35,6 +37,12 @@ export class UsersService {
     });
 
     const { passwordHash: _, ...result } = user;
+
+    // Send welcome email asynchronously
+    this.mailService
+      .sendWelcomeEmail(user.email, user.firstName, user.role)
+      .catch((err) => console.error('Failed to send welcome email', err));
+
     return result;
   }
 
